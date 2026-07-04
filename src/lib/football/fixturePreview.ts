@@ -18,10 +18,10 @@ export type FixturePreviewItem = {
 };
 
 export type FixturesPreview = {
-  featured: FixturePreviewItem[];
+  live: FixturePreviewItem[];
+  remaining: FixturePreviewItem[];
   recent: FixturePreviewItem[];
   today: FixturePreviewItem[];
-  upcoming: FixturePreviewItem[];
 };
 
 const teamNameAliases: Record<string, string> = {
@@ -161,12 +161,6 @@ function toPreviewItem(
   };
 }
 
-function hasNamedTeams(fixture: FixturePreviewItem) {
-  return ![fixture.home.name, fixture.away.name].some((name) =>
-    /^(team tbc|tbd|tba|[wl]\d+)$/i.test(name.trim()),
-  );
-}
-
 export async function loadOpenFootballFixturesPreview(
   participants: Participant[],
   now = new Date(),
@@ -177,18 +171,17 @@ export async function loadOpenFootballFixturesPreview(
   const teamsById = new Map(result.teams.map((team) => [team.id, team]));
   const ownersByTeamName = ownerLookup(participants);
   const fixtures = result.matches
+    .filter((match) => match.round !== "group-stage")
     .map((match) => toPreviewItem(match, teamsById, ownersByTeamName))
     .sort((a, b) => a.timestamp - b.timestamp);
-  const featured = fixtures
-    .filter(
-      (fixture) =>
-        fixture.stageLabel === "Group stage" && hasNamedTeams(fixture),
-    )
-    .slice(0, 6);
+  const live = fixtures.filter((fixture) => fixture.statusLabel === "Live");
   const today = fixtures.filter((fixture) =>
     Number.isFinite(fixture.timestamp) &&
     sameUkDay(new Date(fixture.timestamp), now),
   );
+  const remaining = fixtures
+    .filter((fixture) => fixture.statusLabel !== "Finished")
+    .slice(0, 8);
   const recent = fixtures
     .filter(
       (fixture) =>
@@ -196,14 +189,11 @@ export async function loadOpenFootballFixturesPreview(
     )
     .slice(-4)
     .reverse();
-  const upcoming = fixtures
-    .filter((fixture) => fixture.timestamp > now.getTime())
-    .slice(0, 4);
 
   return {
-    featured,
+    live,
+    remaining,
     recent,
     today,
-    upcoming,
   };
 }

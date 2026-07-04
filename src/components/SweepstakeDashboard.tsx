@@ -369,29 +369,33 @@ export function SweepstakeDashboard({
               title="Fixtures and results"
             >
               <div className="grid gap-5">
+                <p className="text-base font-semibold leading-7 text-[#b8c0ae]">
+                  Only knockout-stage fixtures are shown here. The full path is
+                  available in the wall chart.
+                </p>
                 <FixtureGroup
-                  fixtures={fixturesPreview.featured}
-                  title="Group-stage fixtures"
+                  fixtures={fixturesPreview.remaining}
+                  title="Remaining fixtures"
+                />
+                <FixtureGroup
+                  fixtures={fixturesPreview.live}
+                  title="Live now"
                 />
                 <FixtureGroup
                   fixtures={fixturesPreview.today}
                   title="Today"
                 />
                 <FixtureGroup
-                  fixtures={fixturesPreview.upcoming}
-                  title="Upcoming"
-                />
-                <FixtureGroup
                   fixtures={fixturesPreview.recent}
                   title="Recent results"
                 />
-                {fixturesPreview.featured.length === 0 &&
+                {fixturesPreview.remaining.length === 0 &&
+                fixturesPreview.live.length === 0 &&
                 fixturesPreview.today.length === 0 &&
-                fixturesPreview.upcoming.length === 0 &&
                 fixturesPreview.recent.length === 0 ? (
                   <div className="rounded-lg border border-[#c7a653]/25 bg-[#0e1915] p-4 text-base font-bold text-[#d9dccf]">
-                    Fixtures are not available from OpenFootball static data
-                    right now.
+                    Knockout fixtures are not available from OpenFootball
+                    static data right now.
                   </div>
                 ) : null}
               </div>
