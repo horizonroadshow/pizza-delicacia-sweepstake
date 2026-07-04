@@ -16,6 +16,14 @@ const slotClassNames = {
   5: "row-start-5",
   6: "row-start-6",
   7: "row-start-7",
+  8: "row-start-8",
+  9: "row-start-9",
+  10: "row-start-10",
+  11: "row-start-11",
+  12: "row-start-12",
+  13: "row-start-13",
+  14: "row-start-14",
+  15: "row-start-15",
 } as const;
 
 type Slot = keyof typeof slotClassNames;
@@ -33,23 +41,23 @@ type MobileRoundColumnData = MobilePanel & {
 };
 
 const leftRoundSlots: Record<string, Slot[]> = {
-  "left-round-of-32": [1, 3, 5, 7],
-  "left-round-of-16": [2, 6],
-  "left-quarter-finals": [4],
-  "left-semi-finals": [4],
+  "left-round-of-32": [1, 3, 5, 7, 9, 11, 13, 15],
+  "left-round-of-16": [2, 6, 10, 14],
+  "left-quarter-finals": [4, 12],
+  "left-semi-finals": [8],
 };
 
 const rightRoundSlots: Record<string, Slot[]> = {
-  "right-semi-finals": [4],
-  "right-quarter-finals": [4],
-  "right-round-of-16": [2, 6],
-  "right-round-of-32": [1, 3, 5, 7],
+  "right-semi-finals": [8],
+  "right-quarter-finals": [4, 12],
+  "right-round-of-16": [2, 6, 10, 14],
+  "right-round-of-32": [1, 3, 5, 7, 9, 11, 13, 15],
 };
 
 const connectorSlotsByStage = {
-  early: [2, 6],
-  middle: [4],
-  late: [4],
+  early: [2, 6, 10, 14],
+  middle: [4, 12],
+  late: [8],
 } as const;
 
 function TeamLine({ team }: { team: KnockoutTeam }) {
@@ -169,7 +177,7 @@ function DesktopRoundColumn({
   return (
     <div className="grid w-[286px] grid-rows-[auto_1fr] gap-4">
       <RoundHeader>{round.name}</RoundHeader>
-      <div className="grid grid-rows-8 gap-y-8">
+      <div className="grid grid-rows-[repeat(16,minmax(0,1fr))] gap-y-8">
         {round.matches.map((match, index) => (
           <div
             className={`${slotClassNames[slots[index] ?? 1]} row-span-2 self-center`}
@@ -191,7 +199,7 @@ function DesktopConnectorColumn({
   return (
     <div aria-hidden="true" className="grid w-12 grid-rows-[auto_1fr] gap-4">
       <div className="h-[46px]" />
-      <div className="grid grid-rows-8 gap-y-8">
+      <div className="grid grid-rows-[repeat(16,minmax(0,1fr))] gap-y-8">
         {slots.map((slot, index) => (
           <div
             className={`${slotClassNames[slot]} row-span-2 flex items-center`}
@@ -222,12 +230,12 @@ function DesktopCentreColumn({
           Final
         </p>
       </div>
-      <div className="grid grid-rows-8 gap-y-8">
-        <div className="row-start-3 row-span-3 self-center">
+      <div className="grid grid-rows-[repeat(16,minmax(0,1fr))] gap-y-8">
+        <div className="row-start-6 row-span-4 self-center">
           <MatchCard match={final} prominent />
         </div>
         {thirdPlace ? (
-          <div className="row-start-7 row-span-2 self-start rounded-lg border border-dashed border-[#c7a653]/35 bg-[#0e1915] p-3">
+          <div className="row-start-12 row-span-3 self-start rounded-lg border border-dashed border-[#c7a653]/35 bg-[#0e1915] p-3">
             <p className="mb-3 text-center text-xs font-black uppercase tracking-[0.18em] text-[#c7a653]">
               Optional third-place match
             </p>
@@ -240,20 +248,20 @@ function DesktopCentreColumn({
 }
 
 const mobileRoundCardSlots: Record<string, number[]> = {
-  "mobile-round-of-32": [1, 3, 5, 7, 9, 11, 13, 15],
-  "mobile-round-of-16": [2, 6, 10, 14],
-  "mobile-quarter-finals": [4, 12],
-  "mobile-semi-finals": [4, 12],
-  final: [8],
-  "third-place": [12],
+  "mobile-round-of-32": [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31],
+  "mobile-round-of-16": [2, 6, 10, 14, 18, 22, 26, 30],
+  "mobile-quarter-finals": [4, 12, 20, 28],
+  "mobile-semi-finals": [8, 24],
+  final: [16],
+  "third-place": [24],
 };
 
 const mobileConnectorSlots: Record<string, number[]> = {
-  "mobile-round-of-32": [2, 6, 10, 14],
-  "mobile-round-of-16": [4, 12],
-  "mobile-quarter-finals": [4, 12],
-  "mobile-semi-finals": [8],
-  final: [12],
+  "mobile-round-of-32": [2, 6, 10, 14, 18, 22, 26, 30],
+  "mobile-round-of-16": [4, 12, 20, 28],
+  "mobile-quarter-finals": [8, 24],
+  "mobile-semi-finals": [16],
+  final: [24],
 };
 
 const MobileRoundColumn = forwardRef<
@@ -278,7 +286,7 @@ const MobileRoundColumn = forwardRef<
         </p>
         <p className="mt-1 text-xl font-black text-[#f0d88b]">{column.title}</p>
       </div>
-      <div className="mt-4 grid min-h-[1540px] grid-rows-[repeat(16,minmax(0,1fr))] gap-y-5">
+      <div className="mt-4 grid min-h-[3080px] grid-rows-[repeat(32,minmax(0,1fr))] gap-y-5">
         {column.matches.map((match, index) => (
           <div
             className="row-span-2 self-center"
@@ -301,7 +309,7 @@ function MobileConnectorColumn({ slots }: { slots: number[] }) {
       data-mobile-connector-column="true"
     >
       <div />
-      <div className="grid min-h-[1540px] grid-rows-[repeat(16,minmax(0,1fr))] gap-y-5">
+      <div className="grid min-h-[3080px] grid-rows-[repeat(32,minmax(0,1fr))] gap-y-5">
         {slots.map((slot, index) => (
           <div
             className="row-span-2 flex items-center"

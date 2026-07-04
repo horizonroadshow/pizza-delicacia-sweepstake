@@ -39,6 +39,22 @@ function lostCompletedKnockoutMatch(team: Team, matches: Match[]) {
   );
 }
 
+function knockoutFieldTeamIds(matches: Match[]) {
+  const teamIds = new Set<string>();
+
+  for (const match of matches) {
+    if (match.homeTeamId) {
+      teamIds.add(match.homeTeamId);
+    }
+
+    if (match.awayTeamId) {
+      teamIds.add(match.awayTeamId);
+    }
+  }
+
+  return teamIds;
+}
+
 // Local/static status derivation only. OpenFootball is a free static source,
 // not live official data, and this can later be replaced by a live sync layer.
 export async function loadOpenFootballLeaderboardParticipants(
@@ -51,14 +67,22 @@ export async function loadOpenFootballLeaderboardParticipants(
     (match) => match.round !== "group-stage",
   );
   const sourceTeamsByName = teamLookupByName(result.teams);
+  const knockoutTeamIds = knockoutFieldTeamIds(knockoutMatches);
 
   return participants.map((participant) => ({
     ...participant,
     teams: participant.teams.map((team) => {
       const sourceTeam = sourceTeamsByName.get(normaliseName(team.country));
-      const isEliminated = sourceTeam
-        ? lostCompletedKnockoutMatch(sourceTeam, knockoutMatches)
+      const reachedKnockoutStage = sourceTeam
+        ? knockoutTeamIds.has(sourceTeam.id)
         : false;
+      // Status buckets: absent from knockout field = group-stage eliminated;
+      // lost a completed knockout match = knockout eliminated; otherwise alive.
+      const isEliminated =
+        !reachedKnockoutStage ||
+        (sourceTeam
+          ? lostCompletedKnockoutMatch(sourceTeam, knockoutMatches)
+          : false);
 
       return {
         ...team,

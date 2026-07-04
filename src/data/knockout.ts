@@ -509,6 +509,15 @@ function round(
   };
 }
 
+function splitRound(matches: Match[]) {
+  const middleIndex = Math.ceil(matches.length / 2);
+
+  return {
+    left: matches.slice(0, middleIndex),
+    right: matches.slice(middleIndex),
+  };
+}
+
 export function createKnockoutDraw(
   matches: Match[],
   options: KnockoutDrawOptions = {},
@@ -524,6 +533,10 @@ export function createKnockoutDraw(
   const semiFinals = groupedMatches["semi-finals"];
   const final = groupedMatches.final[0];
   const thirdPlace = groupedMatches["third-place"][0];
+  const roundOf32Draw = splitRound(roundOf32);
+  const roundOf16Draw = splitRound(roundOf16);
+  const quarterFinalsDraw = splitRound(quarterFinals);
+  const semiFinalsDraw = splitRound(semiFinals);
 
   if (!final) {
     throw new Error("Sample knockout data is missing the final.");
@@ -535,28 +548,28 @@ export function createKnockoutDraw(
         "left-round-of-32",
         roundNames["round-of-32"],
         "left",
-        roundOf32.slice(0, 4),
+        roundOf32Draw.left,
         drawOptions,
       ),
       round(
         "left-round-of-16",
         roundNames["round-of-16"],
         "left",
-        roundOf16.slice(0, 2),
+        roundOf16Draw.left,
         drawOptions,
       ),
       round(
         "left-quarter-finals",
         roundNames["quarter-finals"],
         "left",
-        quarterFinals.slice(0, 1),
+        quarterFinalsDraw.left,
         drawOptions,
       ),
       round(
         "left-semi-finals",
         roundNames["semi-finals"],
         "left",
-        semiFinals.slice(0, 1),
+        semiFinalsDraw.left,
         drawOptions,
       ),
     ],
@@ -567,28 +580,28 @@ export function createKnockoutDraw(
         "right-semi-finals",
         roundNames["semi-finals"],
         "right",
-        semiFinals.slice(1, 2),
+        semiFinalsDraw.right,
         drawOptions,
       ),
       round(
         "right-quarter-finals",
         roundNames["quarter-finals"],
         "right",
-        quarterFinals.slice(1, 2),
+        quarterFinalsDraw.right,
         drawOptions,
       ),
       round(
         "right-round-of-16",
         roundNames["round-of-16"],
         "right",
-        roundOf16.slice(2, 4),
+        roundOf16Draw.right,
         drawOptions,
       ),
       round(
         "right-round-of-32",
         roundNames["round-of-32"],
         "right",
-        roundOf32.slice(4, 8),
+        roundOf32Draw.right,
         drawOptions,
       ),
     ],
