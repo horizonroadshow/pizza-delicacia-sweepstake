@@ -8,7 +8,10 @@ import { PrizeCard } from "@/components/PrizeCard";
 import { StatCard } from "@/components/StatCard";
 import { knockoutDraw } from "@/data/knockout";
 import type { Participant } from "@/data/sweepstake";
-import { sweepstakeSummary } from "@/data/sweepstake";
+import {
+  countParticipantTeamsRemaining,
+  sweepstakeSummary,
+} from "@/data/sweepstake";
 
 type FilterId = "all" | "two" | "one" | "eliminated";
 
@@ -20,7 +23,7 @@ const filters: { id: FilterId; label: string }[] = [
 ];
 
 function remainingTeams(participant: Participant) {
-  return participant.teams.filter((team) => team.status === "still-in").length;
+  return countParticipantTeamsRemaining(participant);
 }
 
 function filterParticipants(participants: Participant[], activeFilter: FilterId) {

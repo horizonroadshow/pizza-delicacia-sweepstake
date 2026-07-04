@@ -1,6 +1,7 @@
-import type { Participant, Team } from "@/data/sweepstake";
+import type { AllocatedTeam, Participant } from "@/data/sweepstake";
+import { countParticipantTeamsRemaining } from "@/data/sweepstake";
 
-function TeamRow({ team }: { team: Team }) {
+function TeamRow({ team }: { team: AllocatedTeam }) {
   return (
     <li className="flex items-center justify-between gap-3 rounded-md border border-[#d7b85f]/15 bg-[#0e1915] px-3 py-3">
       <span className="flex min-w-0 items-center gap-3">
@@ -23,9 +24,7 @@ function TeamRow({ team }: { team: Team }) {
 }
 
 export function ParticipantCard({ participant }: { participant: Participant }) {
-  const teamsStillIn = participant.teams.filter(
-    (team) => team.status === "still-in",
-  ).length;
+  const teamsStillIn = countParticipantTeamsRemaining(participant);
 
   return (
     <article className="rounded-lg border border-[#c7a653]/25 bg-[#13211c] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5 hover:border-[#d7b85f]/60 hover:bg-[#172820]">
