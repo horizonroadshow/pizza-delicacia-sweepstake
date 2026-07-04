@@ -181,6 +181,9 @@ export function SweepstakeDashboard({
             aria-label="Page sections"
             className="hidden items-center gap-2 text-sm font-bold text-[#d9dccf] md:flex"
           >
+            <a className="rounded-md px-3 py-2 hover:bg-[#13211c]" href="#top">
+              Home
+            </a>
             <a
               className="rounded-md px-3 py-2 hover:bg-[#13211c]"
               href="#entrants"

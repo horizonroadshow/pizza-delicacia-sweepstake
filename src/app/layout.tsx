@@ -3,7 +3,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Pizza Delicacia World Cup Sweepstake",
-  description: "Family World Cup sweepstake tracker for Pizza Delicacia.",
+  description:
+    "Track the Pizza Delicacia family World Cup sweepstake, including team owners, prizes, fixtures, results, and knockout progress.",
 };
 
 export default function RootLayout({
