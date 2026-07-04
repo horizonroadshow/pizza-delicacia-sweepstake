@@ -142,7 +142,7 @@ function MatchCard({
           {match.winnerLabel}
         </span>
         <span className="truncate rounded-md border border-[#8f6355]/25 bg-[#201817] px-3 py-2 text-xs font-black uppercase tracking-wide text-[#caa79b]">
-          {match.eliminatedLabel}
+          {match.statusLabel}
         </span>
       </div>
     </article>

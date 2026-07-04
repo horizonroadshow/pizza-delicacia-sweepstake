@@ -6,7 +6,7 @@ import { ParticipantCard } from "@/components/ParticipantCard";
 import { PlaceholderPanel } from "@/components/PlaceholderPanel";
 import { PrizeCard } from "@/components/PrizeCard";
 import { StatCard } from "@/components/StatCard";
-import { knockoutDraw } from "@/data/knockout";
+import type { KnockoutDraw } from "@/data/knockout";
 import type { Participant } from "@/data/sweepstake";
 import {
   countParticipantTeamsRemaining,
@@ -118,9 +118,11 @@ function FixtureGroup({
 
 export function SweepstakeDashboard({
   fixturesPreview,
+  knockoutDraw,
   participants,
 }: {
   fixturesPreview: FixturesPreview;
+  knockoutDraw: KnockoutDraw;
   participants: Participant[];
 }) {
   const [activeFilter, setActiveFilter] = useState<FilterId>("all");

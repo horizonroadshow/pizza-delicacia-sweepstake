@@ -2,6 +2,8 @@ import type {
   Match,
   MatchId,
   MatchSlot,
+  Participant,
+  Team,
   TeamId,
   TournamentStage,
 } from "@/data/sweepstake";
@@ -22,6 +24,7 @@ export type KnockoutMatch = Match & {
   away: KnockoutTeam;
   label: string;
   scoreLabel: string;
+  statusLabel: string;
   winnerLabel: string;
 };
 
@@ -69,6 +72,53 @@ const matchLabels: Record<MatchId, string> = {
   m17: "Final",
   m18: "Third-place match",
 };
+
+type KnockoutDrawOptions = {
+  participants?: Participant[];
+  teams?: Team[];
+};
+
+const teamNameAliases: Record<string, string> = {
+  "czech republic": "czechia",
+  "ir iran": "iran",
+  "korea republic": "south korea",
+  usa: "united states",
+};
+
+function normaliseName(name: string) {
+  const normalisedName = name
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+  return teamNameAliases[normalisedName] ?? normalisedName;
+}
+
+function ownerLookup(participants: Participant[] = []) {
+  const lookup = new Map<string, string>();
+
+  for (const participant of participants) {
+    for (const team of participant.teams) {
+      lookup.set(normaliseName(team.country), participant.name);
+    }
+  }
+
+  return lookup;
+}
+
+function flagLookup(participants: Participant[] = []) {
+  const lookup = new Map<string, string>();
+
+  for (const participant of participants) {
+    for (const team of participant.teams) {
+      lookup.set(normaliseName(team.country), team.flag);
+    }
+  }
+
+  return lookup;
+}
 
 // Local sample bracket data only. These match records intentionally mirror the
 // fields a live football API is likely to provide later, without inventing real
@@ -346,8 +396,8 @@ export const knockoutMatches: Match[] = [
   },
 ];
 
-function findTeam(teamId: TeamId | null) {
-  return teams.find(({ id }) => id === teamId);
+function findTeam(teamId: TeamId | null, sourceTeams: Team[]) {
+  return sourceTeams.find(({ id }) => id === teamId);
 }
 
 function dateTimeLabel(match: Match) {
@@ -360,6 +410,7 @@ function dateTimeLabel(match: Match) {
   return new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: "Europe/London",
   }).format(new Date(match.kickoffAt));
 }
 
@@ -371,47 +422,74 @@ function scoreLabel(match: Match) {
   return `${match.homeScore}-${match.awayScore}`;
 }
 
-function teamState(match: Match, teamId: TeamId | null) {
-  if (!teamId || match.status !== "finished" || !match.winnerTeamId) {
-    return "pending";
-  }
+function teamState(match: Match, teamId: TeamId | null): KnockoutTeam["state"] {
+  void match;
+  void teamId;
 
-  return match.winnerTeamId === teamId ? "winner" : "eliminated";
+  return "pending";
 }
 
-function resolveMatchTeam(match: Match, slot: MatchSlot): KnockoutTeam {
+function statusLabel(match: Match) {
+  const labels: Record<Match["status"], string> = {
+    finished: "Finished",
+    live: "Live",
+    postponed: "TBD",
+    scheduled: "Scheduled",
+  };
+
+  return labels[match.status];
+}
+
+function resolveMatchTeam(
+  match: Match,
+  slot: MatchSlot,
+  options: Required<KnockoutDrawOptions>,
+): KnockoutTeam {
   const teamId = slot === "home" ? match.homeTeamId : match.awayTeamId;
   const placeholder =
     slot === "home" ? match.homeTeamPlaceholder : match.awayTeamPlaceholder;
-  const team = findTeam(teamId);
+  const team = findTeam(teamId, options.teams);
+  const normalisedTeamName = team ? normaliseName(team.country) : undefined;
+  const ownersByTeamName = ownerLookup(options.participants);
+  const flagsByTeamName = flagLookup(options.participants);
 
   return {
-    flag: team?.flag ?? "◇",
+    flag:
+      (normalisedTeamName ? flagsByTeamName.get(normalisedTeamName) : undefined) ??
+      team?.flag ??
+      "◇",
     id: team?.id ?? null,
     label: team?.country ?? placeholder ?? "Team TBC",
-    owner: team ? (findOwnerOfTeam(team.id) ?? "Family owner TBC") : "Family owner TBC",
+    owner:
+      (normalisedTeamName ? ownersByTeamName.get(normalisedTeamName) : undefined) ??
+      (team ? findOwnerOfTeam(team.id) : undefined) ??
+      "Family owner TBC",
     state: teamState(match, team?.id ?? null),
   };
 }
 
-function resolveWinnerLabel(match: Match) {
+function resolveWinnerLabel(match: Match, sourceTeams: Team[]) {
   if (!match.winnerTeamId) {
     return "Winner TBC";
   }
 
-  return findTeam(match.winnerTeamId)?.country ?? "Winner TBC";
+  return findTeam(match.winnerTeamId, sourceTeams)?.country ?? "Winner TBC";
 }
 
-function toKnockoutMatch(match: Match): KnockoutMatch {
+function toKnockoutMatch(
+  match: Match,
+  options: Required<KnockoutDrawOptions>,
+): KnockoutMatch {
   return {
     ...match,
-    away: resolveMatchTeam(match, "away"),
+    away: resolveMatchTeam(match, "away", options),
     dateTimeLabel: dateTimeLabel(match),
     eliminatedLabel: match.status === "finished" ? "Eliminated" : "Eliminated TBC",
-    home: resolveMatchTeam(match, "home"),
+    home: resolveMatchTeam(match, "home", options),
     label: matchLabels[match.id] ?? roundNames[match.round],
     scoreLabel: scoreLabel(match),
-    winnerLabel: resolveWinnerLabel(match),
+    statusLabel: statusLabel(match),
+    winnerLabel: resolveWinnerLabel(match, options.teams),
   };
 }
 
@@ -420,16 +498,24 @@ function round(
   name: string,
   side: "left" | "right",
   matches: Match[],
+  options: Required<KnockoutDrawOptions>,
 ): KnockoutRound {
   return {
     id,
-    matches: matches.map(toKnockoutMatch),
+    matches: matches.map((match) => toKnockoutMatch(match, options)),
     name,
     side,
   };
 }
 
-function createKnockoutDraw(matches: Match[]): KnockoutDraw {
+export function createKnockoutDraw(
+  matches: Match[],
+  options: KnockoutDrawOptions = {},
+): KnockoutDraw {
+  const drawOptions: Required<KnockoutDrawOptions> = {
+    participants: options.participants ?? [],
+    teams: [...teams, ...(options.teams ?? [])],
+  };
   const groupedMatches = groupMatchesByRound(matches);
   const roundOf32 = groupedMatches["round-of-32"];
   const roundOf16 = groupedMatches["round-of-16"];
@@ -444,28 +530,66 @@ function createKnockoutDraw(matches: Match[]): KnockoutDraw {
 
   return {
     leftRounds: [
-      round("left-round-of-32", roundNames["round-of-32"], "left", roundOf32.slice(0, 4)),
-      round("left-round-of-16", roundNames["round-of-16"], "left", roundOf16.slice(0, 2)),
+      round(
+        "left-round-of-32",
+        roundNames["round-of-32"],
+        "left",
+        roundOf32.slice(0, 4),
+        drawOptions,
+      ),
+      round(
+        "left-round-of-16",
+        roundNames["round-of-16"],
+        "left",
+        roundOf16.slice(0, 2),
+        drawOptions,
+      ),
       round(
         "left-quarter-finals",
         roundNames["quarter-finals"],
         "left",
         quarterFinals.slice(0, 1),
+        drawOptions,
       ),
-      round("left-semi-finals", roundNames["semi-finals"], "left", semiFinals.slice(0, 1)),
+      round(
+        "left-semi-finals",
+        roundNames["semi-finals"],
+        "left",
+        semiFinals.slice(0, 1),
+        drawOptions,
+      ),
     ],
-    final: toKnockoutMatch(final),
-    thirdPlace: thirdPlace ? toKnockoutMatch(thirdPlace) : undefined,
+    final: toKnockoutMatch(final, drawOptions),
+    thirdPlace: thirdPlace ? toKnockoutMatch(thirdPlace, drawOptions) : undefined,
     rightRounds: [
-      round("right-semi-finals", roundNames["semi-finals"], "right", semiFinals.slice(1, 2)),
+      round(
+        "right-semi-finals",
+        roundNames["semi-finals"],
+        "right",
+        semiFinals.slice(1, 2),
+        drawOptions,
+      ),
       round(
         "right-quarter-finals",
         roundNames["quarter-finals"],
         "right",
         quarterFinals.slice(1, 2),
+        drawOptions,
       ),
-      round("right-round-of-16", roundNames["round-of-16"], "right", roundOf16.slice(2, 4)),
-      round("right-round-of-32", roundNames["round-of-32"], "right", roundOf32.slice(4, 8)),
+      round(
+        "right-round-of-16",
+        roundNames["round-of-16"],
+        "right",
+        roundOf16.slice(2, 4),
+        drawOptions,
+      ),
+      round(
+        "right-round-of-32",
+        roundNames["round-of-32"],
+        "right",
+        roundOf32.slice(4, 8),
+        drawOptions,
+      ),
     ],
   };
 }
