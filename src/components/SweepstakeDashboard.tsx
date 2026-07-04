@@ -131,6 +131,7 @@ export function SweepstakeDashboard({
     (total, participant) => total + remainingTeams(participant),
     0,
   );
+  const teamsEliminated = sweepstakeSummary.teamCount - teamsRemaining;
   const eliminatedParticipants = participants.filter(
     (participant) => remainingTeams(participant) === 0,
   ).length;
@@ -217,9 +218,9 @@ export function SweepstakeDashboard({
                 {sweepstakeSummary.name}
               </h1>
               <p className="mt-3 max-w-3xl text-lg leading-8 text-[#d9dccf]">
-                Everyone started with two teams, and the leaderboard now follows
-                completed OpenFootball knockout results while the prizes remain
-                for the World Cup winner and losing finalist.
+                Everyone started with two teams. Right now {teamsRemaining} teams
+                are still in, {teamsEliminated} have been eliminated, and{" "}
+                {eliminatedParticipants} family members are fully out.
               </p>
             </div>
             <div className="rounded-lg border border-[#d7b85f]/35 bg-[#171f18] p-4">
@@ -255,14 +256,10 @@ export function SweepstakeDashboard({
             value={sweepstakeSummary.prizePot}
           />
           <StatCard
-            detail={`${teamsRemaining} teams still in`}
+            detail={`${teamsEliminated} teams eliminated`}
             icon="●"
             label="Tournament status"
-            value={
-              eliminatedParticipants > 0
-                ? `${eliminatedParticipants} out`
-                : "Live"
-            }
+            value={`${teamsRemaining} in`}
           />
         </section>
 
@@ -365,8 +362,8 @@ export function SweepstakeDashboard({
         <section className="mt-5">
           <div id="fixtures">
             <PlaceholderPanel
-              description="Fixture data provided by OpenFootball static data. Live updates may lag official results."
-              title="Fixtures and results preview"
+              description="Fixture and result data is provided by OpenFootball static data. Updates may lag official results."
+              title="Fixtures and results"
             >
               <div className="grid gap-5">
                 <FixtureGroup
@@ -390,8 +387,8 @@ export function SweepstakeDashboard({
                 fixturesPreview.upcoming.length === 0 &&
                 fixturesPreview.recent.length === 0 ? (
                   <div className="rounded-lg border border-[#c7a653]/25 bg-[#0e1915] p-4 text-base font-bold text-[#d9dccf]">
-                    Fixtures are not available in the local OpenFootball
-                    preview yet.
+                    Fixtures are not available from OpenFootball static data
+                    right now.
                   </div>
                 ) : null}
               </div>

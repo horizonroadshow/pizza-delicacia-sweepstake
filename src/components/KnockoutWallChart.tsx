@@ -411,7 +411,7 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-black uppercase tracking-[0.2em] text-[#c7a653]">
-            Preview — live tournament data will be added later
+            OpenFootball World Cup 2026 data
           </p>
           <h2
             className="mt-2 text-3xl font-black text-[#fff4d7]"
@@ -420,9 +420,8 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
             Knockout wall chart
           </h2>
           <p className="mt-2 max-w-3xl text-base leading-7 text-[#b8c0ae]">
-            This mirrored sample bracket flows inward from both sides. It will
-            populate automatically once the tournament reaches the knockout
-            stage.
+            Follow the family teams through the knockout rounds, with scores,
+            winners, and eliminations taken from OpenFootball static data.
           </p>
         </div>
 
@@ -569,9 +568,8 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
 
       <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_auto] lg:items-center">
         <div className="rounded-lg border border-dashed border-[#c7a653]/35 bg-[#0e1915] p-4 text-base font-bold leading-7 text-[#d9dccf]">
-          Empty state: no real knockout fixtures are available yet. The bracket
-          will populate automatically once the tournament reaches the knockout
-          stage.
+          Fixture and result data is provided by OpenFootball static data.
+          Updates may lag official results.
         </div>
         <p className="rounded-lg border border-[#d7b85f]/25 bg-[#171f18] px-4 py-3 text-sm font-black uppercase tracking-wide text-[#f0d88b]">
           Swipe or drag sideways on mobile
