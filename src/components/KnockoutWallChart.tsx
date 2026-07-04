@@ -27,6 +27,11 @@ type MobilePanel = {
   title: string;
 };
 
+type MobileRoundColumnData = MobilePanel & {
+  connectorSlots?: number[];
+  matchSlots: number[];
+};
+
 const leftRoundSlots: Record<string, Slot[]> = {
   "left-round-of-32": [1, 3, 5, 7],
   "left-round-of-16": [2, 6],
@@ -234,42 +239,85 @@ function DesktopCentreColumn({
   );
 }
 
-const MobileRoundPanel = forwardRef<
+const mobileRoundCardSlots: Record<string, number[]> = {
+  "mobile-round-of-32": [1, 3, 5, 7, 9, 11, 13, 15],
+  "mobile-round-of-16": [2, 6, 10, 14],
+  "mobile-quarter-finals": [4, 12],
+  "mobile-semi-finals": [4, 12],
+  final: [8],
+  "third-place": [12],
+};
+
+const mobileConnectorSlots: Record<string, number[]> = {
+  "mobile-round-of-32": [2, 6, 10, 14],
+  "mobile-round-of-16": [4, 12],
+  "mobile-quarter-finals": [4, 12],
+  "mobile-semi-finals": [8],
+  final: [12],
+};
+
+const MobileRoundColumn = forwardRef<
   HTMLDivElement,
   {
+  column: MobileRoundColumnData;
   indicator: string;
-  matches: KnockoutMatch[];
-  prominent?: boolean;
-  title: string;
   }
->(function MobileRoundPanel(
-  { indicator, matches, title, prominent = false },
+>(function MobileRoundColumn(
+  { column, indicator },
   ref,
 ) {
   return (
     <div
-      className="w-full shrink-0 snap-start rounded-lg border border-[#c7a653]/25 bg-[#0b1512] p-3"
+      className="w-[292px] shrink-0 snap-start rounded-lg border border-[#c7a653]/25 bg-[#0b1512] p-3"
+      data-mobile-round-column="true"
       ref={ref}
     >
       <div className="sticky top-0 z-10 rounded-lg border border-[#c7a653]/25 bg-[#16241f] px-3 py-3">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-[#c7a653]">
           {indicator}
         </p>
-        <p className="mt-1 text-xl font-black text-[#f0d88b]">{title}</p>
+        <p className="mt-1 text-xl font-black text-[#f0d88b]">{column.title}</p>
       </div>
-      <div className="mt-4 grid gap-4">
-        {matches.map((match) => (
-          <MatchCard
+      <div className="mt-4 grid min-h-[1540px] grid-rows-[repeat(16,minmax(0,1fr))] gap-y-5">
+        {column.matches.map((match, index) => (
+          <div
+            className="row-span-2 self-center"
             key={match.id}
-            match={match}
-            mobile
-            prominent={prominent}
-          />
+            style={{ gridRowStart: column.matchSlots[index] ?? 1 }}
+          >
+            <MatchCard match={match} mobile prominent={column.prominent} />
+          </div>
         ))}
       </div>
     </div>
   );
 });
+
+function MobileConnectorColumn({ slots }: { slots: number[] }) {
+  return (
+    <div
+      aria-hidden="true"
+      className="grid w-20 shrink-0 grid-rows-[72px_1fr] gap-4"
+      data-mobile-connector-column="true"
+    >
+      <div />
+      <div className="grid min-h-[1540px] grid-rows-[repeat(16,minmax(0,1fr))] gap-y-5">
+        {slots.map((slot, index) => (
+          <div
+            className="row-span-2 flex items-center"
+            key={`${slot}-${index}`}
+            style={{ gridRowStart: slot }}
+          >
+            <div
+              className="h-px w-full bg-[#c7a653]/35"
+              data-mobile-connector-line="true"
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
   const desktopScrollerRef = useRef<HTMLDivElement>(null);
@@ -278,8 +326,8 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
   const [mobilePanelIndex, setMobilePanelIndex] = useState(0);
   const scrollAmount = 350;
 
-  const mobilePanels = useMemo<MobilePanel[]>(
-    () => [
+  const mobilePanels = useMemo<MobileRoundColumnData[]>(() => {
+    const panels: MobilePanel[] = [
       {
         id: "mobile-round-of-32",
         matches: [...draw.leftRounds[0].matches, ...draw.rightRounds[3].matches],
@@ -315,9 +363,14 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
             },
           ]
         : []),
-    ],
-    [draw],
-  );
+    ];
+
+    return panels.map((panel) => ({
+      ...panel,
+      connectorSlots: mobileConnectorSlots[panel.id],
+      matchSlots: mobileRoundCardSlots[panel.id],
+    }));
+  }, [draw]);
 
   function scrollBracket(direction: "previous" | "next") {
     const mobileScroller = mobileScrollerRef.current;
@@ -465,28 +518,43 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
           className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-2 lg:hidden"
           onScroll={(event) => {
             const scroller = event.currentTarget;
-            const panelWidth = scroller.clientWidth;
+            const nextIndex = mobilePanelRefs.current.reduce(
+              (closestIndex, panel, index) => {
+                if (!panel) {
+                  return closestIndex;
+                }
 
-            if (panelWidth > 0) {
-              setMobilePanelIndex(
-                Math.round(scroller.scrollLeft / (panelWidth + 16)),
-              );
-            }
+                const currentPanel = mobilePanelRefs.current[closestIndex];
+                const currentDistance = currentPanel
+                  ? Math.abs(scroller.scrollLeft - currentPanel.offsetLeft)
+                  : Number.POSITIVE_INFINITY;
+                const nextDistance = Math.abs(
+                  scroller.scrollLeft - panel.offsetLeft,
+                );
+
+                return nextDistance < currentDistance ? index : closestIndex;
+              },
+              0,
+            );
+
+            setMobilePanelIndex(nextIndex);
           }}
           ref={mobileScrollerRef}
           tabIndex={0}
         >
           {mobilePanels.map((panel, index) => (
-            <MobileRoundPanel
-              indicator={`Round ${index + 1} of ${mobilePanels.length}`}
-              key={panel.id}
-              matches={panel.matches}
-              prominent={panel.prominent}
-              ref={(element) => {
-                mobilePanelRefs.current[index] = element;
-              }}
-              title={panel.title}
-            />
+            <div className="flex shrink-0" key={panel.id}>
+              <MobileRoundColumn
+                column={panel}
+                indicator={`Round ${index + 1} of ${mobilePanels.length}`}
+                ref={(element) => {
+                  mobilePanelRefs.current[index] = element;
+                }}
+              />
+              {panel.connectorSlots && index < mobilePanels.length - 1 ? (
+                <MobileConnectorColumn slots={panel.connectorSlots} />
+              ) : null}
+            </div>
           ))}
         </div>
       </div>
