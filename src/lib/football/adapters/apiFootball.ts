@@ -214,6 +214,13 @@ export function createApiFootballAdapter(): FootballDataAdapter {
         );
       }
 
+      if (!input.leagueId) {
+        throw new FootballAdapterError(
+          "API-Football sync needs a league ID.",
+          "unexpected-response",
+        );
+      }
+
       const url = new URL("/fixtures", baseUrl);
       url.searchParams.set("league", String(input.leagueId));
       url.searchParams.set("season", String(input.season));
