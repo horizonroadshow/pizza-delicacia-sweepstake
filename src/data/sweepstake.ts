@@ -267,5 +267,5 @@ export const sweepstakeSummary = {
   entryFee: "£5",
   prizePot: "£120",
   format: "Last team standing",
-  prizeSplit: "TBC",
+  prizeSplit: "£100 first, £20 second",
 };

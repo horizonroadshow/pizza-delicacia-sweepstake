@@ -265,14 +265,14 @@ export function SweepstakeDashboard({
 
         <section className="mt-4 grid gap-3 md:grid-cols-2">
           <PrizeCard
-            note="For the owner of the World Cup winning team."
+            note="For the owner of the World Cup winning team. If one person owns both finalists, they receive both prizes."
             place="First prize"
-            prize="TBC"
+            prize="£100"
           />
           <PrizeCard
-            note="For the owner of the losing finalist."
+            note="For the owner of the losing finalist. If one person owns both finalists, they receive both prizes."
             place="Second prize"
-            prize="TBC"
+            prize="£20"
           />
         </section>
 
