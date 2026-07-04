@@ -15,7 +15,9 @@ export const OPENFOOTBALL_WORLD_CUP_2026_URL =
   "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json";
 
 type OpenFootballScore = {
+  et?: [number | null, number | null];
   ft?: [number | null, number | null];
+  p?: [number | null, number | null];
 };
 
 type OpenFootballMatch = {
@@ -130,19 +132,26 @@ function scoreAt(match: OpenFootballMatch, index: 0 | 1) {
   return match.score?.ft?.[index] ?? null;
 }
 
+function winnerFromScorePair(
+  match: OpenFootballMatch,
+  scores: [number | null, number | null] | undefined,
+) {
+  if (!scores || scores[0] === null || scores[1] === null || scores[0] === scores[1]) {
+    return null;
+  }
+
+  return scores[0] > scores[1] ? toTeam(match.team1) : toTeam(match.team2);
+}
+
 function status(match: OpenFootballMatch): MatchStatus {
   return match.score?.ft ? "finished" : "scheduled";
 }
 
 function winnerTeamId(match: OpenFootballMatch): TeamId | null {
-  const homeScore = scoreAt(match, 0);
-  const awayScore = scoreAt(match, 1);
-
-  if (homeScore === null || awayScore === null || homeScore === awayScore) {
-    return null;
-  }
-
-  const winningTeam = homeScore > awayScore ? toTeam(match.team1) : toTeam(match.team2);
+  const winningTeam =
+    winnerFromScorePair(match, match.score?.p) ??
+    winnerFromScorePair(match, match.score?.et) ??
+    winnerFromScorePair(match, match.score?.ft);
 
   return winningTeam?.id ?? null;
 }

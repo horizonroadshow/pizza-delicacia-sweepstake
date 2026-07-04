@@ -423,10 +423,11 @@ function scoreLabel(match: Match) {
 }
 
 function teamState(match: Match, teamId: TeamId | null): KnockoutTeam["state"] {
-  void match;
-  void teamId;
+  if (!teamId || match.status !== "finished" || !match.winnerTeamId) {
+    return "pending";
+  }
 
-  return "pending";
+  return match.winnerTeamId === teamId ? "winner" : "eliminated";
 }
 
 function statusLabel(match: Match) {
