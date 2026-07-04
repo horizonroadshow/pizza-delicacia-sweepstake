@@ -12,6 +12,10 @@ import {
   countParticipantTeamsRemaining,
   sweepstakeSummary,
 } from "@/data/sweepstake";
+import type {
+  FixturePreviewItem,
+  FixturesPreview,
+} from "@/lib/football/fixturePreview";
 
 type FilterId = "all" | "two" | "one" | "eliminated";
 
@@ -46,9 +50,77 @@ function filterParticipants(participants: Participant[], activeFilter: FilterId)
   });
 }
 
+function FixtureTeam({ team }: { team: FixturePreviewItem["home"] }) {
+  return (
+    <div className="min-w-0">
+      <p className="truncate text-base font-black text-[#fff4d7]">
+        {team.name}
+      </p>
+      <p className="mt-1 truncate text-xs font-bold uppercase tracking-wide text-[#b8c0ae]">
+        {team.owner ? team.owner : "No family owner"}
+      </p>
+    </div>
+  );
+}
+
+function FixtureCard({ fixture }: { fixture: FixturePreviewItem }) {
+  return (
+    <article className="rounded-lg border border-[#c7a653]/25 bg-[#0e1915] p-3 shadow-[0_14px_35px_rgba(0,0,0,0.16)]">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-black uppercase tracking-wide text-[#c7a653]">
+          {fixture.stageLabel}
+        </p>
+        <span className="rounded-full border border-[#d7b85f]/25 bg-[#251f12] px-3 py-1 text-xs font-black uppercase tracking-wide text-[#f0d88b]">
+          {fixture.statusLabel}
+        </span>
+      </div>
+      <p className="mt-2 text-sm font-bold text-[#b8c0ae]">
+        {fixture.kickoffLabel}
+      </p>
+
+      <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
+        <FixtureTeam team={fixture.home} />
+        <span className="rounded-md border border-[#d7b85f]/25 bg-[#251f12] px-3 py-2 text-sm font-black text-[#f0d88b]">
+          {fixture.scoreLabel}
+        </span>
+        <div className="text-right">
+          <FixtureTeam team={fixture.away} />
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function FixtureGroup({
+  fixtures,
+  title,
+}: {
+  fixtures: FixturePreviewItem[];
+  title: string;
+}) {
+  if (fixtures.length === 0) {
+    return null;
+  }
+
+  return (
+    <div>
+      <h3 className="text-sm font-black uppercase tracking-[0.18em] text-[#c7a653]">
+        {title}
+      </h3>
+      <div className="mt-3 grid gap-3 lg:grid-cols-2">
+        {fixtures.map((fixture) => (
+          <FixtureCard fixture={fixture} key={fixture.id} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function SweepstakeDashboard({
+  fixturesPreview,
   participants,
 }: {
+  fixturesPreview: FixturesPreview;
   participants: Participant[];
 }) {
   const [activeFilter, setActiveFilter] = useState<FilterId>("all");
@@ -280,31 +352,30 @@ export function SweepstakeDashboard({
         <section className="mt-5">
           <div id="fixtures">
             <PlaceholderPanel
-              description="Scores and automatic updates will be added later. For now, this shows the planned match-card style."
+              description="Fixture data provided by OpenFootball static data. Live updates may lag official results."
               title="Fixtures and results preview"
             >
-              <div className="grid gap-3">
-                {[
-                  ["Opening fixture", "Team TBC", "Team TBC"],
-                  ["Next family watch", "Winner path", "Runner-up path"],
-                  ["Final", "First prize", "Second prize"],
-                ].map(([label, home, away]) => (
-                  <div
-                    className="rounded-lg border border-[#c7a653]/25 bg-[#0e1915] p-3"
-                    key={label}
-                  >
-                    <p className="text-xs font-black uppercase tracking-wide text-[#c7a653]">
-                      {label}
-                    </p>
-                    <div className="mt-2 flex items-center justify-between gap-3 text-base font-black text-[#fff4d7]">
-                      <span>{home}</span>
-                      <span className="rounded-md bg-[#251f12] px-2 py-1 text-sm text-[#f0d88b]">
-                        v
-                      </span>
-                      <span className="text-right">{away}</span>
-                    </div>
+              <div className="grid gap-5">
+                <FixtureGroup
+                  fixtures={fixturesPreview.today}
+                  title="Today"
+                />
+                <FixtureGroup
+                  fixtures={fixturesPreview.upcoming}
+                  title="Upcoming"
+                />
+                <FixtureGroup
+                  fixtures={fixturesPreview.recent}
+                  title="Recent results"
+                />
+                {fixturesPreview.today.length === 0 &&
+                fixturesPreview.upcoming.length === 0 &&
+                fixturesPreview.recent.length === 0 ? (
+                  <div className="rounded-lg border border-[#c7a653]/25 bg-[#0e1915] p-4 text-base font-bold text-[#d9dccf]">
+                    Fixtures are not available in the local OpenFootball
+                    preview yet.
                   </div>
-                ))}
+                ) : null}
               </div>
             </PlaceholderPanel>
           </div>
