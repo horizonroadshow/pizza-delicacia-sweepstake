@@ -158,26 +158,47 @@ function MatchCard({
   );
 }
 
-function RoundHeader({ children }: { children: React.ReactNode }) {
+function RoundHeader({
+  children,
+  isCurrent = false,
+}: {
+  children: React.ReactNode;
+  isCurrent?: boolean;
+}) {
   return (
-    <div className="sticky top-0 z-10 rounded-lg border border-[#c7a653]/25 bg-[#16241f] px-3 py-3">
+    <div
+      aria-current={isCurrent ? "step" : undefined}
+      className={`sticky top-0 z-10 rounded-lg border px-3 py-3 ${
+        isCurrent
+          ? "border-[#d7b85f]/80 bg-[#251f12] shadow-[0_0_0_1px_rgba(215,184,95,0.22),0_16px_34px_rgba(0,0,0,0.2)]"
+          : "border-[#c7a653]/25 bg-[#16241f]"
+      }`}
+      data-current-round={isCurrent ? "true" : undefined}
+    >
       <p className="text-center text-sm font-black uppercase tracking-[0.18em] text-[#f0d88b]">
         {children}
       </p>
+      {isCurrent ? (
+        <p className="mt-1 text-center text-[10px] font-black uppercase tracking-[0.18em] text-[#d7b85f]">
+          Current round
+        </p>
+      ) : null}
     </div>
   );
 }
 
 function DesktopRoundColumn({
+  isCurrent = false,
   round,
   slots,
 }: {
+  isCurrent?: boolean;
   round: KnockoutRound;
   slots: Slot[];
 }) {
   return (
     <div className="grid w-[286px] grid-rows-[auto_1fr] gap-4">
-      <RoundHeader>{round.name}</RoundHeader>
+      <RoundHeader isCurrent={isCurrent}>{round.name}</RoundHeader>
       <div className="grid grid-rows-[repeat(16,minmax(0,1fr))] gap-y-8">
         {round.matches.map((match, index) => (
           <div
@@ -219,24 +240,50 @@ function DesktopConnectorColumn({
 
 function DesktopCentreColumn({
   final,
+  currentRoundId,
   thirdPlace,
 }: {
+  currentRoundId: KnockoutDraw["currentRoundId"];
   final: KnockoutMatch;
   thirdPlace?: KnockoutMatch;
 }) {
+  const isFinalCurrent = currentRoundId === "final";
+  const isThirdPlaceCurrent = currentRoundId === "third-place";
+
   return (
     <div className="grid w-[440px] grid-rows-[auto_1fr] gap-4">
-      <div className="rounded-lg border border-[#d7b85f]/70 bg-[#251f12] px-3 py-4">
+      <div
+        aria-current={isFinalCurrent ? "step" : undefined}
+        className={`rounded-lg border px-3 py-4 ${
+          isFinalCurrent
+            ? "border-[#d7b85f] bg-[#2b2415] shadow-[0_0_0_1px_rgba(215,184,95,0.25),0_18px_38px_rgba(0,0,0,0.22)]"
+            : "border-[#d7b85f]/70 bg-[#251f12]"
+        }`}
+        data-current-round={isFinalCurrent ? "true" : undefined}
+      >
         <p className="text-center text-base font-black uppercase tracking-[0.2em] text-[#f0d88b]">
           Final
         </p>
+        {isFinalCurrent ? (
+          <p className="mt-1 text-center text-[10px] font-black uppercase tracking-[0.18em] text-[#d7b85f]">
+            Current round
+          </p>
+        ) : null}
       </div>
       <div className="grid grid-rows-[repeat(16,minmax(0,1fr))] gap-y-8">
         <div className="row-start-6 row-span-4 self-center">
           <MatchCard match={final} prominent />
         </div>
         {thirdPlace ? (
-          <div className="row-start-12 row-span-3 self-start rounded-lg border border-dashed border-[#c7a653]/35 bg-[#0e1915] p-3">
+          <div
+            aria-current={isThirdPlaceCurrent ? "step" : undefined}
+            className={`row-start-12 row-span-3 self-start rounded-lg border border-dashed p-3 ${
+              isThirdPlaceCurrent
+                ? "border-[#d7b85f]/75 bg-[#251f12]"
+                : "border-[#c7a653]/35 bg-[#0e1915]"
+            }`}
+            data-current-round={isThirdPlaceCurrent ? "true" : undefined}
+          >
             <p className="mb-3 text-center text-xs font-black uppercase tracking-[0.18em] text-[#c7a653]">
               Optional third-place match
             </p>
@@ -287,22 +334,40 @@ const MobileRoundColumn = forwardRef<
   {
   column: MobileRoundColumnData;
   indicator: string;
+  isCurrent?: boolean;
   }
 >(function MobileRoundColumn(
-  { column, indicator },
+  { column, indicator, isCurrent = false },
   ref,
 ) {
   return (
     <div
-      className="w-[292px] shrink-0 snap-start rounded-lg border border-[#c7a653]/25 bg-[#0b1512] p-3"
+      aria-current={isCurrent ? "step" : undefined}
+      className={`w-[292px] shrink-0 snap-start rounded-lg border bg-[#0b1512] p-3 ${
+        isCurrent
+          ? "border-[#d7b85f]/85 shadow-[0_0_0_1px_rgba(215,184,95,0.18),0_18px_42px_rgba(0,0,0,0.28)]"
+          : "border-[#c7a653]/25"
+      }`}
+      data-current-round={isCurrent ? "true" : undefined}
       data-mobile-round-column="true"
       ref={ref}
     >
-      <div className="sticky top-0 z-10 rounded-lg border border-[#c7a653]/25 bg-[#16241f] px-3 py-3">
+      <div
+        className={`sticky top-0 z-10 rounded-lg border px-3 py-3 ${
+          isCurrent
+            ? "border-[#d7b85f]/75 bg-[#251f12]"
+            : "border-[#c7a653]/25 bg-[#16241f]"
+        }`}
+      >
         <p className="text-xs font-black uppercase tracking-[0.18em] text-[#c7a653]">
           {indicator}
         </p>
         <p className="mt-1 text-xl font-black text-[#f0d88b]">{column.title}</p>
+        {isCurrent ? (
+          <p className="mt-1 text-xs font-black uppercase tracking-[0.18em] text-[#d7b85f]">
+            Current round
+          </p>
+        ) : null}
       </div>
       <div className="mt-4 grid min-h-[3080px] grid-rows-[repeat(32,minmax(0,1fr))] gap-y-5">
         {column.matches.map((match, index) => (
@@ -353,6 +418,10 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
     mobilePanelIndexForRound(draw.currentRoundId, Boolean(draw.thirdPlace)),
   );
   const scrollAmount = 350;
+  const currentMobilePanel = mobilePanelIndexForRound(
+    draw.currentRoundId,
+    Boolean(draw.thirdPlace),
+  );
 
   const mobilePanels = useMemo<MobileRoundColumnData[]>(() => {
     const panels: MobilePanel[] = [
@@ -411,17 +480,21 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
       draw.currentRoundId,
       Boolean(draw.thirdPlace),
     );
-    const mobileScroller = mobileScrollerRef.current;
-    const currentPanel = mobilePanelRefs.current[currentRoundIndex];
+    const animationFrame = requestAnimationFrame(() => {
+      const mobileScroller = mobileScrollerRef.current;
+      const currentPanel = mobilePanelRefs.current[currentRoundIndex];
 
-    if (!mobileScroller || !currentPanel) {
-      return;
-    }
+      if (!mobileScroller || !currentPanel) {
+        return;
+      }
 
-    mobileScroller.scrollTo({
-      behavior: "auto",
-      left: currentPanel.offsetLeft - mobileScroller.offsetLeft,
+      mobileScroller.scrollTo({
+        behavior: "auto",
+        left: currentPanel.offsetLeft - mobileScroller.offsetLeft,
+      });
     });
+
+    return () => cancelAnimationFrame(animationFrame);
   }, [draw.currentRoundId, draw.thirdPlace, mobilePanels]);
 
   function scrollBracket(direction: "previous" | "next") {
@@ -489,24 +562,34 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
 
       <div className="mt-4 flex gap-2 overflow-x-auto pb-1 text-xs font-black uppercase tracking-wide text-[#d9dccf]">
         {[
-          "Round of 32",
-          "Round of 16",
-          "Quarter-finals",
-          "Semi-finals",
-          "Final",
-          "Third place",
-          "Semi-finals",
-          "Quarter-finals",
-          "Round of 16",
-          "Round of 32",
-        ].map((round, index) => (
+          { label: "Round of 32", stageId: "round-of-32" },
+          { label: "Round of 16", stageId: "round-of-16" },
+          { label: "Quarter-finals", stageId: "quarter-finals" },
+          { label: "Semi-finals", stageId: "semi-finals" },
+          { label: "Final", stageId: "final" },
+          { label: "Third place", stageId: "third-place" },
+          { label: "Semi-finals", stageId: "semi-finals" },
+          { label: "Quarter-finals", stageId: "quarter-finals" },
+          { label: "Round of 16", stageId: "round-of-16" },
+          { label: "Round of 32", stageId: "round-of-32" },
+        ].map((round, index) => {
+          const isCurrent = round.stageId === draw.currentRoundId;
+
+          return (
           <span
-            className="shrink-0 rounded-full border border-[#c7a653]/25 bg-[#0e1915] px-3 py-2"
-            key={`${round}-${index}`}
+            aria-current={isCurrent ? "step" : undefined}
+            className={`shrink-0 rounded-full border px-3 py-2 ${
+              isCurrent
+                ? "border-[#d7b85f] bg-[#d7b85f] text-[#07110f]"
+                : "border-[#c7a653]/25 bg-[#0e1915]"
+            }`}
+            data-current-round={isCurrent ? "true" : undefined}
+            key={`${round.label}-${index}`}
           >
-            {round}
+            {round.label}
           </span>
-        ))}
+          );
+        })}
       </div>
 
       <div className="mt-5 rounded-lg border border-[#c7a653]/20 bg-[#0b1512] p-3">
@@ -518,46 +601,55 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
         >
           <div className="grid min-w-[3328px] grid-cols-[286px_48px_286px_48px_286px_48px_286px_64px_440px_64px_286px_48px_286px_48px_286px_48px_286px] gap-x-4">
             <DesktopRoundColumn
+              isCurrent={draw.currentRoundId === "round-of-32"}
               round={draw.leftRounds[0]}
               slots={leftRoundSlots[draw.leftRounds[0].id]}
             />
             <DesktopConnectorColumn slots={connectorSlotsByStage.early} />
             <DesktopRoundColumn
+              isCurrent={draw.currentRoundId === "round-of-16"}
               round={draw.leftRounds[1]}
               slots={leftRoundSlots[draw.leftRounds[1].id]}
             />
             <DesktopConnectorColumn slots={connectorSlotsByStage.middle} />
             <DesktopRoundColumn
+              isCurrent={draw.currentRoundId === "quarter-finals"}
               round={draw.leftRounds[2]}
               slots={leftRoundSlots[draw.leftRounds[2].id]}
             />
             <DesktopConnectorColumn slots={connectorSlotsByStage.late} />
             <DesktopRoundColumn
+              isCurrent={draw.currentRoundId === "semi-finals"}
               round={draw.leftRounds[3]}
               slots={leftRoundSlots[draw.leftRounds[3].id]}
             />
             <DesktopConnectorColumn slots={connectorSlotsByStage.late} />
             <DesktopCentreColumn
+              currentRoundId={draw.currentRoundId}
               final={draw.final}
               thirdPlace={draw.thirdPlace}
             />
             <DesktopConnectorColumn slots={connectorSlotsByStage.late} />
             <DesktopRoundColumn
+              isCurrent={draw.currentRoundId === "semi-finals"}
               round={draw.rightRounds[0]}
               slots={rightRoundSlots[draw.rightRounds[0].id]}
             />
             <DesktopConnectorColumn slots={connectorSlotsByStage.late} />
             <DesktopRoundColumn
+              isCurrent={draw.currentRoundId === "quarter-finals"}
               round={draw.rightRounds[1]}
               slots={rightRoundSlots[draw.rightRounds[1].id]}
             />
             <DesktopConnectorColumn slots={connectorSlotsByStage.middle} />
             <DesktopRoundColumn
+              isCurrent={draw.currentRoundId === "round-of-16"}
               round={draw.rightRounds[2]}
               slots={rightRoundSlots[draw.rightRounds[2].id]}
             />
             <DesktopConnectorColumn slots={connectorSlotsByStage.early} />
             <DesktopRoundColumn
+              isCurrent={draw.currentRoundId === "round-of-32"}
               round={draw.rightRounds[3]}
               slots={rightRoundSlots[draw.rightRounds[3].id]}
             />
@@ -598,6 +690,7 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
               <MobileRoundColumn
                 column={panel}
                 indicator={`Round ${index + 1} of ${mobilePanels.length}`}
+                isCurrent={index === currentMobilePanel}
                 ref={(element) => {
                   mobilePanelRefs.current[index] = element;
                 }}
