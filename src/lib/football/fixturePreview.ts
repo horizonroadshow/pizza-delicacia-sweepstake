@@ -18,6 +18,7 @@ export type FixturePreviewItem = {
 };
 
 export type FixturesPreview = {
+  featured: FixturePreviewItem[];
   recent: FixturePreviewItem[];
   today: FixturePreviewItem[];
   upcoming: FixturePreviewItem[];
@@ -160,6 +161,12 @@ function toPreviewItem(
   };
 }
 
+function hasNamedTeams(fixture: FixturePreviewItem) {
+  return ![fixture.home.name, fixture.away.name].some((name) =>
+    /^(team tbc|tbd|tba|[wl]\d+)$/i.test(name.trim()),
+  );
+}
+
 export async function loadOpenFootballFixturesPreview(
   participants: Participant[],
   now = new Date(),
@@ -172,6 +179,12 @@ export async function loadOpenFootballFixturesPreview(
   const fixtures = result.matches
     .map((match) => toPreviewItem(match, teamsById, ownersByTeamName))
     .sort((a, b) => a.timestamp - b.timestamp);
+  const featured = fixtures
+    .filter(
+      (fixture) =>
+        fixture.stageLabel === "Group stage" && hasNamedTeams(fixture),
+    )
+    .slice(0, 6);
   const today = fixtures.filter((fixture) =>
     Number.isFinite(fixture.timestamp) &&
     sameUkDay(new Date(fixture.timestamp), now),
@@ -188,6 +201,7 @@ export async function loadOpenFootballFixturesPreview(
     .slice(0, 4);
 
   return {
+    featured,
     recent,
     today,
     upcoming,

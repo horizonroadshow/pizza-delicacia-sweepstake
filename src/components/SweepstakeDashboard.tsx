@@ -357,6 +357,10 @@ export function SweepstakeDashboard({
             >
               <div className="grid gap-5">
                 <FixtureGroup
+                  fixtures={fixturesPreview.featured}
+                  title="Group-stage fixtures"
+                />
+                <FixtureGroup
                   fixtures={fixturesPreview.today}
                   title="Today"
                 />
@@ -368,7 +372,8 @@ export function SweepstakeDashboard({
                   fixtures={fixturesPreview.recent}
                   title="Recent results"
                 />
-                {fixturesPreview.today.length === 0 &&
+                {fixturesPreview.featured.length === 0 &&
+                fixturesPreview.today.length === 0 &&
                 fixturesPreview.upcoming.length === 0 &&
                 fixturesPreview.recent.length === 0 ? (
                   <div className="rounded-lg border border-[#c7a653]/25 bg-[#0e1915] p-4 text-base font-bold text-[#d9dccf]">
