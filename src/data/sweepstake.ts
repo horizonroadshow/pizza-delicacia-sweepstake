@@ -199,9 +199,14 @@ export function isTeamStillIn(teamId: TeamId | null, matches: Match[] = []) {
 }
 
 export function countParticipantTeamsRemaining(
-  participant: Pick<Participant, "teamIds">,
+  participant: Pick<Participant, "teamIds"> & Partial<Pick<Participant, "teams">>,
   matches: Match[] = [],
 ) {
+  if (matches.length === 0 && participant.teams) {
+    return participant.teams.filter((team) => team.status === "still-in")
+      .length as 0 | 1 | 2;
+  }
+
   return participant.teamIds.filter((teamId) => isTeamStillIn(teamId, matches))
     .length as 0 | 1 | 2;
 }

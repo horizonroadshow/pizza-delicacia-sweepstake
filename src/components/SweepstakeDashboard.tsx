@@ -127,6 +127,13 @@ export function SweepstakeDashboard({
 }) {
   const [activeFilter, setActiveFilter] = useState<FilterId>("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const teamsRemaining = participants.reduce(
+    (total, participant) => total + remainingTeams(participant),
+    0,
+  );
+  const eliminatedParticipants = participants.filter(
+    (participant) => remainingTeams(participant) === 0,
+  ).length;
 
   const filteredParticipants = useMemo(() => {
     const filteredByStatus = filterParticipants(participants, activeFilter);
@@ -210,9 +217,9 @@ export function SweepstakeDashboard({
                 {sweepstakeSummary.name}
               </h1>
               <p className="mt-3 max-w-3xl text-lg leading-8 text-[#d9dccf]">
-                Everyone has two teams, every team is currently still in, and
-                the prizes will go to the owners of the World Cup winner and
-                losing finalist.
+                Everyone started with two teams, and the leaderboard now follows
+                completed OpenFootball knockout results while the prizes remain
+                for the World Cup winner and losing finalist.
               </p>
             </div>
             <div className="rounded-lg border border-[#d7b85f]/35 bg-[#171f18] p-4">
@@ -248,10 +255,14 @@ export function SweepstakeDashboard({
             value={sweepstakeSummary.prizePot}
           />
           <StatCard
-            detail="All teams still in"
+            detail={`${teamsRemaining} teams still in`}
             icon="●"
             label="Tournament status"
-            value="Live"
+            value={
+              eliminatedParticipants > 0
+                ? `${eliminatedParticipants} out`
+                : "Live"
+            }
           />
         </section>
 
