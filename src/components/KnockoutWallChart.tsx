@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useMemo, useRef, useState } from "react";
+import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import type {
   KnockoutDraw,
   KnockoutMatch,
@@ -32,6 +32,7 @@ type MobilePanel = {
   id: string;
   matches: KnockoutMatch[];
   prominent?: boolean;
+  stageId: KnockoutDraw["currentRoundId"];
   title: string;
 };
 
@@ -264,6 +265,23 @@ const mobileConnectorSlots: Record<string, number[]> = {
   final: [24],
 };
 
+function mobilePanelIndexForRound(
+  roundId: KnockoutDraw["currentRoundId"],
+  hasThirdPlace: boolean,
+) {
+  const mobileRoundOrder: KnockoutDraw["currentRoundId"][] = [
+    "round-of-32",
+    "round-of-16",
+    "quarter-finals",
+    "semi-finals",
+    "final",
+    ...(hasThirdPlace ? (["third-place"] as const) : []),
+  ];
+  const index = mobileRoundOrder.indexOf(roundId);
+
+  return index === -1 ? 0 : index;
+}
+
 const MobileRoundColumn = forwardRef<
   HTMLDivElement,
   {
@@ -331,7 +349,9 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
   const desktopScrollerRef = useRef<HTMLDivElement>(null);
   const mobileScrollerRef = useRef<HTMLDivElement>(null);
   const mobilePanelRefs = useRef<Array<HTMLDivElement | null>>([]);
-  const [mobilePanelIndex, setMobilePanelIndex] = useState(0);
+  const [mobilePanelIndex, setMobilePanelIndex] = useState(() =>
+    mobilePanelIndexForRound(draw.currentRoundId, Boolean(draw.thirdPlace)),
+  );
   const scrollAmount = 350;
 
   const mobilePanels = useMemo<MobileRoundColumnData[]>(() => {
@@ -339,27 +359,32 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
       {
         id: "mobile-round-of-32",
         matches: [...draw.leftRounds[0].matches, ...draw.rightRounds[3].matches],
+        stageId: "round-of-32",
         title: "Round of 32",
       },
       {
         id: "mobile-round-of-16",
         matches: [...draw.leftRounds[1].matches, ...draw.rightRounds[2].matches],
+        stageId: "round-of-16",
         title: "Round of 16",
       },
       {
         id: "mobile-quarter-finals",
         matches: [...draw.leftRounds[2].matches, ...draw.rightRounds[1].matches],
+        stageId: "quarter-finals",
         title: "Quarter-finals",
       },
       {
         id: "mobile-semi-finals",
         matches: [...draw.leftRounds[3].matches, ...draw.rightRounds[0].matches],
+        stageId: "semi-finals",
         title: "Semi-finals",
       },
       {
         id: "final",
         matches: [draw.final],
         prominent: true,
+        stageId: "final",
         title: "Final",
       },
       ...(draw.thirdPlace
@@ -367,6 +392,7 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
             {
               id: "third-place",
               matches: [draw.thirdPlace],
+              stageId: "third-place" as const,
               title: "Third-place match",
             },
           ]
@@ -379,6 +405,24 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
       matchSlots: mobileRoundCardSlots[panel.id],
     }));
   }, [draw]);
+
+  useEffect(() => {
+    const currentRoundIndex = mobilePanelIndexForRound(
+      draw.currentRoundId,
+      Boolean(draw.thirdPlace),
+    );
+    const mobileScroller = mobileScrollerRef.current;
+    const currentPanel = mobilePanelRefs.current[currentRoundIndex];
+
+    if (!mobileScroller || !currentPanel) {
+      return;
+    }
+
+    mobileScroller.scrollTo({
+      behavior: "auto",
+      left: currentPanel.offsetLeft - mobileScroller.offsetLeft,
+    });
+  }, [draw.currentRoundId, draw.thirdPlace, mobilePanels]);
 
   function scrollBracket(direction: "previous" | "next") {
     const mobileScroller = mobileScrollerRef.current;

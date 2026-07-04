@@ -14,12 +14,14 @@ import {
 } from "@/data/sweepstake";
 import type {
   FixturePreviewItem,
+  FixturePreviewRoundGroup,
   FixturesPreview,
 } from "@/lib/football/fixturePreview";
 
-type FilterId = "all" | "two" | "one" | "eliminated";
+type FilterId = "still-in" | "all" | "two" | "one" | "eliminated";
 
 const filters: { id: FilterId; label: string }[] = [
+  { id: "still-in", label: "Still in the running" },
   { id: "all", label: "Everyone" },
   { id: "two", label: "Two teams remaining" },
   { id: "one", label: "One team remaining" },
@@ -38,6 +40,10 @@ function filterParticipants(participants: Participant[], activeFilter: FilterId)
   return participants.filter((participant) => {
     const remaining = remainingTeams(participant);
 
+    if (activeFilter === "still-in") {
+      return remaining > 0;
+    }
+
     if (activeFilter === "two") {
       return remaining === 2;
     }
@@ -48,6 +54,21 @@ function filterParticipants(participants: Participant[], activeFilter: FilterId)
 
     return remaining === 0;
   });
+}
+
+function sortParticipantsForFilter(
+  participants: Participant[],
+  activeFilter: FilterId,
+) {
+  if (activeFilter !== "still-in") {
+    return participants;
+  }
+
+  return [...participants].sort(
+    (a, b) =>
+      remainingTeams(b) - remainingTeams(a) ||
+      a.name.localeCompare(b.name, "en-GB"),
+  );
 }
 
 function FixtureTeam({ team }: { team: FixturePreviewItem["home"] }) {
@@ -63,9 +84,21 @@ function FixtureTeam({ team }: { team: FixturePreviewItem["home"] }) {
   );
 }
 
-function FixtureCard({ fixture }: { fixture: FixturePreviewItem }) {
+function FixtureCard({
+  compact = false,
+  fixture,
+  muted = false,
+}: {
+  compact?: boolean;
+  fixture: FixturePreviewItem;
+  muted?: boolean;
+}) {
   return (
-    <article className="rounded-lg border border-[#c7a653]/25 bg-[#0e1915] p-3 shadow-[0_14px_35px_rgba(0,0,0,0.16)]">
+    <article
+      className={`rounded-lg border border-[#c7a653]/25 bg-[#0e1915] shadow-[0_14px_35px_rgba(0,0,0,0.16)] ${
+        compact ? "p-2.5 opacity-85" : "p-3"
+      } ${muted ? "border-[#c7a653]/15 bg-[#0b1512]" : ""}`}
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs font-black uppercase tracking-wide text-[#c7a653]">
           {fixture.stageLabel}
@@ -74,11 +107,15 @@ function FixtureCard({ fixture }: { fixture: FixturePreviewItem }) {
           {fixture.statusLabel}
         </span>
       </div>
-      <p className="mt-2 text-sm font-bold text-[#b8c0ae]">
+      <p className={`mt-2 font-bold text-[#b8c0ae] ${compact ? "text-xs" : "text-sm"}`}>
         {fixture.kickoffLabel}
       </p>
 
-      <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
+      <div
+        className={`mt-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center ${
+          compact ? "gap-2" : "gap-3"
+        }`}
+      >
         <FixtureTeam team={fixture.home} />
         <span className="rounded-md border border-[#d7b85f]/25 bg-[#251f12] px-3 py-2 text-sm font-black text-[#f0d88b]">
           {fixture.scoreLabel}
@@ -91,27 +128,54 @@ function FixtureCard({ fixture }: { fixture: FixturePreviewItem }) {
   );
 }
 
-function FixtureGroup({
-  fixtures,
-  title,
-}: {
-  fixtures: FixturePreviewItem[];
-  title: string;
-}) {
-  if (fixtures.length === 0) {
+function FixtureRoundGroup({ group }: { group: FixturePreviewRoundGroup }) {
+  const hasRemaining = group.remaining.length > 0;
+  const hasCompleted = group.completed.length > 0;
+
+  if (!hasRemaining && !hasCompleted) {
     return null;
   }
 
   return (
-    <div>
-      <h3 className="text-sm font-black uppercase tracking-[0.18em] text-[#c7a653]">
-        {title}
-      </h3>
-      <div className="mt-3 grid gap-3 lg:grid-cols-2">
-        {fixtures.map((fixture) => (
-          <FixtureCard fixture={fixture} key={fixture.id} />
-        ))}
+    <div className="rounded-lg border border-[#c7a653]/20 bg-[#0b1512] p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-black uppercase tracking-[0.18em] text-[#c7a653]">
+          {group.title}
+        </h3>
+        <span className="rounded-full border border-[#d7b85f]/25 bg-[#251f12] px-3 py-1 text-xs font-black uppercase tracking-wide text-[#f0d88b]">
+          {group.remaining.length} to play
+        </span>
       </div>
+
+      {hasRemaining ? (
+        <div className="mt-3 grid gap-3 lg:grid-cols-2">
+          {group.remaining.map((fixture) => (
+            <FixtureCard fixture={fixture} key={fixture.id} />
+          ))}
+        </div>
+      ) : (
+        <p className="mt-3 rounded-lg border border-[#c7a653]/15 bg-[#0e1915] p-3 text-sm font-bold text-[#b8c0ae]">
+          No remaining fixtures in this round.
+        </p>
+      )}
+
+      {hasCompleted ? (
+        <details className="mt-3 rounded-lg border border-[#c7a653]/15 bg-[#0e1915]">
+          <summary className="cursor-pointer px-3 py-2 text-sm font-black uppercase tracking-wide text-[#d9dccf]">
+            Completed results ({group.completed.length})
+          </summary>
+          <div className="grid gap-2 border-t border-[#c7a653]/10 p-2 lg:grid-cols-2">
+            {group.completed.map((fixture) => (
+              <FixtureCard
+                compact
+                fixture={fixture}
+                key={fixture.id}
+                muted
+              />
+            ))}
+          </div>
+        </details>
+      ) : null}
     </div>
   );
 }
@@ -125,7 +189,7 @@ export function SweepstakeDashboard({
   knockoutDraw: KnockoutDraw;
   participants: Participant[];
 }) {
-  const [activeFilter, setActiveFilter] = useState<FilterId>("all");
+  const [activeFilter, setActiveFilter] = useState<FilterId>("still-in");
   const [searchTerm, setSearchTerm] = useState("");
   const teamsRemaining = participants.reduce(
     (total, participant) => total + remainingTeams(participant),
@@ -137,7 +201,10 @@ export function SweepstakeDashboard({
   ).length;
 
   const filteredParticipants = useMemo(() => {
-    const filteredByStatus = filterParticipants(participants, activeFilter);
+    const filteredByStatus = sortParticipantsForFilter(
+      filterParticipants(participants, activeFilter),
+      activeFilter,
+    );
     const query = searchTerm.trim().toLowerCase();
 
     if (!query) {
@@ -284,18 +351,21 @@ export function SweepstakeDashboard({
           id="entrants"
         >
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-black uppercase tracking-[0.2em] text-[#c7a653]">
                 Who is still in?
               </p>
               <h2 className="mt-2 text-3xl font-black text-[#fff4d7]">
                 Family leaderboard
               </h2>
+              <p className="mt-2 max-w-2xl text-base font-semibold leading-7 text-[#d9dccf]">
+                These are the players who still have at least one team alive.
+              </p>
               <p className="mt-2 text-base font-semibold text-[#b8c0ae]">
                 Showing {filteredParticipants.length} of {participants.length}
               </p>
             </div>
-            <label className="w-full max-w-xl" htmlFor="entrant-search">
+            <label className="w-full lg:max-w-xl" htmlFor="entrant-search">
               <span className="sr-only">Search entrants or teams</span>
               <span className="relative block">
                 <span
@@ -318,7 +388,7 @@ export function SweepstakeDashboard({
 
           <div
             aria-label="Filter family entrants"
-            className="mt-5 flex gap-2 overflow-x-auto pb-1"
+            className="mt-5 flex max-w-full gap-2 overflow-x-auto pb-2"
             role="group"
           >
             {filters.map((filter) => {
@@ -327,7 +397,7 @@ export function SweepstakeDashboard({
               return (
                 <button
                   aria-pressed={isActive}
-                  className={`min-h-12 shrink-0 rounded-lg border px-4 py-3 text-sm font-black uppercase tracking-wide transition ${
+                  className={`min-h-12 max-w-[82vw] shrink-0 whitespace-normal rounded-lg border px-4 py-3 text-left text-sm font-black uppercase leading-tight tracking-wide transition sm:max-w-none sm:text-center ${
                     isActive
                       ? "border-[#d7b85f] bg-[#d7b85f] text-[#07110f] shadow-[0_10px_30px_rgba(215,184,95,0.16)]"
                       : "border-[#c7a653]/30 bg-[#111d19] text-[#d9dccf] hover:border-[#d7b85f]/70 hover:bg-[#16241f]"
@@ -343,7 +413,7 @@ export function SweepstakeDashboard({
           </div>
 
           {filteredParticipants.length > 0 ? (
-            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div className="mt-5 grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3">
               {filteredParticipants.map((participant) => (
                 <ParticipantCard
                   key={participant.name}
@@ -373,26 +443,12 @@ export function SweepstakeDashboard({
                   Only knockout-stage fixtures are shown here. The full path is
                   available in the wall chart.
                 </p>
-                <FixtureGroup
-                  fixtures={fixturesPreview.remaining}
-                  title="Remaining fixtures"
-                />
-                <FixtureGroup
-                  fixtures={fixturesPreview.live}
-                  title="Live now"
-                />
-                <FixtureGroup
-                  fixtures={fixturesPreview.today}
-                  title="Today"
-                />
-                <FixtureGroup
-                  fixtures={fixturesPreview.recent}
-                  title="Recent results"
-                />
-                {fixturesPreview.remaining.length === 0 &&
-                fixturesPreview.live.length === 0 &&
-                fixturesPreview.today.length === 0 &&
-                fixturesPreview.recent.length === 0 ? (
+                <div className="grid gap-3">
+                  {fixturesPreview.roundGroups.map((group) => (
+                    <FixtureRoundGroup group={group} key={group.id} />
+                  ))}
+                </div>
+                {fixturesPreview.roundGroups.length === 0 ? (
                   <div className="rounded-lg border border-[#c7a653]/25 bg-[#0e1915] p-4 text-base font-bold text-[#d9dccf]">
                     Knockout fixtures are not available from OpenFootball
                     static data right now.

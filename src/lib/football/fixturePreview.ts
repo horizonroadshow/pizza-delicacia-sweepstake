@@ -11,18 +11,32 @@ export type FixturePreviewItem = {
   home: FixturePreviewTeam;
   id: string;
   kickoffLabel: string;
+  roundId: Match["round"];
   scoreLabel: string;
   stageLabel: string;
   statusLabel: string;
   timestamp: number;
 };
 
-export type FixturesPreview = {
-  live: FixturePreviewItem[];
+export type FixturePreviewRoundGroup = {
+  completed: FixturePreviewItem[];
+  id: Match["round"];
   remaining: FixturePreviewItem[];
-  recent: FixturePreviewItem[];
-  today: FixturePreviewItem[];
+  title: string;
 };
+
+export type FixturesPreview = {
+  roundGroups: FixturePreviewRoundGroup[];
+};
+
+const knockoutRoundOrder: Match["round"][] = [
+  "round-of-32",
+  "round-of-16",
+  "quarter-finals",
+  "semi-finals",
+  "final",
+  "third-place",
+];
 
 const teamNameAliases: Record<string, string> = {
   "czech republic": "czechia",
@@ -154,6 +168,7 @@ function toPreviewItem(
     },
     id: match.id,
     kickoffLabel: kickoffLabel(match),
+    roundId: match.round,
     scoreLabel: scoreLabel(match),
     stageLabel: stageLabel(match),
     statusLabel: statusLabel(match),
@@ -174,26 +189,51 @@ export async function loadOpenFootballFixturesPreview(
     .filter((match) => match.round !== "group-stage")
     .map((match) => toPreviewItem(match, teamsById, ownersByTeamName))
     .sort((a, b) => a.timestamp - b.timestamp);
-  const live = fixtures.filter((fixture) => fixture.statusLabel === "Live");
-  const today = fixtures.filter((fixture) =>
-    Number.isFinite(fixture.timestamp) &&
-    sameUkDay(new Date(fixture.timestamp), now),
-  );
-  const remaining = fixtures
-    .filter((fixture) => fixture.statusLabel !== "Finished")
-    .slice(0, 8);
-  const recent = fixtures
+  const remainingPriority = (fixture: FixturePreviewItem) => {
+    if (fixture.statusLabel === "Live") {
+      return 0;
+    }
+
+    if (
+      Number.isFinite(fixture.timestamp) &&
+      sameUkDay(new Date(fixture.timestamp), now)
+    ) {
+      return 1;
+    }
+
+    return 2;
+  };
+  const roundGroups = knockoutRoundOrder
+    .map((roundId) => {
+      const roundFixtures = fixtures.filter((fixture) => fixture.roundId === roundId);
+      const remaining = roundFixtures
+        .filter((fixture) => fixture.statusLabel !== "Finished")
+        .sort(
+          (a, b) =>
+            remainingPriority(a) - remainingPriority(b) ||
+            a.timestamp - b.timestamp,
+        );
+      const completed = roundFixtures
+        .filter((fixture) => fixture.statusLabel === "Finished")
+        .sort((a, b) => b.timestamp - a.timestamp);
+
+      return {
+        completed,
+        id: roundId,
+        remaining,
+        title: stageLabel({ round: roundId } as Match),
+      };
+    })
     .filter(
-      (fixture) =>
-        fixture.statusLabel === "Finished" && fixture.timestamp <= now.getTime(),
+      (group) => group.remaining.length > 0 || group.completed.length > 0,
     )
-    .slice(-4)
-    .reverse();
+    .sort(
+      (a, b) =>
+        Number(b.remaining.length > 0) - Number(a.remaining.length > 0) ||
+        knockoutRoundOrder.indexOf(a.id) - knockoutRoundOrder.indexOf(b.id),
+    );
 
   return {
-    live,
-    remaining,
-    recent,
-    today,
+    roundGroups,
   };
 }

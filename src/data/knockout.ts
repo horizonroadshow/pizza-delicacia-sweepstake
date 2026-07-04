@@ -36,6 +36,7 @@ export type KnockoutRound = {
 };
 
 export type KnockoutDraw = {
+  currentRoundId: TournamentStage;
   leftRounds: KnockoutRound[];
   final: KnockoutMatch;
   thirdPlace?: KnockoutMatch;
@@ -518,6 +519,27 @@ function splitRound(matches: Match[]) {
   };
 }
 
+function currentRoundId(groupedMatches: ReturnType<typeof groupMatchesByRound>) {
+  const knockoutRoundOrder: TournamentStage[] = [
+    "round-of-32",
+    "round-of-16",
+    "quarter-finals",
+    "semi-finals",
+    "final",
+    "third-place",
+  ];
+
+  return (
+    knockoutRoundOrder.find((roundId) =>
+      groupedMatches[roundId].some((match) => match.status !== "finished"),
+    ) ??
+    [...knockoutRoundOrder]
+      .reverse()
+      .find((roundId) => groupedMatches[roundId].length > 0) ??
+    "round-of-32"
+  );
+}
+
 export function createKnockoutDraw(
   matches: Match[],
   options: KnockoutDrawOptions = {},
@@ -543,6 +565,7 @@ export function createKnockoutDraw(
   }
 
   return {
+    currentRoundId: currentRoundId(groupedMatches),
     leftRounds: [
       round(
         "left-round-of-32",
