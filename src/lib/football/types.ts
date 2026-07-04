@@ -1,11 +1,15 @@
 import type { Match, Team } from "@/data/sweepstake";
 
-export type FootballProviderId = "api-football" | "football-data";
+export type FootballProviderId =
+  | "api-football"
+  | "football-data"
+  | "openfootball";
 
 export type FetchWorldCupFixturesInput = {
   competitionCode?: string;
   leagueId?: number;
   season: number;
+  sourceUrl?: string;
 };
 
 export type FootballFixtureSyncResult = {

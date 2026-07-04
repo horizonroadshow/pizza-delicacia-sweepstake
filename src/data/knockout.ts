@@ -40,6 +40,7 @@ export type KnockoutDraw = {
 };
 
 const roundNames: Record<TournamentStage, string> = {
+  "group-stage": "Group stage",
   "round-of-32": "Round of 32",
   "round-of-16": "Round of 16",
   "quarter-finals": "Quarter-finals",

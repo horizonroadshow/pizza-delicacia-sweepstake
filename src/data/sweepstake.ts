@@ -5,6 +5,7 @@ export type MatchId = string;
 export type MatchStatus = "scheduled" | "live" | "finished" | "postponed";
 
 export type TournamentStage =
+  | "group-stage"
   | "round-of-32"
   | "round-of-16"
   | "quarter-finals"
@@ -212,6 +213,7 @@ export function groupMatchesByRound(matches: Match[]) {
       return groupedMatches;
     },
     {
+      "group-stage": [],
       "round-of-32": [],
       "round-of-16": [],
       "quarter-finals": [],
