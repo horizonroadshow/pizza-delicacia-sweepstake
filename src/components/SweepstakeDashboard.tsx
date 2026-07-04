@@ -1,10 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { KnockoutWallChart } from "@/components/KnockoutWallChart";
 import { ParticipantCard } from "@/components/ParticipantCard";
 import { PlaceholderPanel } from "@/components/PlaceholderPanel";
 import { PrizeCard } from "@/components/PrizeCard";
 import { StatCard } from "@/components/StatCard";
+import { knockoutDraw } from "@/data/knockout";
 import type { Participant } from "@/data/sweepstake";
 import { sweepstakeSummary } from "@/data/sweepstake";
 
@@ -94,13 +96,22 @@ export function SweepstakeDashboard({
             aria-label="Page sections"
             className="hidden items-center gap-2 text-sm font-bold text-[#d9dccf] md:flex"
           >
-            <a className="rounded-md px-3 py-2 hover:bg-[#13211c]" href="#entrants">
+            <a
+              className="rounded-md px-3 py-2 hover:bg-[#13211c]"
+              href="#entrants"
+            >
               Entrants
             </a>
-            <a className="rounded-md px-3 py-2 hover:bg-[#13211c]" href="#knockout">
+            <a
+              className="rounded-md px-3 py-2 hover:bg-[#13211c]"
+              href="#knockout"
+            >
               Knockout
             </a>
-            <a className="rounded-md px-3 py-2 hover:bg-[#13211c]" href="#fixtures">
+            <a
+              className="rounded-md px-3 py-2 hover:bg-[#13211c]"
+              href="#fixtures"
+            >
               Fixtures
             </a>
           </nav>
@@ -259,37 +270,11 @@ export function SweepstakeDashboard({
           )}
         </section>
 
-        <section className="mt-5 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-          <div id="knockout">
-            <PlaceholderPanel
-              description="A compact tournament path will sit here once the fixture data is ready."
-              title="Knockout wall-chart preview"
-            >
-              <div className="grid gap-3 text-sm font-black text-[#fff4d7] sm:grid-cols-4">
-                {["Round of 32", "Round of 16", "Quarter-finals", "Final"].map(
-                  (round, index) => (
-                    <div
-                      className="rounded-lg border border-[#c7a653]/25 bg-[#0e1915] p-3"
-                      key={round}
-                    >
-                      <p className="text-xs uppercase tracking-wide text-[#c7a653]">
-                        {round}
-                      </p>
-                      <div className="mt-3 grid gap-2">
-                        <span className="rounded-md bg-[#172820] px-3 py-2">
-                          {index === 3 ? "Winner" : "Team"}
-                        </span>
-                        <span className="rounded-md border border-dashed border-[#c7a653]/30 px-3 py-2 text-[#b8c0ae]">
-                          TBC
-                        </span>
-                      </div>
-                    </div>
-                  ),
-                )}
-              </div>
-            </PlaceholderPanel>
-          </div>
+        <div className="mt-5">
+          <KnockoutWallChart draw={knockoutDraw} />
+        </div>
 
+        <section className="mt-5">
           <div id="fixtures">
             <PlaceholderPanel
               description="Scores and automatic updates will be added later. For now, this shows the planned match-card style."
