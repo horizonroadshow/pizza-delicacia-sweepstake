@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+:root {
+  --background: #07110f;
+  --foreground: #fff4d7;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-mono: "Courier New", Courier, monospace;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+button {
+  font: inherit;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: #d7b85f;
+  color: #07110f;
+}
