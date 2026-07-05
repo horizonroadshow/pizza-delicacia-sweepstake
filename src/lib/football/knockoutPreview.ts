@@ -1,6 +1,7 @@
 import { createKnockoutDraw, type KnockoutDraw } from "@/data/knockout";
 import type { Participant } from "@/data/sweepstake";
 import { createOpenFootballAdapter } from "@/lib/football/adapters/openFootball";
+import { resolveKnownKnockoutMatchups } from "@/lib/football/resolveKnockoutPlaceholders";
 
 export async function loadOpenFootballKnockoutDraw(
   participants: Participant[],
@@ -11,8 +12,12 @@ export async function loadOpenFootballKnockoutDraw(
   const knockoutMatches = result.matches.filter(
     (match) => match.round !== "group-stage",
   );
+  const resolvedKnockoutMatches = resolveKnownKnockoutMatchups(
+    knockoutMatches,
+    result.teams,
+  );
 
-  return createKnockoutDraw(knockoutMatches, {
+  return createKnockoutDraw(resolvedKnockoutMatches, {
     participants,
     teams: result.teams,
   });

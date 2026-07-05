@@ -1,5 +1,11 @@
 import type { Match, Participant, Team } from "@/data/sweepstake";
 import { createOpenFootballAdapter } from "@/lib/football/adapters/openFootball";
+import {
+  normaliseTeamName,
+  ownerLookup,
+  possibleOwnerLabel,
+} from "@/lib/football/ownerLabels";
+import { resolveKnownKnockoutMatchups } from "@/lib/football/resolveKnockoutPlaceholders";
 
 export type FixturePreviewTeam = {
   name: string;
@@ -37,36 +43,6 @@ const knockoutRoundOrder: Match["round"][] = [
   "final",
   "third-place",
 ];
-
-const teamNameAliases: Record<string, string> = {
-  "czech republic": "czechia",
-  "ir iran": "iran",
-  "korea republic": "south korea",
-  usa: "united states",
-};
-
-function normaliseName(name: string) {
-  const normalisedName = name
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-
-  return teamNameAliases[normalisedName] ?? normalisedName;
-}
-
-function ownerLookup(participants: Participant[]) {
-  const lookup = new Map<string, string>();
-
-  for (const participant of participants) {
-    for (const team of participant.teams) {
-      lookup.set(normaliseName(team.country), participant.name);
-    }
-  }
-
-  return lookup;
-}
 
 function teamName(
   teamId: string | null,
@@ -150,6 +126,7 @@ function sameUkDay(a: Date, b: Date) {
 
 function toPreviewItem(
   match: Match,
+  participants: Participant[],
   teamsById: Map<string, Team>,
   ownersByTeamName: Map<string, string>,
 ): FixturePreviewItem {
@@ -160,11 +137,15 @@ function toPreviewItem(
   return {
     away: {
       name: awayName,
-      owner: ownersByTeamName.get(normaliseName(awayName)),
+      owner:
+        ownersByTeamName.get(normaliseTeamName(awayName)) ??
+        possibleOwnerLabel(awayName, participants),
     },
     home: {
       name: homeName,
-      owner: ownersByTeamName.get(normaliseName(homeName)),
+      owner:
+        ownersByTeamName.get(normaliseTeamName(homeName)) ??
+        possibleOwnerLabel(homeName, participants),
     },
     id: match.id,
     kickoffLabel: kickoffLabel(match),
@@ -185,9 +166,13 @@ export async function loadOpenFootballFixturesPreview(
   });
   const teamsById = new Map(result.teams.map((team) => [team.id, team]));
   const ownersByTeamName = ownerLookup(participants);
-  const fixtures = result.matches
-    .filter((match) => match.round !== "group-stage")
-    .map((match) => toPreviewItem(match, teamsById, ownersByTeamName))
+  const knockoutMatches = result.matches.filter(
+    (match) => match.round !== "group-stage",
+  );
+  const fixtures = resolveKnownKnockoutMatchups(knockoutMatches, result.teams)
+    .map((match) =>
+      toPreviewItem(match, participants, teamsById, ownersByTeamName),
+    )
     .sort((a, b) => a.timestamp - b.timestamp);
   const remainingPriority = (fixture: FixturePreviewItem) => {
     if (fixture.statusLabel === "Live") {

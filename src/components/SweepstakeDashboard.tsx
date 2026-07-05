@@ -78,7 +78,7 @@ function FixtureTeam({ team }: { team: FixturePreviewItem["home"] }) {
         {team.name}
       </p>
       <p className="mt-1 truncate text-xs font-bold uppercase tracking-wide text-[#b8c0ae]">
-        {team.owner ? team.owner : "No family owner"}
+        {team.owner ? team.owner : "TBC"}
       </p>
     </div>
   );
@@ -199,6 +199,8 @@ export function SweepstakeDashboard({
   const eliminatedParticipants = participants.filter(
     (participant) => remainingTeams(participant) === 0,
   ).length;
+  const participantsRemaining =
+    sweepstakeSummary.playerCount - eliminatedParticipants;
 
   const filteredParticipants = useMemo(() => {
     const filteredByStatus = sortParticipantsForFilter(
@@ -288,9 +290,13 @@ export function SweepstakeDashboard({
                 {sweepstakeSummary.name}
               </h1>
               <p className="mt-3 max-w-3xl text-lg leading-8 text-[#d9dccf]">
-                Everyone started with two teams. Right now {teamsRemaining} teams
-                are still in, {teamsEliminated} have been eliminated, and{" "}
-                {eliminatedParticipants} family members are fully out.
+                {sweepstakeSummary.teamCount} teams started, {teamsEliminated}{" "}
+                have been eliminated, {teamsRemaining} remain.
+              </p>
+              <p className="mt-2 max-w-3xl text-lg leading-8 text-[#d9dccf]">
+                {sweepstakeSummary.playerCount} family members, 2 teams each.{" "}
+                {eliminatedParticipants} are out, {participantsRemaining}{" "}
+                remain.
               </p>
             </div>
             <div className="rounded-lg border border-[#d7b85f]/35 bg-[#171f18] p-4">
@@ -329,7 +335,7 @@ export function SweepstakeDashboard({
             detail={`${teamsEliminated} teams eliminated`}
             icon="●"
             label="Tournament status"
-            value={`${teamsRemaining} in`}
+            value={`${teamsRemaining} teams remain`}
           />
         </section>
 
@@ -360,6 +366,7 @@ export function SweepstakeDashboard({
               </h2>
               <p className="mt-2 max-w-2xl text-base font-semibold leading-7 text-[#d9dccf]">
                 These are the players who still have at least one team alive.
+                The £100 dream is still alive.
               </p>
               <p className="mt-2 text-base font-semibold text-[#b8c0ae]">
                 Showing {filteredParticipants.length} of {participants.length}
@@ -441,7 +448,8 @@ export function SweepstakeDashboard({
               <div className="grid gap-5">
                 <p className="text-base font-semibold leading-7 text-[#b8c0ae]">
                   Only knockout-stage fixtures are shown here. The full path is
-                  available in the wall chart.
+                  available in the wall chart. One result away from family
+                  bragging rights.
                 </p>
                 <div className="grid gap-3">
                   {fixturesPreview.roundGroups.map((group) => (

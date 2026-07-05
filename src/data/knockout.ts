@@ -8,6 +8,11 @@ import type {
   TournamentStage,
 } from "@/data/sweepstake";
 import { findOwnerOfTeam, groupMatchesByRound, teams } from "@/data/sweepstake";
+import {
+  normaliseTeamName,
+  ownerLookup,
+  possibleOwnerLabel,
+} from "@/lib/football/ownerLabels";
 
 export type KnockoutTeam = {
   flag: string;
@@ -80,42 +85,12 @@ type KnockoutDrawOptions = {
   teams?: Team[];
 };
 
-const teamNameAliases: Record<string, string> = {
-  "czech republic": "czechia",
-  "ir iran": "iran",
-  "korea republic": "south korea",
-  usa: "united states",
-};
-
-function normaliseName(name: string) {
-  const normalisedName = name
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-
-  return teamNameAliases[normalisedName] ?? normalisedName;
-}
-
-function ownerLookup(participants: Participant[] = []) {
-  const lookup = new Map<string, string>();
-
-  for (const participant of participants) {
-    for (const team of participant.teams) {
-      lookup.set(normaliseName(team.country), participant.name);
-    }
-  }
-
-  return lookup;
-}
-
 function flagLookup(participants: Participant[] = []) {
   const lookup = new Map<string, string>();
 
   for (const participant of participants) {
     for (const team of participant.teams) {
-      lookup.set(normaliseName(team.country), team.flag);
+      lookup.set(normaliseTeamName(team.country), team.flag);
     }
   }
 
@@ -452,7 +427,7 @@ function resolveMatchTeam(
   const placeholder =
     slot === "home" ? match.homeTeamPlaceholder : match.awayTeamPlaceholder;
   const team = findTeam(teamId, options.teams);
-  const normalisedTeamName = team ? normaliseName(team.country) : undefined;
+  const normalisedTeamName = team ? normaliseTeamName(team.country) : undefined;
   const ownersByTeamName = ownerLookup(options.participants);
   const flagsByTeamName = flagLookup(options.participants);
 
@@ -466,7 +441,7 @@ function resolveMatchTeam(
     owner:
       (normalisedTeamName ? ownersByTeamName.get(normalisedTeamName) : undefined) ??
       (team ? findOwnerOfTeam(team.id) : undefined) ??
-      "Family owner TBC",
+      possibleOwnerLabel(placeholder, options.participants),
     state: teamState(match, team?.id ?? null),
   };
 }
