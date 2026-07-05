@@ -215,9 +215,6 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
     oddsPreview.fetchedAt,
     oddsPreview.oddsAreStale,
   );
-  const oddsBasisCopy = oddsPreview.outrightWinnerAvailable
-    ? "Outright winner odds use averaged bookmaker prices and normalised market-implied probabilities. Fixture cards still use upcoming match markets."
-    : "Based on available upcoming match odds. Outright tournament odds are not currently available.";
 
   if (oddsPreview.marketWatchCards.length === 0) {
     return (
@@ -235,12 +232,8 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
             Odds are for sweepstake entertainment only and may change.
           </p>
         </div>
-        <p className="mt-3 text-sm font-semibold leading-6 text-[#b8c0ae]">
-          {oddsBasisCopy}
-        </p>
         <p className="mt-3 rounded-lg border border-[#c7a653]/15 bg-[#111d19] p-3 text-sm font-bold text-[#b8c0ae]">
-          Odds TBC for now. Fixtures still show as normal, and this corner will
-          fill back in when the provider returns usable match markets.
+          Odds TBC for now. Fixtures still show as normal.
         </p>
         {updatedLabel ? (
           <p className="mt-2 text-xs font-bold uppercase tracking-wide text-[#c7a653]">
@@ -266,11 +259,8 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
           Odds are for sweepstake entertainment only and may change.
         </p>
       </div>
-      <p className="mt-3 text-sm font-semibold leading-6 text-[#b8c0ae]">
-        {oddsBasisCopy}
-      </p>
       {updatedLabel ? (
-        <p className="mt-2 text-xs font-bold uppercase tracking-wide text-[#c7a653]">
+        <p className="mt-3 text-xs font-bold uppercase tracking-wide text-[#c7a653]">
           {updatedLabel}
         </p>
       ) : null}
@@ -568,16 +558,8 @@ export function SweepstakeDashboard({
         </section>
 
         <section className="mt-4 grid gap-3 md:grid-cols-2">
-          <PrizeCard
-            note="For the owner of the World Cup winning team. If one person owns both finalists, they receive both prizes."
-            place="First prize"
-            prize={config.prizeSplit.first}
-          />
-          <PrizeCard
-            note="For the owner of the losing finalist. If one person owns both finalists, they receive both prizes."
-            place="Second prize"
-            prize={config.prizeSplit.second}
-          />
+          <PrizeCard place="First prize" prize={config.prizeSplit.first} />
+          <PrizeCard place="Second prize" prize={config.prizeSplit.second} />
         </section>
 
         <BookiesCornerSection oddsPreview={oddsPreview} />
@@ -595,7 +577,7 @@ export function SweepstakeDashboard({
                 Family leaderboard
               </h2>
               <p className="mt-2 max-w-2xl text-base font-semibold leading-7 text-[#d9dccf]">
-                These are the players who still have at least one team alive.
+                These are the players who still have at least one team left.
                 The £100 dream is still alive.
               </p>
               <p className="mt-2 text-base font-semibold text-[#b8c0ae]">
@@ -672,15 +654,9 @@ export function SweepstakeDashboard({
         <section className="mt-5">
           <div id="fixtures">
             <PlaceholderPanel
-              description="Fixture and result data is provided by OpenFootball static data. Updates may lag official results."
               title="Fixtures and results"
             >
               <div className="grid gap-5">
-                <p className="text-base font-semibold leading-7 text-[#b8c0ae]">
-                  Only knockout-stage fixtures are shown here. The full path is
-                  available in the wall chart. One result away from family
-                  bragging rights.
-                </p>
                 <div className="grid gap-3">
                   {fixturesPreview.roundGroups.map((group) => (
                     <FixtureRoundGroup group={group} key={group.id} />
@@ -692,6 +668,10 @@ export function SweepstakeDashboard({
                     static data right now.
                   </div>
                 ) : null}
+                <p className="text-xs font-bold leading-5 text-[#858d7d]">
+                  Fixture and result data is provided by OpenFootball static
+                  data. Updates may lag official results.
+                </p>
               </div>
             </PlaceholderPanel>
           </div>

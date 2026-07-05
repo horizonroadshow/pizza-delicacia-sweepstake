@@ -818,10 +818,6 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
           >
             Knockout wall chart
           </h2>
-          <p className="mt-2 max-w-3xl text-base leading-7 text-[#b8c0ae]">
-            Follow the family teams through the knockout rounds, with scores,
-            winners, and eliminations taken from OpenFootball static data.
-          </p>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -967,7 +963,7 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
       </div>
 
       <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_auto] lg:items-center">
-        <div className="rounded-lg border border-dashed border-[#c7a653]/35 bg-[#0e1915] p-4 text-base font-bold leading-7 text-[#d9dccf]">
+        <div className="rounded-lg border border-dashed border-[#c7a653]/25 bg-[#0e1915] px-3 py-2 text-xs font-bold leading-5 text-[#858d7d]">
           Fixture and result data is provided by OpenFootball static data.
           Updates may lag official results.
         </div>

@@ -1,6 +1,6 @@
 type PlaceholderPanelProps = {
   children?: React.ReactNode;
-  description: string;
+  description?: string;
   title: string;
 };
 
@@ -15,10 +15,12 @@ export function PlaceholderPanel({
         Preview
       </p>
       <h2 className="mt-2 text-2xl font-black text-[#fff4d7]">{title}</h2>
-      <p className="mt-2 max-w-3xl text-base leading-7 text-[#b8c0ae]">
-        {description}
-      </p>
-      {children ? <div className="mt-5">{children}</div> : null}
+      {description ? (
+        <p className="mt-2 max-w-3xl text-base leading-7 text-[#b8c0ae]">
+          {description}
+        </p>
+      ) : null}
+      {children ? <div className="mt-4">{children}</div> : null}
     </section>
   );
 }

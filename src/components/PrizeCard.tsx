@@ -1,5 +1,5 @@
 type PrizeCardProps = {
-  note: string;
+  note?: string;
   place: string;
   prize: string;
 };
@@ -11,7 +11,9 @@ export function PrizeCard({ note, place, prize }: PrizeCardProps) {
         {place}
       </p>
       <p className="mt-2 text-4xl font-black text-[#fff4d7]">{prize}</p>
-      <p className="mt-2 text-base leading-7 text-[#b8c0ae]">{note}</p>
+      {note ? (
+        <p className="mt-2 text-base leading-7 text-[#b8c0ae]">{note}</p>
+      ) : null}
     </div>
   );
 }
