@@ -203,26 +203,25 @@ export function SweepstakeDashboard({
     sweepstakeSummary.playerCount - eliminatedParticipants;
 
   const filteredParticipants = useMemo(() => {
-    const filteredByStatus = sortParticipantsForFilter(
+    const query = searchTerm.trim().toLowerCase();
+
+    if (query) {
+      return participants.filter((participant) => {
+        const searchableText = [
+          participant.name,
+          ...participant.teams.map((team) => team.country),
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        return searchableText.includes(query);
+      });
+    }
+
+    return sortParticipantsForFilter(
       filterParticipants(participants, activeFilter),
       activeFilter,
     );
-    const query = searchTerm.trim().toLowerCase();
-
-    if (!query) {
-      return filteredByStatus;
-    }
-
-    return filteredByStatus.filter((participant) => {
-      const searchableText = [
-        participant.name,
-        ...participant.teams.map((team) => team.country),
-      ]
-        .join(" ")
-        .toLowerCase();
-
-      return searchableText.includes(query);
-    });
   }, [activeFilter, participants, searchTerm]);
 
   return (
@@ -241,7 +240,7 @@ export function SweepstakeDashboard({
                 Pizza Delicacia
               </span>
               <span className="block text-base font-black text-[#fff4d7]">
-                World Cup Sweepstake
+                World Cup 2026 Sweepstake
               </span>
             </span>
           </a>
@@ -287,7 +286,8 @@ export function SweepstakeDashboard({
                 Family last-team-standing sweepstake
               </p>
               <h1 className="mt-2 max-w-4xl text-3xl font-black leading-tight text-[#fff4d7] sm:text-5xl">
-                {sweepstakeSummary.name}
+                <span className="block">Pizza Delicacia 🍕</span>
+                <span className="block">World Cup 2026 Sweepstake ⚽️</span>
               </h1>
               <p className="mt-3 max-w-3xl text-lg leading-8 text-[#d9dccf]">
                 {sweepstakeSummary.teamCount} teams started, {teamsEliminated}{" "}
@@ -306,7 +306,7 @@ export function SweepstakeDashboard({
               <div className="mt-3 grid gap-2 text-base font-bold text-[#fff4d7]">
                 <p>Entry: {sweepstakeSummary.entryFee} each</p>
                 <p>Prize split: {sweepstakeSummary.prizeSplit}</p>
-                <p>Editor later: Ajay only</p>
+                <p>Commissioner: Ajay</p>
               </div>
             </div>
           </div>
