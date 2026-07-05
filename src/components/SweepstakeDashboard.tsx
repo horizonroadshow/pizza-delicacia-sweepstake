@@ -425,6 +425,8 @@ export function SweepstakeDashboard({
   const heroEyebrow =
     config.copy?.heroEyebrow ?? "Family last-team-standing sweepstake";
   const memberLabelPlural = config.copy?.memberLabelPlural ?? "family members";
+  const leaderboardTitle = config.copy?.leaderboardTitle ?? "Family leaderboard";
+  const playerStatDetail = config.copy?.playerStatDetail ?? "Family members";
 
   const filteredParticipants = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -541,7 +543,7 @@ export function SweepstakeDashboard({
 
         <section className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            detail="Family members"
+            detail={playerStatDetail}
             icon="★"
             label="Players"
             value={`${sweepstakeSummary.playerCount}`}
@@ -583,11 +585,11 @@ export function SweepstakeDashboard({
                 Who is still in?
               </p>
               <h2 className="mt-2 text-3xl font-black text-[#fff4d7]">
-                Family leaderboard
+                {leaderboardTitle}
               </h2>
               <p className="mt-2 max-w-2xl text-base font-semibold leading-7 text-[#d9dccf]">
                 These are the players who still have at least one team left.
-                The £100 dream is still alive.
+                The {config.prizeSplit.first} dream is still alive.
               </p>
               <p className="mt-2 text-base font-semibold text-[#b8c0ae]">
                 Showing {filteredParticipants.length} of {participants.length}

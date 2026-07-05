@@ -100,4 +100,6 @@ export const formidableRelationships: SweepstakeRelationshipConfig = {
     ["Kish", "Suchita"],
     ["Alasdair", "Alaleh"],
   ],
+  genericBraggingRightsCopy: "Friendship on the line.",
+  title: "Friends Feud",
 };

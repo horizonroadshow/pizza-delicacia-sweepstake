@@ -16,6 +16,7 @@ export type FamilyRelationshipInsight = {
   copy: string;
   label: string;
   priority: number;
+  socialType?: string;
   title: string;
   type: FamilyRelationshipType;
 };
@@ -55,6 +56,9 @@ export function familyRelationshipInsight(
 ): FamilyRelationshipInsight {
   const branchA = familyBranch(ownerA, relationships);
   const branchB = familyBranch(ownerB, relationships);
+  const relationshipTitle = relationships?.title ?? "Family Feud";
+  const genericCopy =
+    relationships?.genericBraggingRightsCopy ?? "Family bragging rights loading.";
 
   if (
     relationships?.spousePairs?.some((pair) =>
@@ -67,7 +71,7 @@ export function familyRelationshipInsight(
       copy: "Marriage temporarily suspended for 90 minutes.",
       label: "HOMEWRECKER",
       priority: 0,
-      title: "Family Feud",
+      title: relationshipTitle,
       type: "spouse",
     };
   }
@@ -83,7 +87,8 @@ export function familyRelationshipInsight(
       copy: socialPair.copy,
       label: socialPair.label,
       priority: socialPair.priority,
-      title: "Family Feud",
+      socialType: socialPair.type,
+      title: relationshipTitle,
       type: "custom-social",
     };
   }
@@ -99,7 +104,7 @@ export function familyRelationshipInsight(
       copy: "Parent-child bragging rights are on the line.",
       label: "Parent vs child",
       priority: 1,
-      title: "Family Feud",
+      title: relationshipTitle,
       type: "parent-child",
     };
   }
@@ -111,7 +116,7 @@ export function familyRelationshipInsight(
       copy: "Civil war in the household.",
       label: "Same household",
       priority: 2,
-      title: "Family Feud",
+      title: relationshipTitle,
       type: "same-household",
     };
   }
@@ -123,7 +128,7 @@ export function familyRelationshipInsight(
       copy: "Sibling rivalry has entered the chat.",
       label: "Sibling vs sibling",
       priority: 3,
-      title: "Family Feud",
+      title: relationshipTitle,
       type: "sibling",
     };
   }
@@ -135,7 +140,7 @@ export function familyRelationshipInsight(
       copy: "Civil war in the family branch.",
       label: "Same branch",
       priority: 4,
-      title: "Family Feud",
+      title: relationshipTitle,
       type: "same-branch",
     };
   }
@@ -147,7 +152,7 @@ export function familyRelationshipInsight(
       copy: "Branch bragging rights loading.",
       label: "Branch vs branch",
       priority: 5,
-      title: "Family Feud",
+      title: relationshipTitle,
       type: "different-branch",
     };
   }
@@ -155,10 +160,10 @@ export function familyRelationshipInsight(
   return {
     branchA,
     branchB,
-    copy: "Family bragging rights loading.",
+    copy: genericCopy,
     label: "Owned teams",
     priority: 6,
-    title: "Family Feud",
+    title: relationshipTitle,
     type: "fallback",
   };
 }

@@ -238,6 +238,8 @@ function savedWorldCupOutrights(
 
 function buildUnderdogCard(
   events: OddsEventSummary[],
+  outrightOdds: OutrightOddsSummary[],
+  outrightOddsState: OutrightOddsState,
   participants: Participant[],
 ): MarketWatchCard {
   const teamCandidates = allTeamOddsCandidates(events, participants);
@@ -256,6 +258,56 @@ function buildUnderdogCard(
     };
   }
 
+  const outrightUnderdog = outrightOdds
+    .flatMap((odd) => {
+      const owner = findOwnerForTeamName(odd.team, participants);
+      const participant = participants.find(({ name }) => name === owner);
+      const allocatedTeam = participant?.teams.find(
+        (team) =>
+          normaliseTeamName(team.country) === normaliseTeamName(odd.team),
+      );
+
+      if (
+        !owner ||
+        allocatedTeam?.status !== "still-in" ||
+        !Number.isFinite(odd.impliedProbability) ||
+        odd.impliedProbability <= 0
+      ) {
+        return [];
+      }
+
+      return [
+        {
+          owner,
+          percentage: odd.impliedProbability,
+          team: allocatedTeam.country,
+        },
+      ];
+    })
+    .sort(
+      (a, b) =>
+        a.percentage - b.percentage || a.owner.localeCompare(b.owner, "en-GB"),
+    )[0];
+
+  if (outrightUnderdog) {
+    const fallbackNote =
+      outrightOddsState === "saved-outrights" ||
+      outrightOddsState === "cached-outrights"
+        ? " Using outright odds fallback."
+        : "";
+
+    return {
+      detail: `${outrightUnderdog.owner} has ${teamDisplayName(
+        outrightUnderdog.team,
+        participants,
+      )}, rated at ${precisePercentageLabel(
+        outrightUnderdog.percentage,
+      )} to win it all. Underdog watch.${fallbackNote}`,
+      eyebrow: "Biggest underdog still alive",
+      title: teamDisplayName(outrightUnderdog.team, participants),
+    };
+  }
+
   return {
     detail:
       events.length > 0
@@ -268,6 +320,7 @@ function buildUnderdogCard(
 
 function buildFamilyFeudCard(
   events: OddsEventSummary[],
+  outrightOdds: OutrightOddsSummary[],
   participants: Participant[],
   config: SweepstakeConfig,
 ): MarketWatchCard {
@@ -303,12 +356,21 @@ function buildFamilyFeudCard(
 
   if (familyBranchBattle) {
     const isRelationshipConfigured = Boolean(config.relationships);
+    const isFriendsSweepstake = config.copy?.groupStyleLabel === "friends";
     const feudEyebrow = isRelationshipConfigured
       ? familyBranchBattle.relationship.title
       : "Fixture watch";
-    const feudTitle = isRelationshipConfigured
-      ? "Next Homewrecker"
-      : "Next owned-team matchup";
+    const feudTitle =
+      familyBranchBattle.relationship.label === "HOMEWRECKER" ||
+      familyBranchBattle.relationship.socialType === "dating"
+        ? "Next Homewrecker"
+        : familyBranchBattle.relationship.socialType === "school-friend"
+          ? "Schoolmate bragging rights"
+          : isRelationshipConfigured && isFriendsSweepstake
+            ? "Friendship on the line"
+            : isRelationshipConfigured
+              ? "Next Homewrecker"
+              : "Next owned-team matchup";
     const odds = fixtureOddsLabel(familyBranchBattle.event, participants);
 
     return {
@@ -325,10 +387,37 @@ function buildFamilyFeudCard(
     };
   }
 
+  const ownerRankings = rankOwnersByOutrightOdds(outrightOdds, participants);
+  const [leader, chaser] = ownerRankings;
+
+  if (leader && chaser) {
+    const leaderTeams = leader.teams
+      .map((team) => teamDisplayName(team.team, participants))
+      .join(" / ");
+    const chaserTeams = chaser.teams
+      .map((team) => teamDisplayName(team.team, participants))
+      .join(" / ");
+
+    return {
+      detail: `${leader.owner} leads the bookies' board, but ${chaser.owner} is still chasing.`,
+      eyebrow: config.copy?.feudEyebrow ?? "Family Feud",
+      feudLines: {
+        banter: `${leader.owner} leads the bookies' board, but ${chaser.owner} is still chasing.`,
+        fixture: `${leaderTeams} vs ${chaserTeams}`,
+        owners: `${leader.owner} vs. ${chaser.owner}`,
+      },
+      title: "Title-race bragging rights",
+    };
+  }
+
   return {
-    detail: "Family bragging rights loading.",
-    eyebrow: "Family Feud",
-    title: "Next Homewrecker",
+    detail:
+      config.copy?.genericBraggingRightsCopy ?? "Family bragging rights loading.",
+    eyebrow: config.copy?.feudEyebrow ?? "Family Feud",
+    title:
+      config.copy?.groupStyleLabel === "friends"
+        ? "Friendship on the line"
+        : "Next Homewrecker",
   };
 }
 
@@ -341,8 +430,8 @@ function buildMarketWatchCards(
 ): MarketWatchCard[] {
   return [
     buildOutrightCard(outrightOdds, outrightOddsState, participants),
-    buildUnderdogCard(events, participants),
-    buildFamilyFeudCard(events, participants, config),
+    buildUnderdogCard(events, outrightOdds, outrightOddsState, participants),
+    buildFamilyFeudCard(events, outrightOdds, participants, config),
   ];
 }
 
