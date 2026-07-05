@@ -423,6 +423,9 @@ export function SweepstakeDashboard({
   ).length;
   const participantsRemaining =
     sweepstakeSummary.playerCount - eliminatedParticipants;
+  const heroEyebrow =
+    config.copy?.heroEyebrow ?? "Family last-team-standing sweepstake";
+  const memberLabelPlural = config.copy?.memberLabelPlural ?? "family members";
 
   const filteredParticipants = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -505,7 +508,7 @@ export function SweepstakeDashboard({
           <div className="grid gap-5 lg:grid-cols-[1.4fr_0.6fr] lg:items-end">
             <div>
               <p className="text-sm font-black uppercase tracking-[0.2em] text-[#c7a653]">
-                Family last-team-standing sweepstake
+                {heroEyebrow}
               </p>
               <h1 className="mt-2 max-w-4xl text-3xl font-black leading-tight text-[#fff4d7] sm:text-5xl">
                 {config.displayTitleLines.map((line) => (
@@ -519,7 +522,7 @@ export function SweepstakeDashboard({
                 have been eliminated, {teamsRemaining} remain.
               </p>
               <p className="mt-2 max-w-3xl text-lg leading-8 text-[#d9dccf]">
-                {sweepstakeSummary.playerCount} family members,{" "}
+                {sweepstakeSummary.playerCount} {memberLabelPlural},{" "}
                 {sweepstakeSummary.teamsPerParticipant} teams each.{" "}
                 {eliminatedParticipants} are out, {participantsRemaining} remain.
               </p>

@@ -1,7 +1,5 @@
 import type { Match, MatchStatus, Team, TeamId, TournamentStage } from "@/data/sweepstake";
-import { normaliseTeamName, ownerLookup } from "@/lib/football/ownerLabels";
-import { activeSweepstakeConfig } from "@/data/sweepstakes";
-import { createParticipants } from "@/data/sweepstake";
+import { normaliseTeamName } from "@/lib/football/ownerLabels";
 import {
   OddsAdapterError,
   type OddsAdapter,
@@ -540,24 +538,6 @@ export function createOddsApiIoAdapter(): OddsAdapter {
       const matchedFixtureKeys = new Set(
         matchedFixtureEvents.map((event) => matchupKey(event.home, event.away)),
       );
-      const participants = createParticipants(activeSweepstakeConfig);
-      const ownersByTeam = ownerLookup(participants);
-      const teamNamesFailingOwnerMatch = Array.from(
-        new Set(
-          oddsExamples
-            .flatMap((event) => [event.home, event.away])
-            .filter(
-              (teamName) =>
-                !ownersByTeam.has(normaliseTeamName(teamName)) &&
-                targetFixtureSummaries.some(
-                  (fixture) =>
-                    normaliseTeamName(fixture.home) === normaliseTeamName(teamName) ||
-                    normaliseTeamName(fixture.away) === normaliseTeamName(teamName),
-                ),
-            ),
-        ),
-      ).sort((a, b) => a.localeCompare(b, "en-GB"));
-
       return {
         diagnostics: {
           fixtureOddsReturned: oddsExamples.map((event) => ({
@@ -574,7 +554,7 @@ export function createOddsApiIoAdapter(): OddsAdapter {
             home: event.home ?? "Team TBC",
           })),
           targetFixtures: targetFixtureSummaries,
-          teamNamesFailingOwnerMatch,
+          teamNamesFailingOwnerMatch: [],
         },
         eventSearchCount: worldCupEvents.length,
         fetchedAt: new Date().toISOString(),

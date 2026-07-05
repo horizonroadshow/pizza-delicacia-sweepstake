@@ -1,4 +1,5 @@
 import type { Participant } from "@/data/sweepstake";
+import type { SweepstakeConfig } from "@/data/sweepstakes";
 import { familyRelationshipInsight } from "@/lib/familyRelationships";
 import { normaliseTeamName } from "@/lib/football/ownerLabels";
 import type {
@@ -142,6 +143,7 @@ function buildMarketWatchCards(
   events: OddsEventSummary[],
   outrightOdds: OutrightOddsSummary[],
   participants: Participant[],
+  config: SweepstakeConfig,
 ): MarketWatchCard[] {
   const cards: MarketWatchCard[] = [];
   const outrightOwnerRankings = rankOwnersByOutrightOdds(
@@ -228,7 +230,11 @@ function buildMarketWatchCards(
         return undefined;
       }
 
-      const relationship = familyRelationshipInsight(homeOwner, awayOwner);
+      const relationship = familyRelationshipInsight(
+        homeOwner,
+        awayOwner,
+        config.relationships,
+      );
 
       return {
         awayOwner,
@@ -246,9 +252,17 @@ function buildMarketWatchCards(
     )[0];
 
   if (familyBranchBattle) {
+    const isRelationshipConfigured = Boolean(config.relationships);
+    const feudEyebrow = isRelationshipConfigured
+      ? familyBranchBattle.relationship.title
+      : "Fixture watch";
+    const feudTitle = isRelationshipConfigured
+      ? "Next Homewrecker"
+      : "Next owned-team matchup";
+
     cards.push({
       detail: `${teamDisplayName(familyBranchBattle.event.home, participants)} v ${teamDisplayName(familyBranchBattle.event.away, participants)}. ${familyBranchBattle.homeOwner} vs. ${familyBranchBattle.awayOwner}. ${familyBranchBattle.relationship.copy} ${fixtureOddsLabel(familyBranchBattle.event, participants)}.`,
-      eyebrow: "Family Feud",
+      eyebrow: feudEyebrow,
       feudLines: {
         banter: familyBranchBattle.relationship.copy,
         date: kickoffLabel(familyBranchBattle.event.kickoffAt),
@@ -256,7 +270,7 @@ function buildMarketWatchCards(
         odds: fixtureOddsLabel(familyBranchBattle.event, participants),
         owners: `${familyBranchBattle.homeOwner} vs. ${familyBranchBattle.awayOwner}`,
       },
-      title: "Next Homewrecker",
+      title: feudTitle,
     });
   }
 
@@ -339,6 +353,7 @@ function emptyPreview(): OddsPreview {
 
 export async function loadOddsPreview(
   participants: Participant[],
+  config: SweepstakeConfig,
 ): Promise<OddsPreview> {
   const cachedDiscovery = await loadOddsDiscoveryWithCache();
 
@@ -361,6 +376,7 @@ export async function loadOddsPreview(
       discovery.oddsExamples,
       availableOutrightOdds,
       participants,
+      config,
     ),
     oddsAreStale: cachedDiscovery.stale,
     outrightWinnerAvailable:

@@ -1,80 +1,4 @@
-const branches = {
-  "Rita/Bill": ["Rita", "Bill", "Ajay", "Aditi", "Ayesha", "Karan"],
-  "Vijay/Sunita": [
-    "Vijay",
-    "Sunita",
-    "Arun",
-    "Esha",
-    "Sienna",
-    "Layla",
-    "Priya",
-    "Steve",
-    "Simran",
-    "Avi",
-  ],
-  "Yash/Asha": ["Yash", "Asha", "Alisha", "Rohan", "Kavita", "Yaad", "Veeran"],
-} as const;
-
-const spousePairs = [
-  ["Rita", "Bill"],
-  ["Ajay", "Aditi"],
-  ["Ayesha", "Karan"],
-  ["Yash", "Asha"],
-  ["Kavita", "Yaad"],
-  ["Vijay", "Sunita"],
-  ["Arun", "Esha"],
-  ["Priya", "Steve"],
-] as const;
-
-const parentChildPairs = [
-  ["Nanaji", "Asha"],
-  ["Nanaji", "Vijay"],
-  ["Nanaji", "Rita"],
-  ["Rita", "Ajay"],
-  ["Rita", "Ayesha"],
-  ["Bill", "Ajay"],
-  ["Bill", "Ayesha"],
-  ["Yash", "Alisha"],
-  ["Yash", "Rohan"],
-  ["Yash", "Kavita"],
-  ["Asha", "Alisha"],
-  ["Asha", "Rohan"],
-  ["Asha", "Kavita"],
-  ["Kavita", "Veeran"],
-  ["Yaad", "Veeran"],
-  ["Vijay", "Arun"],
-  ["Vijay", "Priya"],
-  ["Sunita", "Arun"],
-  ["Sunita", "Priya"],
-  ["Arun", "Sienna"],
-  ["Arun", "Layla"],
-  ["Esha", "Sienna"],
-  ["Esha", "Layla"],
-  ["Priya", "Simran"],
-  ["Priya", "Avi"],
-  ["Steve", "Simran"],
-  ["Steve", "Avi"],
-] as const;
-
-const siblingGroups = [
-  ["Asha", "Vijay", "Rita"],
-  ["Ajay", "Ayesha"],
-  ["Alisha", "Rohan", "Kavita"],
-  ["Arun", "Priya"],
-  ["Sienna", "Layla"],
-  ["Simran", "Avi"],
-] as const;
-
-const households = [
-  ["Rita", "Bill", "Ajay", "Ayesha"],
-  ["Ajay", "Aditi"],
-  ["Ayesha", "Karan"],
-  ["Yash", "Asha", "Alisha", "Rohan", "Kavita"],
-  ["Kavita", "Yaad", "Veeran"],
-  ["Vijay", "Sunita", "Arun", "Priya"],
-  ["Arun", "Esha", "Sienna", "Layla"],
-  ["Priya", "Steve", "Simran", "Avi"],
-] as const;
+import type { SweepstakeRelationshipConfig } from "@/data/sweepstakes/types";
 
 export type FamilyRelationshipType =
   | "different-branch"
@@ -102,42 +26,40 @@ function pairMatches(a: string, b: string, pair: readonly [string, string]) {
   );
 }
 
-function sameSiblingGroup(a: string, b: string) {
-  return siblingGroups.some((group) => {
-    const members: readonly string[] = group;
-
-    return members.includes(a) && members.includes(b);
-  });
+function sameGroup(a: string, b: string, groups: readonly string[][] = []) {
+  return groups.some((group) => group.includes(a) && group.includes(b));
 }
 
-function sameHousehold(a: string, b: string) {
-  return households.some((household) => {
-    const members: readonly string[] = household;
+export function familyBranch(
+  owner: string,
+  relationships?: SweepstakeRelationshipConfig,
+) {
+  if (!relationships?.branches) {
+    return undefined;
+  }
 
-    return members.includes(a) && members.includes(b);
-  });
-}
-
-export function familyBranch(owner: string) {
   if (owner === "Nanaji") {
     return "Patriarch";
   }
 
-  return Object.entries(branches).find(([, members]) => {
-    const branchMembers: readonly string[] = members;
-
-    return branchMembers.includes(owner);
-  })?.[0];
+  return Object.entries(relationships.branches).find(([, members]) =>
+    members.includes(owner),
+  )?.[0];
 }
 
 export function familyRelationshipInsight(
   ownerA: string,
   ownerB: string,
+  relationships?: SweepstakeRelationshipConfig,
 ): FamilyRelationshipInsight {
-  const branchA = familyBranch(ownerA);
-  const branchB = familyBranch(ownerB);
+  const branchA = familyBranch(ownerA, relationships);
+  const branchB = familyBranch(ownerB, relationships);
 
-  if (spousePairs.some((pair) => pairMatches(ownerA, ownerB, pair))) {
+  if (
+    relationships?.spousePairs?.some((pair) =>
+      pairMatches(ownerA, ownerB, pair),
+    )
+  ) {
     return {
       branchA,
       branchB,
@@ -149,7 +71,11 @@ export function familyRelationshipInsight(
     };
   }
 
-  if (parentChildPairs.some((pair) => pairMatches(ownerA, ownerB, pair))) {
+  if (
+    relationships?.parentChildPairs?.some((pair) =>
+      pairMatches(ownerA, ownerB, pair),
+    )
+  ) {
     return {
       branchA,
       branchB,
@@ -161,7 +87,7 @@ export function familyRelationshipInsight(
     };
   }
 
-  if (sameHousehold(ownerA, ownerB)) {
+  if (sameGroup(ownerA, ownerB, relationships?.households)) {
     return {
       branchA,
       branchB,
@@ -173,7 +99,7 @@ export function familyRelationshipInsight(
     };
   }
 
-  if (sameSiblingGroup(ownerA, ownerB)) {
+  if (sameGroup(ownerA, ownerB, relationships?.siblingGroups)) {
     return {
       branchA,
       branchB,

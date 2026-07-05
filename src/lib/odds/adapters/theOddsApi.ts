@@ -6,22 +6,6 @@ const DEFAULT_BASE_URL = "https://api.the-odds-api.com/v4";
 const SPORT_KEY = "soccer_fifa_world_cup_winner";
 const MARKET = "outrights";
 const REQUEST_LIMIT = 3;
-const TARGET_REMAINING_TEAMS = [
-  "Morocco",
-  "Switzerland",
-  "Egypt",
-  "Mexico",
-  "England",
-  "France",
-  "Belgium",
-  "Colombia",
-  "Argentina",
-  "Norway",
-  "Portugal",
-  "Brazil",
-  "United States",
-  "Spain",
-];
 
 type TheOddsApiOutcome = {
   name?: string;
@@ -131,6 +115,14 @@ function rounded(value: number) {
   return Math.round(value * 10) / 10;
 }
 
+function remainingTeamNames(participants: Participant[]) {
+  return participants.flatMap((participant) =>
+    participant.teams
+      .filter((team) => team.status === "still-in")
+      .map((team) => team.country),
+  );
+}
+
 // Discovery-only adapter. It is intentionally not used by the visible site yet;
 // it checks whether The Odds API can support future outright winner insights.
 export function createTheOddsApiAdapter({
@@ -210,6 +202,7 @@ export function createTheOddsApiAdapter({
     async discoverWorldCupWinnerOutrights(): Promise<TheOddsApiOutrightDiscovery> {
       const events = await requestOutrights();
       const ownersByTeam = ownerLookup(participants);
+      const targetRemainingTeams = remainingTeamNames(participants);
       const teamsByName = new Map(
         participants.flatMap((participant) =>
           participant.teams.map((team) => [normaliseTeamName(team.country), team.country]),
@@ -261,7 +254,7 @@ export function createTheOddsApiAdapter({
       );
       const remainingRawTotal = rawSummaries
         .filter((summary) =>
-          TARGET_REMAINING_TEAMS.some(
+          targetRemainingTeams.some(
             (team) =>
               normaliseTeamName(summary.team) === normaliseTeamName(team) ||
               normaliseTeamName(summary.matchedInternalTeam ?? "") ===
@@ -286,7 +279,7 @@ export function createTheOddsApiAdapter({
             b.normalisedImpliedProbability - a.normalisedImpliedProbability ||
             a.team.localeCompare(b.team, "en-GB"),
         );
-      const matchedRemainingTeams = TARGET_REMAINING_TEAMS.filter((team) =>
+      const matchedRemainingTeams = targetRemainingTeams.filter((team) =>
         mappedOutcomes.some(
           (outcome) =>
             normaliseTeamName(outcome.team) === normaliseTeamName(team) ||
@@ -315,15 +308,7 @@ export function createTheOddsApiAdapter({
         provider: "the-odds-api",
         qualityDiagnostics: mappedOutcomes
           .filter((outcome) =>
-            [
-              "Morocco",
-              "France",
-              "Argentina",
-              "England",
-              "Spain",
-              "Brazil",
-              "Portugal",
-            ].some(
+            targetRemainingTeams.some(
               (team) =>
                 normaliseTeamName(team) === normaliseTeamName(outcome.team) ||
                 normaliseTeamName(team) ===
@@ -341,7 +326,7 @@ export function createTheOddsApiAdapter({
         requestCount,
         sportKey: SPORT_KEY,
         strongestRemainingTeamPossible: matchedRemainingTeams.length > 0,
-        unmatchedRemainingTeams: TARGET_REMAINING_TEAMS.filter(
+        unmatchedRemainingTeams: targetRemainingTeams.filter(
           (team) => !matchedRemainingTeams.includes(team),
         ),
       };

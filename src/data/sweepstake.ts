@@ -1,5 +1,4 @@
-import { activeSweepstakeConfig } from "@/data/sweepstakes";
-import type { SweepstakeConfig } from "@/data/sweepstakes";
+import type { SweepstakeConfig } from "@/data/sweepstakes/types";
 
 export type TeamId = string;
 export type ParticipantId = string;
@@ -121,15 +120,18 @@ export const teams: Team[] = [
   { id: "australia", country: "Australia", flag: "🇦🇺" },
 ];
 
-export const allocations = activeSweepstakeConfig.allocations;
-
-export function findOwnerOfTeam(teamId: TeamId | null) {
+export function findOwnerOfTeam(
+  teamId: TeamId | null,
+  config?: SweepstakeConfig,
+) {
   if (!teamId) {
     return undefined;
   }
 
-  const allocation = allocations.find(({ teamIds }) => teamIds.includes(teamId));
-  const participant = activeSweepstakeConfig.participants.find(
+  const allocation = config?.allocations.find(({ teamIds }) =>
+    teamIds.includes(teamId),
+  );
+  const participant = config?.participants.find(
     ({ id }) => id === allocation?.participantId,
   );
 
@@ -211,8 +213,6 @@ export function createParticipants(config: SweepstakeConfig): Participant[] {
   });
 }
 
-export const participants = createParticipants(activeSweepstakeConfig);
-
 export function createSweepstakeSummary(
   config: SweepstakeConfig,
   sweepstakeParticipants: Participant[],
@@ -231,8 +231,3 @@ export function createSweepstakeSummary(
     teamsPerParticipant: config.teamsPerParticipant,
   };
 }
-
-export const sweepstakeSummary = createSweepstakeSummary(
-  activeSweepstakeConfig,
-  participants,
-);

@@ -1,4 +1,5 @@
 import type { SweepstakeConfig } from "@/data/sweepstakes/types";
+import { pizzaDelicaciaRelationships } from "@/data/sweepstakes/pizza-delicacia-relationships";
 
 // The app is structured for multiple independent sweepstake configs. For now,
 // Pizza Delicacia is the only active public sweepstake.
@@ -68,6 +69,7 @@ export const pizzaDelicaciaSweepstake: SweepstakeConfig = {
     second: "£20",
     summary: "£100 first, £20 second",
   },
+  relationships: pizzaDelicaciaRelationships,
   slug: "pizza-delicacia",
   teamsPerParticipant: 2,
   totalPrizePot: "£120",

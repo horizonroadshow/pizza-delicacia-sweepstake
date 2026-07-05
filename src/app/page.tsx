@@ -15,7 +15,10 @@ export default async function Home() {
     loadOpenFootballKnockoutDraw(participants),
     loadOpenFootballLeaderboardParticipants(participants),
   ]);
-  const oddsPreview = await loadOddsPreview(leaderboardParticipants);
+  const oddsPreview = await loadOddsPreview(
+    leaderboardParticipants,
+    activeSweepstakeConfig,
+  );
   const fixturesPreview = await loadOpenFootballFixturesPreview(
     leaderboardParticipants,
     new Date(),
