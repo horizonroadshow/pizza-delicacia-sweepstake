@@ -637,10 +637,10 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
   const [mobilePanelIndex, setMobilePanelIndex] = useState(() =>
     mobilePanelIndexForRound(draw.currentRoundId, Boolean(draw.thirdPlace)),
   );
-  const scrollAmount = 350;
-  const currentMobilePanel = mobilePanelIndexForRound(
-    draw.currentRoundId,
-    Boolean(draw.thirdPlace),
+  const [isMobileLayout, setIsMobileLayout] = useState(() =>
+    typeof window === "undefined"
+      ? false
+      : window.matchMedia("(max-width: 1023px)").matches,
   );
   const desktopRounds = draw.rounds;
   const desktopProgression = useMemo(
@@ -705,15 +705,37 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
       matchSlots: mobileRoundCardSlots[panel.id],
     }));
   }, [draw]);
+  const selectedPanel =
+    mobilePanels[mobilePanelIndex] ??
+    mobilePanels[
+      mobilePanelIndexForRound(draw.currentRoundId, Boolean(draw.thirdPlace))
+    ];
+  const activeToolbarStageId = isMobileLayout
+    ? (selectedPanel?.stageId ?? draw.currentRoundId)
+    : draw.currentRoundId;
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 1023px)");
+    const updateMobileLayout = (event: MediaQueryListEvent) => {
+      setIsMobileLayout(event.matches);
+    };
+
+    mediaQuery.addEventListener("change", updateMobileLayout);
+
+    return () => mediaQuery.removeEventListener("change", updateMobileLayout);
+  }, []);
 
   useEffect(() => {
     const currentRoundIndex = mobilePanelIndexForRound(
       draw.currentRoundId,
       Boolean(draw.thirdPlace),
     );
+
     const animationFrame = requestAnimationFrame(() => {
       const mobileScroller = mobileScrollerRef.current;
       const currentPanel = mobilePanelRefs.current[currentRoundIndex];
+
+      setMobilePanelIndex(currentRoundIndex);
 
       if (!mobileScroller || !currentPanel) {
         return;
@@ -728,16 +750,38 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
     return () => cancelAnimationFrame(animationFrame);
   }, [draw.currentRoundId, draw.thirdPlace, mobilePanels]);
 
-  function scrollBracket(direction: "previous" | "next") {
+  function scrollDesktopToRound(stageId: KnockoutDraw["currentRoundId"]) {
+    const desktopScroller = desktopScrollerRef.current;
+
+    if (!desktopScroller) {
+      return;
+    }
+
+    const targetRoundId =
+      stageId === "final" || stageId === "third-place" ? "finals" : stageId;
+    const targetColumn = desktopScroller.querySelector<HTMLElement>(
+      `[data-round-id="${targetRoundId}"]`,
+    );
+
+    if (!targetColumn) {
+      return;
+    }
+
+    desktopScroller.scrollTo({
+      behavior: "smooth",
+      left: targetColumn.offsetLeft - desktopScroller.offsetLeft,
+    });
+  }
+
+  function selectMobilePanel(index: number) {
+    const nextIndex = Math.max(0, Math.min(mobilePanels.length - 1, index));
+    const nextPanel = mobilePanels[nextIndex];
+
+    setMobilePanelIndex(nextIndex);
+
     const mobileScroller = mobileScrollerRef.current;
 
     if (mobileScroller && getComputedStyle(mobileScroller).display !== "none") {
-      const nextIndex =
-        direction === "next"
-          ? Math.min(mobilePanels.length - 1, mobilePanelIndex + 1)
-          : Math.max(0, mobilePanelIndex - 1);
-
-      setMobilePanelIndex(nextIndex);
       mobilePanelRefs.current[nextIndex]?.scrollIntoView({
         behavior: "smooth",
         block: "nearest",
@@ -746,8 +790,15 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
       return;
     }
 
-    const left = direction === "next" ? scrollAmount : -scrollAmount;
-    desktopScrollerRef.current?.scrollBy({ behavior: "smooth", left });
+    if (nextPanel) {
+      scrollDesktopToRound(nextPanel.stageId);
+    }
+  }
+
+  function scrollBracket(direction: "previous" | "next") {
+    selectMobilePanel(
+      direction === "next" ? mobilePanelIndex + 1 : mobilePanelIndex - 1,
+    );
   }
 
   return (
@@ -775,14 +826,16 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
 
         <div className="flex flex-wrap gap-2">
           <button
-            className="min-h-11 rounded-lg border border-[#c7a653]/35 bg-[#171f18] px-4 py-2 text-sm font-black uppercase tracking-wide text-[#f0d88b] transition hover:border-[#d7b85f] hover:bg-[#1d2d25]"
+            className="min-h-11 rounded-lg border border-[#c7a653]/35 bg-[#171f18] px-4 py-2 text-sm font-black uppercase tracking-wide text-[#f0d88b] transition hover:border-[#d7b85f] hover:bg-[#1d2d25] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:border-[#c7a653]/35 disabled:hover:bg-[#171f18]"
+            disabled={mobilePanelIndex === 0}
             onClick={() => scrollBracket("previous")}
             type="button"
           >
             Previous round
           </button>
           <button
-            className="min-h-11 rounded-lg border border-[#c7a653]/35 bg-[#171f18] px-4 py-2 text-sm font-black uppercase tracking-wide text-[#f0d88b] transition hover:border-[#d7b85f] hover:bg-[#1d2d25]"
+            className="min-h-11 rounded-lg border border-[#c7a653]/35 bg-[#171f18] px-4 py-2 text-sm font-black uppercase tracking-wide text-[#f0d88b] transition hover:border-[#d7b85f] hover:bg-[#1d2d25] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:border-[#c7a653]/35 disabled:hover:bg-[#171f18]"
+            disabled={mobilePanelIndex === mobilePanels.length - 1}
             onClick={() => scrollBracket("next")}
             type="button"
           >
@@ -791,7 +844,11 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
         </div>
       </div>
 
-      <div className="mt-4 flex gap-2 overflow-x-auto pb-1 text-xs font-black uppercase tracking-wide text-[#d9dccf]">
+      <div
+        aria-label="Knockout rounds"
+        className="mt-4 flex gap-2 overflow-x-auto pb-1 text-xs font-black uppercase tracking-wide text-[#d9dccf]"
+        role="tablist"
+      >
         {[
           ...draw.rounds.map((round) => ({
             label: round.name,
@@ -802,21 +859,24 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
             ? [{ label: "Third place", stageId: "third-place" }]
             : []),
         ].map((round, index) => {
-          const isCurrent = round.stageId === draw.currentRoundId;
+          const isCurrent = round.stageId === activeToolbarStageId;
 
           return (
-          <span
-            aria-current={isCurrent ? "step" : undefined}
-            className={`shrink-0 rounded-full border px-3 py-2 ${
-              isCurrent
-                ? "border-[#d7b85f] bg-[#d7b85f] text-[#07110f]"
-                : "border-[#c7a653]/25 bg-[#0e1915]"
-            }`}
-            data-current-round={isCurrent ? "true" : undefined}
-            key={`${round.label}-${index}`}
-          >
-            {round.label}
-          </span>
+            <button
+              aria-selected={isCurrent}
+              className={`shrink-0 rounded-full border px-3 py-2 transition ${
+                isCurrent
+                  ? "border-[#d7b85f] bg-[#d7b85f] text-[#07110f]"
+                  : "border-[#c7a653]/25 bg-[#0e1915] hover:border-[#d7b85f]/70 hover:bg-[#16241f]"
+              }`}
+              data-current-round={isCurrent ? "true" : undefined}
+              key={`${round.label}-${index}`}
+              onClick={() => selectMobilePanel(index)}
+              role="tab"
+              type="button"
+            >
+              {round.label}
+            </button>
           );
         })}
       </div>
@@ -893,7 +953,7 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
               <MobileRoundColumn
                 column={panel}
                 indicator={`Round ${index + 1} of ${mobilePanels.length}`}
-                isCurrent={index === currentMobilePanel}
+                isCurrent={index === mobilePanelIndex}
                 ref={(element) => {
                   mobilePanelRefs.current[index] = element;
                 }}
