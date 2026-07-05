@@ -36,6 +36,173 @@ function desktopSlotCentre(slot: number) {
   return slot * desktopBracketRowHeight;
 }
 
+type DesktopConnection = {
+  fromSlots: number[];
+  sourceIds: string[];
+  targetId: string;
+  toSlot: number;
+};
+
+type DesktopProgression = {
+  connectionsByTargetRound: Map<string, DesktopConnection[]>;
+  finalConnections: DesktopConnection[];
+  finalSlot: number;
+  slotsByMatchId: Map<string, number>;
+  validationMessages: string[];
+};
+
+function averageSlot(slots: number[]) {
+  return slots.reduce((total, slot) => total + slot, 0) / slots.length;
+}
+
+function roundedSlot(slot: number) {
+  return Math.max(1, Math.min(desktopBracketRowCount - 1, Math.round(slot)));
+}
+
+function buildDesktopProgression(
+  rounds: KnockoutRound[],
+  final: KnockoutMatch,
+): DesktopProgression {
+  const slotsByMatchId = new Map<string, number>();
+  const sourcesByTargetId = new Map<string, KnockoutMatch[]>();
+  const roundByMatchId = new Map<string, string>();
+  const validationMessages: string[] = [];
+
+  for (const round of rounds) {
+    for (const match of round.matches) {
+      roundByMatchId.set(match.id, round.id);
+
+      if (match.nextMatchId) {
+        const sources = sourcesByTargetId.get(match.nextMatchId) ?? [];
+        sources.push(match);
+        sourcesByTargetId.set(match.nextMatchId, sources);
+      }
+    }
+  }
+
+  roundByMatchId.set(final.id, "final");
+
+  for (const round of rounds) {
+    const fallbackSlots = desktopRoundCardSlots[round.id] ?? [];
+
+    for (const [index, match] of round.matches.entries()) {
+      const sourceSlots =
+        sourcesByTargetId
+          .get(match.id)
+          ?.map((source) => slotsByMatchId.get(source.id))
+          .filter((slot): slot is number => typeof slot === "number") ?? [];
+
+      slotsByMatchId.set(
+        match.id,
+        sourceSlots.length >= 2
+          ? roundedSlot(averageSlot(sourceSlots))
+          : (fallbackSlots[index] ?? 1),
+      );
+    }
+  }
+
+  const finalSourceSlots =
+    sourcesByTargetId
+      .get(final.id)
+      ?.map((source) => slotsByMatchId.get(source.id))
+      .filter((slot): slot is number => typeof slot === "number") ?? [];
+  const finalSlot =
+    finalSourceSlots.length >= 2 ? roundedSlot(averageSlot(finalSourceSlots)) : 16;
+
+  slotsByMatchId.set(final.id, finalSlot);
+
+  const connectionForTarget = (target: KnockoutMatch): DesktopConnection | null => {
+    const sources = sourcesByTargetId.get(target.id) ?? [];
+    const sourcesWithSlots = sources
+      .map((source) => ({
+        id: source.id,
+        slot: slotsByMatchId.get(source.id),
+      }))
+      .filter(
+        (source): source is { id: string; slot: number } =>
+          typeof source.slot === "number",
+      )
+      .sort((a, b) => a.slot - b.slot);
+    const toSlot = slotsByMatchId.get(target.id);
+
+    if (
+      sources.length < 2 ||
+      sourcesWithSlots.length < 2 ||
+      typeof toSlot !== "number"
+    ) {
+      return null;
+    }
+
+    return {
+      fromSlots: sourcesWithSlots.map((source) => source.slot),
+      sourceIds: sourcesWithSlots.map((source) => source.id),
+      targetId: target.id,
+      toSlot,
+    };
+  };
+
+  const connectionsByTargetRound = new Map<string, DesktopConnection[]>();
+
+  for (const round of rounds.slice(1)) {
+    connectionsByTargetRound.set(
+      round.id,
+      round.matches
+        .map((match) => connectionForTarget(match))
+        .filter((connection): connection is DesktopConnection => Boolean(connection)),
+    );
+  }
+
+  const finalConnection = connectionForTarget(final);
+  const expectedTargetCounts = new Map([
+    ["round-of-16", 8],
+    ["quarter-finals", 4],
+    ["semi-finals", 2],
+    ["final", 1],
+  ]);
+
+  for (const [targetRoundId, expectedTargetCount] of expectedTargetCounts) {
+    const targets =
+      targetRoundId === "final"
+        ? [final]
+        : (rounds.find((round) => round.id === targetRoundId)?.matches ?? []);
+    const linkedTargets = targets.filter(
+      (target) => (sourcesByTargetId.get(target.id) ?? []).length === 2,
+    );
+
+    if (targets.length !== expectedTargetCount) {
+      validationMessages.push(
+        `${targetRoundId} has ${targets.length} matches, expected ${expectedTargetCount}.`,
+      );
+    }
+
+    if (linkedTargets.length !== targets.length) {
+      validationMessages.push(
+        `${targetRoundId} has ${linkedTargets.length} fully linked targets out of ${targets.length}.`,
+      );
+    }
+  }
+
+  for (const round of rounds.slice(0, -1)) {
+    for (const match of round.matches) {
+      const targetRound = match.nextMatchId
+        ? roundByMatchId.get(match.nextMatchId)
+        : undefined;
+
+      if (!targetRound) {
+        validationMessages.push(`${match.id} does not feed a later match.`);
+      }
+    }
+  }
+
+  return {
+    connectionsByTargetRound,
+    finalConnections: finalConnection ? [finalConnection] : [],
+    finalSlot,
+    slotsByMatchId,
+    validationMessages,
+  };
+}
+
 function TeamLine({ team }: { team: KnockoutTeam }) {
   const stateLabel =
     team.state === "winner"
@@ -165,11 +332,11 @@ function RoundHeader({
 function DesktopRoundColumn({
   isCurrent = false,
   round,
-  slots,
+  slotsByMatchId,
 }: {
   isCurrent?: boolean;
   round: KnockoutRound;
-  slots: number[];
+  slotsByMatchId: Map<string, number>;
 }) {
   return (
     <div
@@ -187,8 +354,14 @@ function DesktopRoundColumn({
         {round.matches.map((match, index) => (
           <div
             className="row-span-2 self-center"
+            data-match-id={match.id}
             key={match.id}
-            style={{ gridRowStart: slots[index] ?? 1 }}
+            style={{
+              gridRowStart:
+                slotsByMatchId.get(match.id) ??
+                desktopRoundCardSlots[round.id]?.[index] ??
+                1,
+            }}
           >
             <MatchCard match={match} />
           </div>
@@ -199,11 +372,9 @@ function DesktopRoundColumn({
 }
 
 function DesktopConnectorColumn({
-  fromSlots,
-  toSlots,
+  connections,
 }: {
-  fromSlots: number[];
-  toSlots: number[];
+  connections: DesktopConnection[];
 }) {
   return (
     <div
@@ -216,12 +387,11 @@ function DesktopConnectorColumn({
         className="relative"
         style={{ height: desktopBracketHeight }}
       >
-        {toSlots.map((targetSlot, index) => {
-          const firstSourceSlot = fromSlots[index * 2] ?? targetSlot;
-          const secondSourceSlot = fromSlots[index * 2 + 1] ?? targetSlot;
+        {connections.map((connection) => {
+          const [firstSourceSlot, secondSourceSlot] = connection.fromSlots;
           const firstSourceCentre = desktopSlotCentre(firstSourceSlot);
           const secondSourceCentre = desktopSlotCentre(secondSourceSlot);
-          const targetCentre = desktopSlotCentre(targetSlot);
+          const targetCentre = desktopSlotCentre(connection.toSlot);
           const top = Math.min(firstSourceCentre, secondSourceCentre);
           const height = Math.abs(secondSourceCentre - firstSourceCentre);
 
@@ -229,7 +399,9 @@ function DesktopConnectorColumn({
             <div
               className="absolute inset-x-0"
               data-desktop-connector-line="true"
-              key={`${firstSourceSlot}-${secondSourceSlot}-${targetSlot}`}
+              data-source-ids={connection.sourceIds.join(",")}
+              data-target-id={connection.targetId}
+              key={`${connection.sourceIds.join("-")}-${connection.targetId}`}
               style={{
                 height,
                 top,
@@ -252,11 +424,15 @@ function DesktopConnectorColumn({
 
 function DesktopCentreColumn({
   final,
+  finalConnections,
+  finalSlot,
   currentRoundId,
   thirdPlace,
 }: {
   currentRoundId: KnockoutDraw["currentRoundId"];
   final: KnockoutMatch;
+  finalConnections: DesktopConnection[];
+  finalSlot: number;
   thirdPlace?: KnockoutMatch;
 }) {
   const isFinalCurrent = currentRoundId === "final";
@@ -264,59 +440,66 @@ function DesktopCentreColumn({
 
   return (
     <div
-      className="grid w-[440px] shrink-0 grid-rows-[auto_1fr] gap-4"
-      data-desktop-round-column="true"
-      data-round-id="finals"
+      className="flex shrink-0 gap-4"
+      data-desktop-final-group="true"
     >
+      <DesktopConnectorColumn connections={finalConnections} />
       <div
-        aria-current={isFinalCurrent ? "step" : undefined}
-        className={`rounded-lg border px-3 py-4 ${
-          isFinalCurrent
-            ? "border-[#d7b85f] bg-[#2b2415] shadow-[0_0_0_1px_rgba(215,184,95,0.25),0_18px_38px_rgba(0,0,0,0.22)]"
-            : "border-[#d7b85f]/70 bg-[#251f12]"
-        }`}
-        data-current-round={isFinalCurrent ? "true" : undefined}
-      >
-        <p className="text-center text-base font-black uppercase tracking-[0.2em] text-[#f0d88b]">
-          Final
-        </p>
-        {isFinalCurrent ? (
-          <p className="mt-1 text-center text-[10px] font-black uppercase tracking-[0.18em] text-[#d7b85f]">
-            Current round
-          </p>
-        ) : null}
-      </div>
-      <div
-        className="grid"
-        style={{
-          gridTemplateRows: `repeat(${desktopBracketRowCount}, ${desktopBracketRowHeight}px)`,
-        }}
+        className="grid w-[440px] shrink-0 grid-rows-[auto_1fr] gap-4"
+        data-desktop-round-column="true"
+        data-round-id="finals"
       >
         <div
-          className="row-span-3 self-center"
-          data-round-id="final"
-          style={{ gridRowStart: 16 }}
+          aria-current={isFinalCurrent ? "step" : undefined}
+          className={`rounded-lg border px-3 py-4 ${
+            isFinalCurrent
+              ? "border-[#d7b85f] bg-[#2b2415] shadow-[0_0_0_1px_rgba(215,184,95,0.25),0_18px_38px_rgba(0,0,0,0.22)]"
+              : "border-[#d7b85f]/70 bg-[#251f12]"
+          }`}
+          data-current-round={isFinalCurrent ? "true" : undefined}
         >
-          <MatchCard match={final} prominent />
-        </div>
-        {thirdPlace ? (
-          <div
-            aria-current={isThirdPlaceCurrent ? "step" : undefined}
-            className={`row-span-3 self-start rounded-lg border border-dashed p-3 ${
-              isThirdPlaceCurrent
-                ? "border-[#d7b85f]/75 bg-[#251f12]"
-                : "border-[#c7a653]/35 bg-[#0e1915]"
-            }`}
-            data-current-round={isThirdPlaceCurrent ? "true" : undefined}
-            data-round-id="third-place"
-            style={{ gridRowStart: 24 }}
-          >
-            <p className="mb-3 text-center text-xs font-black uppercase tracking-[0.18em] text-[#c7a653]">
-              Optional third-place match
+          <p className="text-center text-base font-black uppercase tracking-[0.2em] text-[#f0d88b]">
+            Final
+          </p>
+          {isFinalCurrent ? (
+            <p className="mt-1 text-center text-[10px] font-black uppercase tracking-[0.18em] text-[#d7b85f]">
+              Current round
             </p>
-            <MatchCard match={thirdPlace} />
+          ) : null}
+        </div>
+        <div
+          className="grid"
+          style={{
+            gridTemplateRows: `repeat(${desktopBracketRowCount}, ${desktopBracketRowHeight}px)`,
+          }}
+        >
+          <div
+            className="row-span-3 self-center"
+            data-match-id={final.id}
+            data-round-id="final"
+            style={{ gridRowStart: finalSlot }}
+          >
+            <MatchCard match={final} prominent />
           </div>
-        ) : null}
+          {thirdPlace ? (
+            <div
+              aria-current={isThirdPlaceCurrent ? "step" : undefined}
+              className={`row-span-3 self-start rounded-lg border border-dashed p-3 ${
+                isThirdPlaceCurrent
+                  ? "border-[#d7b85f]/75 bg-[#251f12]"
+                  : "border-[#c7a653]/35 bg-[#0e1915]"
+              }`}
+              data-current-round={isThirdPlaceCurrent ? "true" : undefined}
+              data-round-id="third-place"
+              style={{ gridRowStart: 24 }}
+            >
+              <p className="mb-3 text-center text-xs font-black uppercase tracking-[0.18em] text-[#c7a653]">
+                Optional third-place match
+              </p>
+              <MatchCard match={thirdPlace} />
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -460,6 +643,10 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
     Boolean(draw.thirdPlace),
   );
   const desktopRounds = draw.rounds;
+  const desktopProgression = useMemo(
+    () => buildDesktopProgression(desktopRounds, draw.final),
+    [desktopRounds, draw.final],
+  );
 
   const mobilePanels = useMemo<MobileRoundColumnData[]>(() => {
     // Both desktop and mobile use draw.rounds as the complete source of truth.
@@ -644,28 +831,29 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
           <div className="flex min-w-[2072px] items-start gap-4">
             {desktopRounds.map((round, index) => {
               const nextRound = desktopRounds[index + 1];
-              const slots = desktopRoundCardSlots[round.id] ?? [];
-              const nextSlots = nextRound
-                ? desktopRoundCardSlots[nextRound.id] ?? []
-                : [16];
+              const connections = nextRound
+                ? (desktopProgression.connectionsByTargetRound.get(nextRound.id) ??
+                  [])
+                : [];
 
               return (
                 <div className="flex shrink-0 gap-4" key={round.id}>
                   <DesktopRoundColumn
                     isCurrent={draw.currentRoundId === round.id}
                     round={round}
-                    slots={slots}
+                    slotsByMatchId={desktopProgression.slotsByMatchId}
                   />
-                  <DesktopConnectorColumn
-                    fromSlots={slots}
-                    toSlots={nextSlots}
-                  />
+                  {nextRound ? (
+                    <DesktopConnectorColumn connections={connections} />
+                  ) : null}
                 </div>
               );
             })}
             <DesktopCentreColumn
               currentRoundId={draw.currentRoundId}
               final={draw.final}
+              finalConnections={desktopProgression.finalConnections}
+              finalSlot={desktopProgression.finalSlot}
               thirdPlace={draw.thirdPlace}
             />
           </div>
