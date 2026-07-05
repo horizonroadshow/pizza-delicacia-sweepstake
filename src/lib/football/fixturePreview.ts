@@ -6,6 +6,8 @@ import {
   possibleOwnerLabel,
 } from "@/lib/football/ownerLabels";
 import { resolveKnownKnockoutMatchups } from "@/lib/football/resolveKnockoutPlaceholders";
+import type { FixtureOddsDisplay, OddsPreview } from "@/lib/odds/displayTypes";
+import { normalisedMatchupKey } from "@/lib/odds/helpers";
 
 export type FixturePreviewTeam = {
   name: string;
@@ -17,6 +19,7 @@ export type FixturePreviewItem = {
   home: FixturePreviewTeam;
   id: string;
   kickoffLabel: string;
+  odds?: FixtureOddsDisplay;
   roundId: Match["round"];
   scoreLabel: string;
   stageLabel: string;
@@ -129,6 +132,7 @@ function toPreviewItem(
   participants: Participant[],
   teamsById: Map<string, Team>,
   ownersByTeamName: Map<string, string>,
+  oddsPreview?: OddsPreview,
 ): FixturePreviewItem {
   const homeName = teamName(match.homeTeamId, match.homeTeamPlaceholder, teamsById);
   const awayName = teamName(match.awayTeamId, match.awayTeamPlaceholder, teamsById);
@@ -149,6 +153,9 @@ function toPreviewItem(
     },
     id: match.id,
     kickoffLabel: kickoffLabel(match),
+    odds: oddsPreview?.fixtureOddsByMatchup[
+      normalisedMatchupKey(homeName, awayName)
+    ],
     roundId: match.round,
     scoreLabel: scoreLabel(match),
     stageLabel: stageLabel(match),
@@ -160,6 +167,7 @@ function toPreviewItem(
 export async function loadOpenFootballFixturesPreview(
   participants: Participant[],
   now = new Date(),
+  oddsPreview?: OddsPreview,
 ): Promise<FixturesPreview> {
   const result = await createOpenFootballAdapter().fetchWorldCupFixtures({
     season: 2026,
@@ -171,7 +179,13 @@ export async function loadOpenFootballFixturesPreview(
   );
   const fixtures = resolveKnownKnockoutMatchups(knockoutMatches, result.teams)
     .map((match) =>
-      toPreviewItem(match, participants, teamsById, ownersByTeamName),
+      toPreviewItem(
+        match,
+        participants,
+        teamsById,
+        ownersByTeamName,
+        oddsPreview,
+      ),
     )
     .sort((a, b) => a.timestamp - b.timestamp);
   const remainingPriority = (fixture: FixturePreviewItem) => {

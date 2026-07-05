@@ -18,6 +18,7 @@ import type {
   FixturePreviewRoundGroup,
   FixturesPreview,
 } from "@/lib/football/fixturePreview";
+import type { FixtureOddsDisplay, OddsPreview } from "@/lib/odds/displayTypes";
 
 type FilterId = "still-in" | "all" | "eliminated" | `remaining-${number}`;
 
@@ -105,6 +106,39 @@ function FixtureTeam({ team }: { team: FixturePreviewItem["home"] }) {
   );
 }
 
+function FixtureOddsPanel({ odds }: { odds?: FixtureOddsDisplay }) {
+  if (!odds) {
+    return (
+      <p className="mt-3 rounded-md border border-[#c7a653]/15 bg-[#111d19] px-3 py-2 text-sm font-bold text-[#b8c0ae]">
+        Odds TBC
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-3 rounded-md border border-[#c7a653]/20 bg-[#111d19] p-3">
+      <div className="flex flex-wrap gap-2">
+        {odds.probabilities.map((probability) => (
+          <span
+            className={`rounded-full border px-3 py-1 text-xs font-black uppercase tracking-wide ${
+              probability.label === odds.favourite
+                ? "border-[#d7b85f] bg-[#d7b85f] text-[#07110f]"
+                : "border-[#c7a653]/25 bg-[#0b1512] text-[#d9dccf]"
+            }`}
+            key={`${probability.side}-${probability.label}`}
+          >
+            {probability.label} {Math.round(probability.percentage)}%
+          </span>
+        ))}
+      </div>
+      <p className="mt-2 text-xs font-bold text-[#b8c0ae]">
+        {odds.favourite ? `Favourite: ${odds.favourite}` : "Favourite TBC"}
+        {odds.underdog ? ` · Underdog: ${odds.underdog}` : ""}
+      </p>
+    </div>
+  );
+}
+
 function FixtureCard({
   compact = false,
   fixture,
@@ -145,7 +179,70 @@ function FixtureCard({
           <FixtureTeam team={fixture.away} />
         </div>
       </div>
+
+      {!compact && fixture.statusLabel !== "Finished" ? (
+        <FixtureOddsPanel odds={fixture.odds} />
+      ) : null}
     </article>
+  );
+}
+
+function MarketWatchSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
+  if (oddsPreview.marketWatchCards.length === 0) {
+    return (
+      <section className="mt-4 rounded-lg border border-[#c7a653]/20 bg-[#0d1814] p-4 sm:p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm font-black uppercase tracking-[0.2em] text-[#c7a653]">
+              Market Watch
+            </p>
+            <h2 className="mt-1 text-2xl font-black text-[#fff4d7]">
+              Odds TBC
+            </h2>
+          </div>
+          <p className="max-w-2xl text-sm font-semibold leading-6 text-[#b8c0ae]">
+            Odds are for sweepstake entertainment only and may change.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="mt-4 rounded-lg border border-[#c7a653]/25 bg-[#0d1814] p-4 shadow-[0_22px_70px_rgba(0,0,0,0.18)] sm:p-5">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-sm font-black uppercase tracking-[0.2em] text-[#c7a653]">
+            Market Watch
+          </p>
+          <h2 className="mt-1 text-2xl font-black text-[#fff4d7]">
+            Sweepstake form guide
+          </h2>
+        </div>
+        <p className="max-w-2xl text-sm font-semibold leading-6 text-[#b8c0ae]">
+          Odds are for sweepstake entertainment only and may change.
+        </p>
+      </div>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {oddsPreview.marketWatchCards.map((card) => (
+          <article
+            className="rounded-lg border border-[#c7a653]/20 bg-[#111d19] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.16)]"
+            key={`${card.eyebrow}-${card.title}`}
+          >
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#c7a653]">
+              {card.eyebrow}
+            </p>
+            <h3 className="mt-2 text-lg font-black text-[#fff4d7]">
+              {card.title}
+            </h3>
+            <p className="mt-2 text-sm font-semibold leading-6 text-[#b8c0ae]">
+              {card.detail}
+            </p>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -205,11 +302,13 @@ export function SweepstakeDashboard({
   config,
   fixturesPreview,
   knockoutDraw,
+  oddsPreview,
   participants,
 }: {
   config: SweepstakeConfig;
   fixturesPreview: FixturesPreview;
   knockoutDraw: KnockoutDraw;
+  oddsPreview: OddsPreview;
   participants: Participant[];
 }) {
   const [activeFilter, setActiveFilter] = useState<FilterId>("still-in");
@@ -382,6 +481,8 @@ export function SweepstakeDashboard({
             prize={config.prizeSplit.second}
           />
         </section>
+
+        <MarketWatchSection oddsPreview={oddsPreview} />
 
         <section
           className="mt-5 rounded-lg border border-[#c7a653]/25 bg-[#0d1814] p-4 shadow-[0_22px_70px_rgba(0,0,0,0.24)] sm:p-5"
