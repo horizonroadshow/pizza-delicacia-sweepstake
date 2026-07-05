@@ -30,16 +30,20 @@ type OutrightOddsState =
   | "provider-rate-limited"
   | "saved-outrights";
 
-const PIZZA_DELICACIA_SAVED_OUTRIGHTS: Array<{
-  owner: string;
+const SAVED_WORLD_CUP_OUTRIGHTS: Array<{
   probability: number;
   team: string;
 }> = [
-  { owner: "Steve", probability: 33.4, team: "France" },
-  { owner: "Yash", probability: 15.7, team: "Argentina" },
-  { owner: "Yash", probability: 2.2, team: "Norway" },
-  { owner: "Veeran", probability: 13.2, team: "Spain" },
-  { owner: "Veeran", probability: 2.5, team: "United States" },
+  { probability: 33.4, team: "France" },
+  { probability: 15.7, team: "Argentina" },
+  { probability: 13.2, team: "Spain" },
+  { probability: 7.9, team: "England" },
+  { probability: 6.9, team: "Brazil" },
+  { probability: 6.2, team: "Portugal" },
+  { probability: 5.9, team: "Egypt" },
+  { probability: 3.0, team: "Morocco" },
+  { probability: 2.5, team: "United States" },
+  { probability: 2.2, team: "Norway" },
 ];
 
 let cachedTheOddsApiOutrights:
@@ -214,27 +218,20 @@ function toSavedOutrightSummary(team: string, probability: number): OutrightOdds
   };
 }
 
-function savedPizzaDelicaciaOutrights(
-  config: SweepstakeConfig,
+function savedWorldCupOutrights(
   participants: Participant[],
 ): OutrightOddsSummary[] {
-  if (config.id !== "pizza-delicacia") {
-    return [];
-  }
-
-  const canUsePizzaSnapshot = PIZZA_DELICACIA_SAVED_OUTRIGHTS.every(
-    (snapshot) => {
-      const owner = findOwnerForTeamName(snapshot.team, participants);
-
-      return owner === snapshot.owner;
-    },
+  const allocatedTeams = new Set(
+    participants
+      .flatMap((participant) => participant.teams)
+      .map((team) => normaliseTeamName(team.country)),
   );
 
-  if (!canUsePizzaSnapshot) {
-    return [];
-  }
-
-  return PIZZA_DELICACIA_SAVED_OUTRIGHTS.map((snapshot) =>
+  // Saved fallback odds are stored at team level so any future sweepstake can
+  // map the same World Cup market snapshot onto its own owners.
+  return SAVED_WORLD_CUP_OUTRIGHTS.filter((snapshot) =>
+    allocatedTeams.has(normaliseTeamName(snapshot.team)),
+  ).map((snapshot) =>
     toSavedOutrightSummary(snapshot.team, snapshot.probability),
   );
 }
@@ -350,13 +347,11 @@ function buildMarketWatchCards(
 }
 
 function chooseOutrightOddsForDisplay({
-  config,
   fallbackOutrightOdds,
   fallbackOutrightState,
   participants,
   outrightResult,
 }: {
-  config: SweepstakeConfig;
   fallbackOutrightOdds: OutrightOddsSummary[];
   fallbackOutrightState: "cached-outrights" | "saved-outrights";
   participants: Participant[];
@@ -379,7 +374,7 @@ function chooseOutrightOddsForDisplay({
     };
   }
 
-  const savedOutrights = savedPizzaDelicaciaOutrights(config, participants);
+  const savedOutrights = savedWorldCupOutrights(participants);
 
   if (savedOutrights.length > 0) {
     return {
@@ -488,12 +483,11 @@ export async function loadOddsPreview(
   config: SweepstakeConfig,
 ): Promise<OddsPreview> {
   const cachedDiscovery = await loadOddsDiscoveryWithCache();
-  const savedOutrights = savedPizzaDelicaciaOutrights(config, participants);
+  const savedOutrights = savedWorldCupOutrights(participants);
 
   if (!cachedDiscovery.result) {
     const outrightResult = await loadTheOddsApiOutrights(participants);
     const availableOutrights = chooseOutrightOddsForDisplay({
-      config,
       fallbackOutrightOdds: savedOutrights,
       fallbackOutrightState: "saved-outrights",
       participants,
@@ -519,7 +513,6 @@ export async function loadOddsPreview(
   const discovery = cachedDiscovery.result;
   const outrightResult = await loadTheOddsApiOutrights(participants);
   const availableOutrights = chooseOutrightOddsForDisplay({
-    config,
     fallbackOutrightOdds:
       discovery.outrightOdds.length > 0
         ? discovery.outrightOdds
