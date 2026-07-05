@@ -14,7 +14,6 @@ import {
   allTeamOddsCandidates,
   findOwnerForTeamName,
   normalisedMatchupKey,
-  rankOwnersByAvailableNextMatchOdds,
   rankOwnersByOutrightOdds,
   toFixtureOddsDisplay,
 } from "@/lib/odds/helpers";
@@ -150,7 +149,6 @@ function buildMarketWatchCards(
     outrightOdds,
     participants,
   );
-  const ownerRankings = rankOwnersByAvailableNextMatchOdds(events, participants);
   const teamCandidates = allTeamOddsCandidates(events, participants);
   const biggestUnderdog = [...teamCandidates].sort(
     (a, b) => a.percentage - b.percentage,
@@ -177,37 +175,6 @@ function buildMarketWatchCards(
         })),
       title: "Most Likely to Win...",
     });
-  } else {
-    const bestOwnerWithOdds = ownerRankings.find(
-      (ranking) => ranking.teams.length > 0,
-    );
-
-    if (bestOwnerWithOdds) {
-      const rankedTeams = bestOwnerWithOdds.teams
-        .map(
-          (team) =>
-            `${teamDisplayName(team.team, participants)} ${percentageLabel(
-              team.percentage,
-            )}`,
-        )
-        .join(" + ");
-      const missingTeams =
-        bestOwnerWithOdds.missingTeams.length > 0
-          ? ` Odds TBC for ${bestOwnerWithOdds.missingTeams
-              .map((team) => teamDisplayName(team, participants))
-              .join(" and ")}.`
-          : "";
-
-      cards.push({
-        detail: `${rankedTeams} gives ${
-          bestOwnerWithOdds.owner
-        } a ${percentageLabel(
-          bestOwnerWithOdds.percentage,
-        )} available next-match outlook.${missingTeams} This is not an outright tournament chance.`,
-        eyebrow: "Best next-match outlook",
-        title: `${bestOwnerWithOdds.owner} has the strongest next-fixture outlook`,
-      });
-    }
   }
 
   if (biggestUnderdog) {
@@ -274,23 +241,7 @@ function buildMarketWatchCards(
     });
   }
 
-  const firstMissingOdds = ownerRankings.find(
-    (ranking) => ranking.missingTeams.length > 0 && ranking.teams.length > 0,
-  );
-
-  if (firstMissingOdds) {
-    cards.push({
-      detail: `${firstMissingOdds.owner} has available odds for ${firstMissingOdds.teams
-        .map((team) => teamDisplayName(team.team, participants))
-        .join(" and ")}, with Odds TBC for ${firstMissingOdds.missingTeams
-        .map((team) => teamDisplayName(team, participants))
-        .join(" and ")}.`,
-      eyebrow: "Odds gaps",
-      title: "Some teams are still TBC",
-    });
-  }
-
-  return cards.slice(0, 4);
+  return cards.slice(0, 3);
 }
 
 function toOutrightOddsSummary(
