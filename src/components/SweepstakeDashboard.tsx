@@ -106,6 +106,10 @@ function FixtureTeam({ team }: { team: FixturePreviewItem["home"] }) {
   );
 }
 
+function roundedPercentage(value: number) {
+  return `${Math.round(value)}%`;
+}
+
 function FixtureOddsPanel({ odds }: { odds?: FixtureOddsDisplay }) {
   if (!odds) {
     return (
@@ -130,7 +134,7 @@ function FixtureOddsPanel({ odds }: { odds?: FixtureOddsDisplay }) {
             }`}
             key={`${probability.side}-${probability.label}`}
           >
-            {probability.label} {Math.round(probability.percentage)}%
+            {probability.label} {roundedPercentage(probability.percentage)}
           </span>
         ))}
       </div>
@@ -190,17 +194,17 @@ function FixtureCard({
   );
 }
 
-function MarketWatchSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
+function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
   if (oddsPreview.marketWatchCards.length === 0) {
     return (
       <section className="mt-4 rounded-lg border border-[#c7a653]/20 bg-[#0d1814] p-4 sm:p-5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-black uppercase tracking-[0.2em] text-[#c7a653]">
-              Market Watch
+              Odds update
             </p>
             <h2 className="mt-1 text-2xl font-black text-[#fff4d7]">
-              Odds TBC
+              Bookies&apos; Corner
             </h2>
           </div>
           <p className="max-w-2xl text-sm font-semibold leading-6 text-[#b8c0ae]">
@@ -211,6 +215,10 @@ function MarketWatchSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
           Based on available upcoming match odds. Outright tournament odds are
           not currently available.
         </p>
+        <p className="mt-3 rounded-lg border border-[#c7a653]/15 bg-[#111d19] p-3 text-sm font-bold text-[#b8c0ae]">
+          Odds TBC for now. Fixtures still show as normal, and this corner will
+          fill back in when the provider returns usable match markets.
+        </p>
       </section>
     );
   }
@@ -220,10 +228,10 @@ function MarketWatchSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-black uppercase tracking-[0.2em] text-[#c7a653]">
-            Market Watch
+            Odds update
           </p>
           <h2 className="mt-1 text-2xl font-black text-[#fff4d7]">
-            Sweepstake form guide
+            Bookies&apos; Corner
           </h2>
         </div>
         <p className="max-w-2xl text-sm font-semibold leading-6 text-[#b8c0ae]">
@@ -493,7 +501,7 @@ export function SweepstakeDashboard({
           />
         </section>
 
-        <MarketWatchSection oddsPreview={oddsPreview} />
+        <BookiesCornerSection oddsPreview={oddsPreview} />
 
         <section
           className="mt-5 rounded-lg border border-[#c7a653]/25 bg-[#0d1814] p-4 shadow-[0_22px_70px_rgba(0,0,0,0.24)] sm:p-5"

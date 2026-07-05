@@ -82,24 +82,30 @@ function buildMarketWatchCards(
       eyebrow: "Most likely to win the £100",
       title: "Outright winner outlook",
     });
-  } else if (ownerRankings[0]) {
-    const rankedTeams = ownerRankings[0].teams
-      .map((team) => `${team.team} ${percentageLabel(team.percentage)}`)
-      .join(" + ");
-    const missingTeams =
-      ownerRankings[0].missingTeams.length > 0
-        ? ` Odds TBC for ${ownerRankings[0].missingTeams.join(" and ")}.`
-        : "";
+  } else {
+    const bestOwnerWithOdds = ownerRankings.find(
+      (ranking) => ranking.teams.length > 0,
+    );
 
-    cards.push({
-      detail: `${rankedTeams || "No available next-match percentages"} gives ${
-        ownerRankings[0].owner
-      } a ${percentageLabel(
-        ownerRankings[0].percentage,
-      )} available next-match outlook.${missingTeams} This is not an outright tournament chance.`,
-      eyebrow: "Best next-match outlook",
-      title: `${ownerRankings[0].owner} has the strongest next-fixture outlook`,
-    });
+    if (bestOwnerWithOdds) {
+      const rankedTeams = bestOwnerWithOdds.teams
+        .map((team) => `${team.team} ${percentageLabel(team.percentage)}`)
+        .join(" + ");
+      const missingTeams =
+        bestOwnerWithOdds.missingTeams.length > 0
+          ? ` Odds TBC for ${bestOwnerWithOdds.missingTeams.join(" and ")}.`
+          : "";
+
+      cards.push({
+        detail: `${rankedTeams} gives ${
+          bestOwnerWithOdds.owner
+        } a ${percentageLabel(
+          bestOwnerWithOdds.percentage,
+        )} available next-match outlook.${missingTeams} This is not an outright tournament chance.`,
+        eyebrow: "Best next-match outlook",
+        title: `${bestOwnerWithOdds.owner} has the strongest next-fixture outlook`,
+      });
+    }
   }
 
   if (strongestTeam) {
@@ -112,7 +118,7 @@ function buildMarketWatchCards(
     });
   }
 
-  if (biggestUnderdog) {
+  if (biggestUnderdog && biggestUnderdog.team !== strongestTeam?.team) {
     cards.push({
       detail: `${biggestUnderdog.owner} has ${biggestUnderdog.team}, rated at ${percentageLabel(
         biggestUnderdog.percentage,

@@ -47,6 +47,20 @@ export function decimalOddsToImpliedProbability(decimalOdds: number) {
   return Math.round((100 / decimalOdds) * 10) / 10;
 }
 
+function validPercentage(value: number | undefined): value is number {
+  return value !== undefined && Number.isFinite(value) && value > 0;
+}
+
+function roundedAverage(total: number, count: number) {
+  if (count <= 0) {
+    return undefined;
+  }
+
+  const average = Math.round((total / count) * 10) / 10;
+
+  return validPercentage(average) ? average : undefined;
+}
+
 export function normalisedMatchupKey(home: string, away: string) {
   return [normaliseTeamName(home), normaliseTeamName(away)]
     .sort()
@@ -74,15 +88,19 @@ export function averageEventProbabilities(event: OddsEventSummary): AveragedOdds
 
   for (const market of event.markets) {
     for (const outcome of market.outcomes) {
+      if (!validPercentage(outcome.impliedProbability)) {
+        continue;
+      }
+
       totals[outcome.name] += outcome.impliedProbability;
       counts[outcome.name] += 1;
     }
   }
 
   return {
-    away: counts.away > 0 ? Math.round((totals.away / counts.away) * 10) / 10 : undefined,
-    draw: counts.draw > 0 ? Math.round((totals.draw / counts.draw) * 10) / 10 : undefined,
-    home: counts.home > 0 ? Math.round((totals.home / counts.home) * 10) / 10 : undefined,
+    away: roundedAverage(totals.away, counts.away),
+    draw: roundedAverage(totals.draw, counts.draw),
+    home: roundedAverage(totals.home, counts.home),
   };
 }
 
@@ -102,7 +120,10 @@ function teamProbabilities(event: OddsEventSummary, odds: AveragedOdds) {
           side: "away" as const,
           team: event.away,
         },
-  ].filter((team): team is NonNullable<typeof team> => Boolean(team));
+  ].filter(
+    (team): team is NonNullable<typeof team> =>
+      Boolean(team?.team.trim()) && validPercentage(team?.percentage),
+  );
 }
 
 export function selectMarketFavourite(event: OddsEventSummary, odds: AveragedOdds) {
@@ -125,7 +146,7 @@ export function toFixtureOddsDisplay(
   const underdog = selectUnderdog(event, odds);
   const probabilities: FixtureOddsDisplay["probabilities"] = [];
 
-  if (odds.home !== undefined) {
+  if (validPercentage(odds.home)) {
     probabilities.push({
       label: event.home,
       percentage: odds.home,
@@ -133,7 +154,7 @@ export function toFixtureOddsDisplay(
     });
   }
 
-  if (odds.draw !== undefined) {
+  if (validPercentage(odds.draw)) {
     probabilities.push({
       label: "Draw",
       percentage: odds.draw,
@@ -141,7 +162,7 @@ export function toFixtureOddsDisplay(
     });
   }
 
-  if (odds.away !== undefined) {
+  if (validPercentage(odds.away)) {
     probabilities.push({
       label: event.away,
       percentage: odds.away,
@@ -303,6 +324,10 @@ export function rankOwnersByOutrightOdds(
     );
 
     if (!owner || allocatedTeam?.status !== "still-in") {
+      continue;
+    }
+
+    if (!validPercentage(odd.impliedProbability)) {
       continue;
     }
 
