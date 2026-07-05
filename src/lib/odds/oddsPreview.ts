@@ -147,24 +147,17 @@ function withFlaggedOddsLabels(
   };
 }
 
-function buildMarketWatchCards(
-  events: OddsEventSummary[],
+function buildOutrightCard(
   outrightOdds: OutrightOddsSummary[],
   outrightOddsState: OutrightOddsState,
   participants: Participant[],
-  config: SweepstakeConfig,
-): MarketWatchCard[] {
-  const cards: MarketWatchCard[] = [];
+): MarketWatchCard {
   const outrightOwnerRankings = rankOwnersByOutrightOdds(
     outrightOdds,
     participants,
   );
-  const teamCandidates = allTeamOddsCandidates(events, participants);
-  const biggestUnderdog = [...teamCandidates].sort(
-    (a, b) => a.percentage - b.percentage,
-  )[0];
 
-  cards.push({
+  return {
     detail:
       outrightOwnerRankings.length > 0
         ? outrightOddsState === "cached-outrights"
@@ -189,19 +182,44 @@ function buildMarketWatchCards(
           }))
         : undefined,
     title: "Most Likely to Win...",
-  });
+  };
+}
+
+function buildUnderdogCard(
+  events: OddsEventSummary[],
+  participants: Participant[],
+): MarketWatchCard {
+  const teamCandidates = allTeamOddsCandidates(events, participants);
+  const biggestUnderdog = [...teamCandidates].sort(
+    (a, b) => a.percentage - b.percentage,
+  )[0];
 
   if (biggestUnderdog) {
-    cards.push({
+    return {
       detail: `${biggestUnderdog.owner} has ${teamDisplayName(
         biggestUnderdog.team,
         participants,
       )}, rated at ${percentageLabel(biggestUnderdog.percentage)}. Underdog watch.`,
       eyebrow: "Biggest underdog still alive",
       title: teamDisplayName(biggestUnderdog.team, participants),
-    });
+    };
   }
 
+  return {
+    detail:
+      events.length > 0
+        ? "Waiting for the next underdog story."
+        : "Underdog watch temporarily unavailable.",
+    eyebrow: "Biggest underdog still alive",
+    title: "Biggest underdog still alive",
+  };
+}
+
+function buildFamilyFeudCard(
+  events: OddsEventSummary[],
+  participants: Participant[],
+  config: SweepstakeConfig,
+): MarketWatchCard {
   const familyBranchBattle = events
     .map((event) => {
       const homeOwner = findOwnerForTeamName(event.home, participants);
@@ -240,22 +258,41 @@ function buildMarketWatchCards(
     const feudTitle = isRelationshipConfigured
       ? "Next Homewrecker"
       : "Next owned-team matchup";
+    const odds = fixtureOddsLabel(familyBranchBattle.event, participants);
 
-    cards.push({
+    return {
       detail: `${teamDisplayName(familyBranchBattle.event.home, participants)} v ${teamDisplayName(familyBranchBattle.event.away, participants)}. ${familyBranchBattle.homeOwner} vs. ${familyBranchBattle.awayOwner}. ${familyBranchBattle.relationship.copy} ${fixtureOddsLabel(familyBranchBattle.event, participants)}.`,
       eyebrow: feudEyebrow,
       feudLines: {
         banter: familyBranchBattle.relationship.copy,
         date: kickoffLabel(familyBranchBattle.event.kickoffAt),
         fixture: `${teamDisplayName(familyBranchBattle.event.home, participants)} v ${teamDisplayName(familyBranchBattle.event.away, participants)}`,
-        odds: fixtureOddsLabel(familyBranchBattle.event, participants),
+        odds: odds === "Odds TBC" ? undefined : odds,
         owners: `${familyBranchBattle.homeOwner} vs. ${familyBranchBattle.awayOwner}`,
       },
       title: feudTitle,
-    });
+    };
   }
 
-  return cards.slice(0, 3);
+  return {
+    detail: "Family bragging rights loading.",
+    eyebrow: "Family Feud",
+    title: "Next Homewrecker",
+  };
+}
+
+function buildMarketWatchCards(
+  events: OddsEventSummary[],
+  outrightOdds: OutrightOddsSummary[],
+  outrightOddsState: OutrightOddsState,
+  participants: Participant[],
+  config: SweepstakeConfig,
+): MarketWatchCard[] {
+  return [
+    buildOutrightCard(outrightOdds, outrightOddsState, participants),
+    buildUnderdogCard(events, participants),
+    buildFamilyFeudCard(events, participants, config),
+  ];
 }
 
 function toOutrightOddsSummary(
@@ -338,7 +375,9 @@ async function loadTheOddsApiOutrights(participants: Participant[]): Promise<{
 function emptyPreview(): OddsPreview {
   return {
     available: false,
+    bookiesCornerCardCount: 0,
     fixtureOddsByMatchup: {},
+    fixtureOddsState: "no-fixture-odds",
     marketWatchCards: [],
     outrightOddsState: "no-outrights",
     outrightWinnerAvailable: false,
@@ -352,15 +391,18 @@ export async function loadOddsPreview(
   const cachedDiscovery = await loadOddsDiscoveryWithCache();
 
   if (!cachedDiscovery.result) {
+    const marketWatchCards = buildMarketWatchCards(
+      [],
+      [],
+      "no-outrights",
+      participants,
+      config,
+    );
+
     return {
       ...emptyPreview(),
-      marketWatchCards: buildMarketWatchCards(
-        [],
-        [],
-        "no-outrights",
-        participants,
-        config,
-      ),
+      bookiesCornerCardCount: marketWatchCards.length,
+      marketWatchCards,
     };
   }
 
@@ -375,19 +417,29 @@ export async function loadOddsPreview(
       : fallbackOutrightOdds.length > 0
         ? "cached-outrights"
         : outrightResult.state;
+  const fixtureOddsByMatchup = buildFixtureOddsMap(
+    discovery.oddsExamples,
+    participants,
+  );
+  const marketWatchCards = buildMarketWatchCards(
+    discovery.oddsExamples,
+    availableOutrightOdds,
+    outrightOddsState,
+    participants,
+    config,
+  );
 
   return {
     available: discovery.fixtureOddsAvailable,
+    bookiesCornerCardCount: marketWatchCards.length,
     cacheState: cachedDiscovery.cacheState,
     fetchedAt: discovery.fetchedAt,
-    fixtureOddsByMatchup: buildFixtureOddsMap(discovery.oddsExamples, participants),
-    marketWatchCards: buildMarketWatchCards(
-      discovery.oddsExamples,
-      availableOutrightOdds,
-      outrightOddsState,
-      participants,
-      config,
-    ),
+    fixtureOddsByMatchup,
+    fixtureOddsState:
+      Object.keys(fixtureOddsByMatchup).length > 0
+        ? "fixture-odds"
+        : "no-fixture-odds",
+    marketWatchCards,
     oddsAreStale: cachedDiscovery.stale,
     outrightOddsState,
     outrightWinnerAvailable:

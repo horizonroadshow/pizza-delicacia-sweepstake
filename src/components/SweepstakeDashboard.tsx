@@ -322,9 +322,11 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
                 <p className="text-sm font-semibold text-[#b8c0ae]">
                   {card.feudLines.banter}
                 </p>
-                <p className="break-words text-xs font-black uppercase tracking-wide text-[#c7a653]">
-                  {card.feudLines.odds}
-                </p>
+                {card.feudLines.odds ? (
+                  <p className="break-words text-xs font-black uppercase tracking-wide text-[#c7a653]">
+                    {card.feudLines.odds}
+                  </p>
+                ) : null}
               </div>
             ) : (
               <p className="mt-2 text-sm font-semibold leading-6 text-[#b8c0ae]">

@@ -18,7 +18,7 @@ export type MarketWatchCard = {
     banter: string;
     date?: string;
     fixture: string;
-    odds: string;
+    odds?: string;
     owners: string;
   };
   rankingRows?: Array<{
@@ -32,6 +32,7 @@ export type MarketWatchCard = {
 
 export type OddsPreview = {
   available: boolean;
+  bookiesCornerCardCount?: number;
   cacheState?:
     | "odds-rate-limited"
     | "odds-unavailable"
@@ -39,6 +40,7 @@ export type OddsPreview = {
     | "using-fresh-odds";
   fetchedAt?: string;
   fixtureOddsByMatchup: Record<string, FixtureOddsDisplay>;
+  fixtureOddsState?: "fixture-odds" | "no-fixture-odds";
   marketWatchCards: MarketWatchCard[];
   oddsAreStale?: boolean;
   outrightOddsState?:
