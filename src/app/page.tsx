@@ -7,6 +7,7 @@ import { loadOpenFootballLeaderboardParticipants } from "@/lib/football/leaderbo
 import { loadOddsPreview } from "@/lib/odds/oddsPreview";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function Home() {
   const participants = createParticipants(activeSweepstakeConfig);

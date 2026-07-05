@@ -383,7 +383,7 @@ export function createOddsApiIoAdapter(): OddsAdapter {
     let response: Response;
 
     try {
-      response = await fetch(url);
+      response = await fetch(url, { cache: "no-store" });
     } catch {
       throw new OddsAdapterError(
         "Odds-API.io request failed because the network call did not complete.",
