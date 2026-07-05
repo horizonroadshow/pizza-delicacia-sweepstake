@@ -56,6 +56,28 @@ function precisePercentageLabel(value: number) {
   return `${Math.round(value * 10) / 10}%`;
 }
 
+function kickoffLabel(kickoffAt: string | null) {
+  if (!kickoffAt) {
+    return undefined;
+  }
+
+  const date = new Date(kickoffAt);
+
+  if (Number.isNaN(date.getTime())) {
+    return undefined;
+  }
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    hour: "2-digit",
+    hour12: false,
+    minute: "2-digit",
+    month: "short",
+    timeZone: "Europe/London",
+    weekday: "short",
+  }).format(date);
+}
+
 function teamFlag(teamName: string, participants: Participant[]) {
   const allocatedTeam = participants
     .flatMap((participant) => participant.teams)
@@ -229,11 +251,12 @@ function buildMarketWatchCards(
       eyebrow: "Family Feud",
       feudLines: {
         banter: familyBranchBattle.relationship.copy,
+        date: kickoffLabel(familyBranchBattle.event.kickoffAt),
         fixture: `${teamDisplayName(familyBranchBattle.event.home, participants)} v ${teamDisplayName(familyBranchBattle.event.away, participants)}`,
         odds: fixtureOddsLabel(familyBranchBattle.event, participants),
         owners: `${familyBranchBattle.homeOwner} vs. ${familyBranchBattle.awayOwner}`,
       },
-      title: familyBranchBattle.relationship.label,
+      title: "Next Homewrecker",
     });
   }
 

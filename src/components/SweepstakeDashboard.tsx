@@ -311,13 +311,20 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
               </div>
             ) : card.feudLines ? (
               <div className="mt-3 space-y-2 text-sm font-semibold leading-6 text-[#b8c0ae]">
-                <p className="text-base font-black text-[#fff4d7]">
-                  {card.feudLines.fixture}
-                </p>
-                <p className="font-black text-[#f0d88b]">
+                <p className="text-lg font-black text-[#fff4d7]">
                   {card.feudLines.owners}
                 </p>
-                <p>{card.feudLines.banter}</p>
+                <p className="text-sm font-black text-[#d9dccf]">
+                  {card.feudLines.fixture}
+                </p>
+                {card.feudLines.date ? (
+                  <p className="text-xs font-black text-[#c7a653]">
+                    {card.feudLines.date}
+                  </p>
+                ) : null}
+                <p className="text-sm font-semibold text-[#b8c0ae]">
+                  {card.feudLines.banter}
+                </p>
                 <p className="break-words text-xs font-black uppercase tracking-wide text-[#c7a653]">
                   {card.feudLines.odds}
                 </p>

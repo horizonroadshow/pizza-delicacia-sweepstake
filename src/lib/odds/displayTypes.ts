@@ -16,6 +16,7 @@ export type MarketWatchCard = {
   eyebrow: string;
   feudLines?: {
     banter: string;
+    date?: string;
     fixture: string;
     odds: string;
     owners: string;
