@@ -1,6 +1,6 @@
 import type { Match, Team } from "@/data/sweepstake";
 
-export type OddsProvider = "odds-api-io";
+export type OddsProvider = "odds-api-io" | "the-odds-api";
 
 export type OddsOutcome = {
   decimalOdds: number;
