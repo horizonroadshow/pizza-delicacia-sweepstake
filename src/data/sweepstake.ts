@@ -1,3 +1,6 @@
+import { activeSweepstakeConfig } from "@/data/sweepstakes";
+import type { SweepstakeConfig } from "@/data/sweepstakes";
+
 export type TeamId = string;
 export type ParticipantId = string;
 export type MatchId = string;
@@ -25,14 +28,14 @@ export type Team = {
 
 export type Allocation = {
   participantId: ParticipantId;
-  teamIds: [TeamId, TeamId];
+  teamIds: TeamId[];
 };
 
 export type Participant = {
   id: ParticipantId;
   name: string;
-  teamIds: [TeamId, TeamId];
-  teams: [AllocatedTeam, AllocatedTeam];
+  teamIds: TeamId[];
+  teams: AllocatedTeam[];
 };
 
 export type AllocatedTeam = Team & {
@@ -118,59 +121,7 @@ export const teams: Team[] = [
   { id: "australia", country: "Australia", flag: "🇦🇺" },
 ];
 
-const participantRecords: Omit<Participant, "teamIds" | "teams">[] = [
-  { id: "nanaji", name: "Nanaji" },
-  { id: "mum", name: "Rita" },
-  { id: "dad", name: "Bill" },
-  { id: "ajay", name: "Ajay" },
-  { id: "aditi", name: "Aditi" },
-  { id: "ayesha", name: "Ayesha" },
-  { id: "karan", name: "Karan" },
-  { id: "mamaji", name: "Vijay" },
-  { id: "mamiji", name: "Sunita" },
-  { id: "priya", name: "Priya" },
-  { id: "jij", name: "Steve" },
-  { id: "simran", name: "Simran" },
-  { id: "avi", name: "Avi" },
-  { id: "arun", name: "Arun" },
-  { id: "esha", name: "Esha" },
-  { id: "sienna", name: "Sienna" },
-  { id: "layla", name: "Layla" },
-  { id: "masi", name: "Asha" },
-  { id: "masard", name: "Yash" },
-  { id: "kavita", name: "Kavita" },
-  { id: "yaad", name: "Yaad" },
-  { id: "veeran", name: "Veeran" },
-  { id: "alisha", name: "Alisha" },
-  { id: "rohan", name: "Rohan" },
-];
-
-export const allocations: Allocation[] = [
-  { participantId: "nanaji", teamIds: ["canada", "dr-congo"] },
-  { participantId: "mum", teamIds: ["haiti", "paraguay"] },
-  { participantId: "dad", teamIds: ["morocco", "netherlands"] },
-  { participantId: "ajay", teamIds: ["uruguay", "panama"] },
-  { participantId: "aditi", teamIds: ["cape-verde", "switzerland"] },
-  { participantId: "ayesha", teamIds: ["egypt", "senegal"] },
-  { participantId: "karan", teamIds: ["ecuador", "tunisia"] },
-  { participantId: "mamaji", teamIds: ["austria", "mexico"] },
-  { participantId: "mamiji", teamIds: ["scotland", "england"] },
-  { participantId: "priya", teamIds: ["south-africa", "japan"] },
-  { participantId: "jij", teamIds: ["ivory-coast", "france"] },
-  { participantId: "simran", teamIds: ["belgium", "curacao"] },
-  { participantId: "avi", teamIds: ["sweden", "germany"] },
-  { participantId: "arun", teamIds: ["croatia", "iran"] },
-  { participantId: "esha", teamIds: ["saudi-arabia", "colombia"] },
-  { participantId: "sienna", teamIds: ["ghana", "jordan"] },
-  { participantId: "layla", teamIds: ["uzbekistan", "czechia"] },
-  { participantId: "masi", teamIds: ["iraq", "qatar"] },
-  { participantId: "masard", teamIds: ["argentina", "norway"] },
-  { participantId: "kavita", teamIds: ["portugal", "bosnia-and-herzegovina"] },
-  { participantId: "yaad", teamIds: ["brazil", "turkey"] },
-  { participantId: "veeran", teamIds: ["united-states", "spain"] },
-  { participantId: "alisha", teamIds: ["algeria", "south-korea"] },
-  { participantId: "rohan", teamIds: ["new-zealand", "australia"] },
-];
+export const allocations = activeSweepstakeConfig.allocations;
 
 export function findOwnerOfTeam(teamId: TeamId | null) {
   if (!teamId) {
@@ -178,7 +129,7 @@ export function findOwnerOfTeam(teamId: TeamId | null) {
   }
 
   const allocation = allocations.find(({ teamIds }) => teamIds.includes(teamId));
-  const participant = participantRecords.find(
+  const participant = activeSweepstakeConfig.participants.find(
     ({ id }) => id === allocation?.participantId,
   );
 
@@ -204,11 +155,11 @@ export function countParticipantTeamsRemaining(
 ) {
   if (matches.length === 0 && participant.teams) {
     return participant.teams.filter((team) => team.status === "still-in")
-      .length as 0 | 1 | 2;
+      .length;
   }
 
   return participant.teamIds.filter((teamId) => isTeamStillIn(teamId, matches))
-    .length as 0 | 1 | 2;
+    .length;
 }
 
 export function groupMatchesByRound(matches: Match[]) {
@@ -239,9 +190,9 @@ function getTeam(teamId: TeamId) {
   return team;
 }
 
-export const participants: Participant[] = participantRecords.map(
-  (participant) => {
-    const allocation = allocations.find(
+export function createParticipants(config: SweepstakeConfig): Participant[] {
+  return config.participants.map((participant) => {
+    const allocation = config.allocations.find(
       ({ participantId }) => participantId === participant.id,
     );
 
@@ -255,17 +206,33 @@ export const participants: Participant[] = participantRecords.map(
       teams: allocation.teamIds.map((teamId) => ({
         ...getTeam(teamId),
         status: isTeamStillIn(teamId) ? "still-in" : "eliminated",
-      })) as [AllocatedTeam, AllocatedTeam],
+      })),
     };
-  },
-);
+  });
+}
 
-export const sweepstakeSummary = {
-  name: "Pizza Delicacia World Cup Sweepstake",
-  playerCount: participants.length,
-  teamCount: teams.length,
-  entryFee: "£5",
-  prizePot: "£120",
-  format: "Last team standing",
-  prizeSplit: "£100 first, £20 second",
-};
+export const participants = createParticipants(activeSweepstakeConfig);
+
+export function createSweepstakeSummary(
+  config: SweepstakeConfig,
+  sweepstakeParticipants: Participant[],
+) {
+  return {
+    entryFee: config.entryFee,
+    format: "Last team standing",
+    name: config.name,
+    playerCount: sweepstakeParticipants.length,
+    prizePot: config.totalPrizePot,
+    prizeSplit: config.prizeSplit.summary,
+    teamCount: sweepstakeParticipants.reduce(
+      (total, participant) => total + participant.teamIds.length,
+      0,
+    ),
+    teamsPerParticipant: config.teamsPerParticipant,
+  };
+}
+
+export const sweepstakeSummary = createSweepstakeSummary(
+  activeSweepstakeConfig,
+  participants,
+);

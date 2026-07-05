@@ -1,5 +1,6 @@
 import { SweepstakeDashboard } from "@/components/SweepstakeDashboard";
-import { participants } from "@/data/sweepstake";
+import { createParticipants } from "@/data/sweepstake";
+import { activeSweepstakeConfig } from "@/data/sweepstakes";
 import { loadOpenFootballFixturesPreview } from "@/lib/football/fixturePreview";
 import { loadOpenFootballKnockoutDraw } from "@/lib/football/knockoutPreview";
 import { loadOpenFootballLeaderboardParticipants } from "@/lib/football/leaderboardStatus";
@@ -7,6 +8,7 @@ import { loadOpenFootballLeaderboardParticipants } from "@/lib/football/leaderbo
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  const participants = createParticipants(activeSweepstakeConfig);
   const [fixturesPreview, knockoutDraw, leaderboardParticipants] = await Promise.all([
     loadOpenFootballFixturesPreview(participants),
     loadOpenFootballKnockoutDraw(participants),
@@ -15,6 +17,7 @@ export default async function Home() {
 
   return (
     <SweepstakeDashboard
+      config={activeSweepstakeConfig}
       fixturesPreview={fixturesPreview}
       knockoutDraw={knockoutDraw}
       participants={leaderboardParticipants}

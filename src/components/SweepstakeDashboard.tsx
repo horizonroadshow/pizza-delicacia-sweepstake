@@ -10,23 +10,48 @@ import type { KnockoutDraw } from "@/data/knockout";
 import type { Participant } from "@/data/sweepstake";
 import {
   countParticipantTeamsRemaining,
-  sweepstakeSummary,
+  createSweepstakeSummary,
 } from "@/data/sweepstake";
+import type { SweepstakeConfig } from "@/data/sweepstakes";
 import type {
   FixturePreviewItem,
   FixturePreviewRoundGroup,
   FixturesPreview,
 } from "@/lib/football/fixturePreview";
 
-type FilterId = "still-in" | "all" | "two" | "one" | "eliminated";
+type FilterId = "still-in" | "all" | "eliminated" | `remaining-${number}`;
 
-const filters: { id: FilterId; label: string }[] = [
-  { id: "still-in", label: "Still in the running" },
-  { id: "all", label: "Everyone" },
-  { id: "two", label: "Two teams remaining" },
-  { id: "one", label: "One team remaining" },
-  { id: "eliminated", label: "Eliminated" },
-];
+function numberWord(value: number) {
+  const words: Record<number, string> = {
+    1: "One",
+    2: "Two",
+    3: "Three",
+  };
+
+  return words[value] ?? `${value}`;
+}
+
+function filtersForTeamsPerParticipant(teamsPerParticipant: number) {
+  return [
+    { id: "still-in" as const, label: "Still in the running" },
+    { id: "all" as const, label: "Everyone" },
+    ...Array.from({ length: teamsPerParticipant }, (_, index) => {
+      const remaining = teamsPerParticipant - index;
+
+      return {
+        id: `remaining-${remaining}` as const,
+        label: `${numberWord(remaining)} ${
+          remaining === 1 ? "team" : "teams"
+        } remaining`,
+      };
+    }),
+    { id: "eliminated" as const, label: "Eliminated" },
+  ];
+}
+
+function compactTitleLine(line: string) {
+  return line.replace(/\s*[🍕⚽️]+/gu, "").trim();
+}
 
 function remainingTeams(participant: Participant) {
   return countParticipantTeamsRemaining(participant);
@@ -44,12 +69,8 @@ function filterParticipants(participants: Participant[], activeFilter: FilterId)
       return remaining > 0;
     }
 
-    if (activeFilter === "two") {
-      return remaining === 2;
-    }
-
-    if (activeFilter === "one") {
-      return remaining === 1;
+    if (activeFilter.startsWith("remaining-")) {
+      return remaining === Number(activeFilter.replace("remaining-", ""));
     }
 
     return remaining === 0;
@@ -181,16 +202,23 @@ function FixtureRoundGroup({ group }: { group: FixturePreviewRoundGroup }) {
 }
 
 export function SweepstakeDashboard({
+  config,
   fixturesPreview,
   knockoutDraw,
   participants,
 }: {
+  config: SweepstakeConfig;
   fixturesPreview: FixturesPreview;
   knockoutDraw: KnockoutDraw;
   participants: Participant[];
 }) {
   const [activeFilter, setActiveFilter] = useState<FilterId>("still-in");
   const [searchTerm, setSearchTerm] = useState("");
+  const filters = useMemo(
+    () => filtersForTeamsPerParticipant(config.teamsPerParticipant),
+    [config.teamsPerParticipant],
+  );
+  const sweepstakeSummary = createSweepstakeSummary(config, participants);
   const teamsRemaining = participants.reduce(
     (total, participant) => total + remainingTeams(participant),
     0,
@@ -237,10 +265,10 @@ export function SweepstakeDashboard({
             </span>
             <span>
               <span className="block text-sm font-black uppercase tracking-[0.18em] text-[#c7a653]">
-                Pizza Delicacia
+                {compactTitleLine(config.displayTitleLines[0])}
               </span>
               <span className="block text-base font-black text-[#fff4d7]">
-                World Cup 2026 Sweepstake
+                {compactTitleLine(config.displayTitleLines[1])}
               </span>
             </span>
           </a>
@@ -286,17 +314,20 @@ export function SweepstakeDashboard({
                 Family last-team-standing sweepstake
               </p>
               <h1 className="mt-2 max-w-4xl text-3xl font-black leading-tight text-[#fff4d7] sm:text-5xl">
-                <span className="block">Pizza Delicacia 🍕</span>
-                <span className="block">World Cup 2026 Sweepstake ⚽️</span>
+                {config.displayTitleLines.map((line) => (
+                  <span className="block" key={line}>
+                    {line}
+                  </span>
+                ))}
               </h1>
               <p className="mt-3 max-w-3xl text-lg leading-8 text-[#d9dccf]">
                 {sweepstakeSummary.teamCount} teams started, {teamsEliminated}{" "}
                 have been eliminated, {teamsRemaining} remain.
               </p>
               <p className="mt-2 max-w-3xl text-lg leading-8 text-[#d9dccf]">
-                {sweepstakeSummary.playerCount} family members, 2 teams each.{" "}
-                {eliminatedParticipants} are out, {participantsRemaining}{" "}
-                remain.
+                {sweepstakeSummary.playerCount} family members,{" "}
+                {sweepstakeSummary.teamsPerParticipant} teams each.{" "}
+                {eliminatedParticipants} are out, {participantsRemaining} remain.
               </p>
             </div>
             <div className="rounded-lg border border-[#d7b85f]/35 bg-[#171f18] p-4">
@@ -306,7 +337,7 @@ export function SweepstakeDashboard({
               <div className="mt-3 grid gap-2 text-base font-bold text-[#fff4d7]">
                 <p>Entry: {sweepstakeSummary.entryFee} each</p>
                 <p>Prize split: {sweepstakeSummary.prizeSplit}</p>
-                <p>Commissioner: Ajay</p>
+                <p>Commissioner: {config.commissioner}</p>
               </div>
             </div>
           </div>
@@ -320,13 +351,13 @@ export function SweepstakeDashboard({
             value={`${sweepstakeSummary.playerCount}`}
           />
           <StatCard
-            detail="Two teams each"
+            detail={`${numberWord(sweepstakeSummary.teamsPerParticipant)} teams each`}
             icon="◆"
             label="Teams"
             value={`${sweepstakeSummary.teamCount}`}
           />
           <StatCard
-            detail="£5 per player"
+            detail={`${sweepstakeSummary.entryFee} per player`}
             icon="£"
             label="Prize pot"
             value={sweepstakeSummary.prizePot}
@@ -343,12 +374,12 @@ export function SweepstakeDashboard({
           <PrizeCard
             note="For the owner of the World Cup winning team. If one person owns both finalists, they receive both prizes."
             place="First prize"
-            prize="£100"
+            prize={config.prizeSplit.first}
           />
           <PrizeCard
             note="For the owner of the losing finalist. If one person owns both finalists, they receive both prizes."
             place="Second prize"
-            prize="£20"
+            prize={config.prizeSplit.second}
           />
         </section>
 
