@@ -128,9 +128,6 @@ function buildMarketWatchCards(
   );
   const ownerRankings = rankOwnersByAvailableNextMatchOdds(events, participants);
   const teamCandidates = allTeamOddsCandidates(events, participants);
-  const strongestTeam = [...teamCandidates].sort(
-    (a, b) => b.percentage - a.percentage,
-  )[0];
   const biggestUnderdog = [...teamCandidates].sort(
     (a, b) => a.percentage - b.percentage,
   )[0];
@@ -154,7 +151,7 @@ function buildMarketWatchCards(
             )
             .join(" + "),
         })),
-      title: "Market-implied £100 outlook",
+      title: "Most Likely to Win...",
     });
   } else {
     const bestOwnerWithOdds = ownerRankings.find(
@@ -189,20 +186,7 @@ function buildMarketWatchCards(
     }
   }
 
-  if (strongestTeam) {
-    cards.push({
-      detail: `${strongestTeam.owner} has ${teamDisplayName(
-        strongestTeam.team,
-        participants,
-      )}, currently ${percentageLabel(
-        strongestTeam.percentage,
-      )} for their next fixture. Based on upcoming match odds only.`,
-      eyebrow: "Strongest remaining team",
-      title: teamDisplayName(strongestTeam.team, participants),
-    });
-  }
-
-  if (biggestUnderdog && biggestUnderdog.team !== strongestTeam?.team) {
+  if (biggestUnderdog) {
     cards.push({
       detail: `${biggestUnderdog.owner} has ${teamDisplayName(
         biggestUnderdog.team,
@@ -241,9 +225,15 @@ function buildMarketWatchCards(
 
   if (familyBranchBattle) {
     cards.push({
-      detail: `${teamDisplayName(familyBranchBattle.event.home, participants)} (${familyBranchBattle.homeOwner}) v ${teamDisplayName(familyBranchBattle.event.away, participants)} (${familyBranchBattle.awayOwner}). ${familyBranchBattle.relationship.copy} ${fixtureOddsLabel(familyBranchBattle.event, participants)}.`,
-      eyebrow: familyBranchBattle.relationship.label,
-      title: familyBranchBattle.relationship.title,
+      detail: `${teamDisplayName(familyBranchBattle.event.home, participants)} v ${teamDisplayName(familyBranchBattle.event.away, participants)}. ${familyBranchBattle.homeOwner} vs. ${familyBranchBattle.awayOwner}. ${familyBranchBattle.relationship.copy} ${fixtureOddsLabel(familyBranchBattle.event, participants)}.`,
+      eyebrow: "Family Feud",
+      feudLines: {
+        banter: familyBranchBattle.relationship.copy,
+        fixture: `${teamDisplayName(familyBranchBattle.event.home, participants)} v ${teamDisplayName(familyBranchBattle.event.away, participants)}`,
+        odds: fixtureOddsLabel(familyBranchBattle.event, participants),
+        owners: `${familyBranchBattle.homeOwner} vs. ${familyBranchBattle.awayOwner}`,
+      },
+      title: familyBranchBattle.relationship.label,
     });
   }
 
@@ -263,7 +253,7 @@ function buildMarketWatchCards(
     });
   }
 
-  return cards.slice(0, 5);
+  return cards.slice(0, 4);
 }
 
 function toOutrightOddsSummary(

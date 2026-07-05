@@ -275,12 +275,10 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
         </p>
       ) : null}
 
-      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-4 grid gap-3 lg:grid-cols-3">
         {oddsPreview.marketWatchCards.map((card) => (
           <article
-            className={`rounded-lg border border-[#c7a653]/20 bg-[#111d19] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.16)] ${
-              card.rankingRows ? "md:col-span-2 xl:col-span-2" : ""
-            }`}
+            className="rounded-lg border border-[#c7a653]/20 bg-[#111d19] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.16)]"
             key={`${card.eyebrow}-${card.title}`}
           >
             <p className="text-xs font-black uppercase tracking-[0.18em] text-[#c7a653]">
@@ -290,10 +288,10 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
               {card.title}
             </h3>
             {card.rankingRows ? (
-              <div className="mt-3 space-y-3">
+              <div className="mt-3 space-y-2">
                 {card.rankingRows.map((row) => (
                   <div
-                    className="rounded-md border border-[#c7a653]/15 bg-[#0d1814] px-3 py-2"
+                    className="rounded-md border border-[#c7a653]/15 bg-[#0d1814] px-3 py-1.5"
                     key={`${row.place}-${row.owner}`}
                   >
                     <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
@@ -305,11 +303,24 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
                         {row.percentage}
                       </p>
                     </div>
-                    <p className="mt-1 break-words text-sm font-bold leading-6 text-[#b8c0ae]">
+                    <p className="mt-0.5 break-words text-xs font-bold leading-5 text-[#b8c0ae]">
                       {row.teams}
                     </p>
                   </div>
                 ))}
+              </div>
+            ) : card.feudLines ? (
+              <div className="mt-3 space-y-2 text-sm font-semibold leading-6 text-[#b8c0ae]">
+                <p className="text-base font-black text-[#fff4d7]">
+                  {card.feudLines.fixture}
+                </p>
+                <p className="font-black text-[#f0d88b]">
+                  {card.feudLines.owners}
+                </p>
+                <p>{card.feudLines.banter}</p>
+                <p className="break-words text-xs font-black uppercase tracking-wide text-[#c7a653]">
+                  {card.feudLines.odds}
+                </p>
               </div>
             ) : (
               <p className="mt-2 text-sm font-semibold leading-6 text-[#b8c0ae]">
