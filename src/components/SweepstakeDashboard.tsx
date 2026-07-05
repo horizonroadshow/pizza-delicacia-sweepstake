@@ -215,6 +215,9 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
     oddsPreview.fetchedAt,
     oddsPreview.oddsAreStale,
   );
+  const oddsBasisCopy = oddsPreview.outrightWinnerAvailable
+    ? "Outright winner odds use averaged bookmaker prices and normalised market-implied probabilities. Fixture cards still use upcoming match markets."
+    : "Based on available upcoming match odds. Outright tournament odds are not currently available.";
 
   if (oddsPreview.marketWatchCards.length === 0) {
     return (
@@ -233,8 +236,7 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
           </p>
         </div>
         <p className="mt-3 text-sm font-semibold leading-6 text-[#b8c0ae]">
-          Based on available upcoming match odds. Outright tournament odds are
-          not currently available.
+          {oddsBasisCopy}
         </p>
         <p className="mt-3 rounded-lg border border-[#c7a653]/15 bg-[#111d19] p-3 text-sm font-bold text-[#b8c0ae]">
           Odds TBC for now. Fixtures still show as normal, and this corner will
@@ -265,8 +267,7 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
         </p>
       </div>
       <p className="mt-3 text-sm font-semibold leading-6 text-[#b8c0ae]">
-        Based on available upcoming match odds. Outright tournament odds are not
-        currently available.
+        {oddsBasisCopy}
       </p>
       {updatedLabel ? (
         <p className="mt-2 text-xs font-bold uppercase tracking-wide text-[#c7a653]">

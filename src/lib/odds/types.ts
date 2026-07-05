@@ -15,10 +15,16 @@ export type OddsMarketSummary = {
 };
 
 export type OutrightOddsSummary = {
+  averageDecimalOdds?: number;
+  bestDecimalOdds?: number;
+  bookmakerCount?: number;
   bookmaker: string;
   decimalOdds: number;
   impliedProbability: number;
   marketName: string;
+  medianDecimalOdds?: number;
+  normalisedImpliedProbability?: number;
+  rawImpliedProbability?: number;
   team: string;
 };
 

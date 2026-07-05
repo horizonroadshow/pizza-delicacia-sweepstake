@@ -48,14 +48,19 @@ type TheOddsApiEvent = {
 };
 
 export type TheOddsApiOutrightSummary = {
-  decimalOdds: number;
-  impliedProbability: number;
+  averageDecimalOdds: number;
+  bestDecimalOdds: number;
+  bookmakerCount: number;
+  medianDecimalOdds: number;
   matchedInternalTeam?: string;
+  normalisedImpliedProbability: number;
   owner?: string;
+  rawImpliedProbability: number;
   team: string;
 };
 
 export type TheOddsApiOutrightDiscovery = {
+  allOutcomes: TheOddsApiOutrightSummary[];
   bookmakerCount: number;
   currentRemainingTeamsFound: string[];
   fetchedAt: string;
@@ -70,6 +75,14 @@ export type TheOddsApiOutrightDiscovery = {
   sportKey: typeof SPORT_KEY;
   strongestRemainingTeamPossible: boolean;
   unmatchedRemainingTeams: string[];
+  qualityDiagnostics: Array<{
+    averageDecimalOdds: number;
+    bookmakerCount: number;
+    normalisedImpliedProbability: number;
+    rawImpliedProbability: number;
+    team: string;
+    unusuallyHigh: boolean;
+  }>;
 };
 
 function impliedProbability(decimalOdds: number) {
@@ -89,9 +102,33 @@ function safeOutcomes(events: TheOddsApiEvent[]) {
     (event.bookmakers ?? []).flatMap((bookmaker) =>
       (bookmaker.markets ?? [])
         .filter((market) => market.key === MARKET)
-        .flatMap((market) => market.outcomes ?? []),
+        .flatMap((market) =>
+          (market.outcomes ?? []).map((outcome) => ({
+            bookmaker: bookmaker.title ?? bookmaker.key ?? "Unknown",
+            outcome,
+          })),
+        ),
     ),
   );
+}
+
+function average(values: number[]) {
+  return values.reduce((total, value) => total + value, 0) / values.length;
+}
+
+function median(values: number[]) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+
+  if (sorted.length % 2 === 0) {
+    return (sorted[middle - 1] + sorted[middle]) / 2;
+  }
+
+  return sorted[middle];
+}
+
+function rounded(value: number) {
+  return Math.round(value * 10) / 10;
 }
 
 // Discovery-only adapter. It is intentionally not used by the visible site yet;
@@ -179,24 +216,75 @@ export function createTheOddsApiAdapter({
         ),
       );
       const outcomes = safeOutcomes(events);
-      const mappedOutcomes = outcomes
-        .filter((outcome) => outcome.name && typeof outcome.price === "number")
-        .map<TheOddsApiOutrightSummary>((outcome) => {
-          const team = outcome.name ?? "Team TBC";
-          const normalisedTeam = normaliseTeamName(team);
-          const matchedInternalTeam = teamsByName.get(normalisedTeam);
+      const pricesByTeam = new Map<
+        string,
+        {
+          bookmakers: Set<string>;
+          prices: number[];
+          team: string;
+        }
+      >();
+
+      for (const { bookmaker, outcome } of outcomes) {
+        if (!outcome.name || typeof outcome.price !== "number") {
+          continue;
+        }
+
+        const normalisedTeam = normaliseTeamName(outcome.name);
+        const existing = pricesByTeam.get(normalisedTeam) ?? {
+          bookmakers: new Set<string>(),
+          prices: [],
+          team: outcome.name,
+        };
+
+        existing.bookmakers.add(bookmaker);
+        existing.prices.push(outcome.price);
+        pricesByTeam.set(normalisedTeam, existing);
+      }
+
+      const rawSummaries = Array.from(pricesByTeam.entries()).map(
+        ([normalisedTeam, teamPrices]) => {
+          const averageDecimalOdds = average(teamPrices.prices);
+          const rawImpliedProbability = impliedProbability(averageDecimalOdds);
 
           return {
-            decimalOdds: outcome.price ?? 0,
-            impliedProbability: impliedProbability(outcome.price ?? 0),
-            matchedInternalTeam,
+            averageDecimalOdds: rounded(averageDecimalOdds),
+            bestDecimalOdds: Math.max(...teamPrices.prices),
+            bookmakerCount: teamPrices.bookmakers.size,
+            matchedInternalTeam: teamsByName.get(normalisedTeam),
+            medianDecimalOdds: rounded(median(teamPrices.prices)),
             owner: ownersByTeam.get(normalisedTeam),
-            team,
+            rawImpliedProbability,
+            team: teamPrices.team,
           };
-        })
+        },
+      );
+      const remainingRawTotal = rawSummaries
+        .filter((summary) =>
+          TARGET_REMAINING_TEAMS.some(
+            (team) =>
+              normaliseTeamName(summary.team) === normaliseTeamName(team) ||
+              normaliseTeamName(summary.matchedInternalTeam ?? "") ===
+                normaliseTeamName(team),
+          ),
+        )
+        .reduce((total, summary) => total + summary.rawImpliedProbability, 0);
+      // Normalised implied probability divides each team's raw implied
+      // probability by the total raw probability for the matched remaining
+      // sweepstake teams. This avoids presenting bookmaker overround as a true
+      // chance while keeping the relative market outlook useful.
+      const mappedOutcomes = rawSummaries
+        .map<TheOddsApiOutrightSummary>((summary) => ({
+          ...summary,
+          normalisedImpliedProbability:
+            remainingRawTotal > 0
+              ? rounded((summary.rawImpliedProbability / remainingRawTotal) * 100)
+              : 0,
+        }))
         .sort(
           (a, b) =>
-            a.decimalOdds - b.decimalOdds || a.team.localeCompare(b.team, "en-GB"),
+            b.normalisedImpliedProbability - a.normalisedImpliedProbability ||
+            a.team.localeCompare(b.team, "en-GB"),
         );
       const matchedRemainingTeams = TARGET_REMAINING_TEAMS.filter((team) =>
         mappedOutcomes.some(
@@ -208,6 +296,7 @@ export function createTheOddsApiAdapter({
       );
 
       return {
+        allOutcomes: mappedOutcomes,
         bookmakerCount: new Set(
           events.flatMap((event) =>
             (event.bookmakers ?? []).map(
@@ -224,6 +313,31 @@ export function createTheOddsApiAdapter({
         outcomeCount: mappedOutcomes.length,
         ownerChancePossible: matchedRemainingTeams.length > 0,
         provider: "the-odds-api",
+        qualityDiagnostics: mappedOutcomes
+          .filter((outcome) =>
+            [
+              "Morocco",
+              "France",
+              "Argentina",
+              "England",
+              "Spain",
+              "Brazil",
+              "Portugal",
+            ].some(
+              (team) =>
+                normaliseTeamName(team) === normaliseTeamName(outcome.team) ||
+                normaliseTeamName(team) ===
+                  normaliseTeamName(outcome.matchedInternalTeam ?? ""),
+            ),
+          )
+          .map((outcome) => ({
+            averageDecimalOdds: outcome.averageDecimalOdds,
+            bookmakerCount: outcome.bookmakerCount,
+            normalisedImpliedProbability: outcome.normalisedImpliedProbability,
+            rawImpliedProbability: outcome.rawImpliedProbability,
+            team: outcome.matchedInternalTeam ?? outcome.team,
+            unusuallyHigh: outcome.normalisedImpliedProbability >= 30,
+          })),
         requestCount,
         sportKey: SPORT_KEY,
         strongestRemainingTeamPossible: matchedRemainingTeams.length > 0,

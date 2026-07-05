@@ -6,6 +6,8 @@ import type {
   MarketWatchCard,
   OddsPreview,
 } from "@/lib/odds/displayTypes";
+import { createTheOddsApiAdapter } from "@/lib/odds/adapters/theOddsApi";
+import type { TheOddsApiOutrightSummary } from "@/lib/odds/adapters/theOddsApi";
 import { loadOddsDiscoveryWithCache } from "@/lib/odds/oddsCache";
 import {
   allTeamOddsCandidates,
@@ -16,6 +18,15 @@ import {
   toFixtureOddsDisplay,
 } from "@/lib/odds/helpers";
 import type { OddsEventSummary, OutrightOddsSummary } from "@/lib/odds/types";
+
+const OUTRIGHT_CACHE_TTL_MS = 60 * 60 * 1000;
+
+let cachedTheOddsApiOutrights:
+  | {
+      expiresAt: number;
+      value: OutrightOddsSummary[];
+    }
+  | undefined;
 
 function buildFixtureOddsMap(
   events: OddsEventSummary[],
@@ -39,6 +50,10 @@ function buildFixtureOddsMap(
 
 function percentageLabel(value: number) {
   return `${Math.round(value)}%`;
+}
+
+function precisePercentageLabel(value: number) {
+  return `${Math.round(value * 10) / 10}%`;
 }
 
 function teamFlag(teamName: string, participants: Participant[]) {
@@ -128,19 +143,19 @@ function buildMarketWatchCards(
           const teams = ranking.teams
             .map(
               (team) =>
-                `${teamDisplayName(team.team, participants)} ${percentageLabel(
+                `${teamDisplayName(team.team, participants)} ${precisePercentageLabel(
                   team.percentage,
                 )}`,
             )
             .join(" + ");
 
-          return `${index + 1}. ${ranking.owner} ${percentageLabel(
+          return `${index + 1}. ${ranking.owner} ${precisePercentageLabel(
             ranking.percentage,
           )} (${teams})`;
         })
         .join(" · "),
-      eyebrow: "Most likely to win the £100",
-      title: "Outright winner outlook",
+      eyebrow: "Bookies' implied chance",
+      title: "Market-implied £100 outlook",
     });
   } else {
     const bestOwnerWithOdds = ownerRankings.find(
@@ -252,6 +267,55 @@ function buildMarketWatchCards(
   return cards.slice(0, 5);
 }
 
+function toOutrightOddsSummary(
+  outcome: TheOddsApiOutrightSummary,
+): OutrightOddsSummary {
+  return {
+    averageDecimalOdds: outcome.averageDecimalOdds,
+    bestDecimalOdds: outcome.bestDecimalOdds,
+    bookmaker: `${outcome.bookmakerCount} bookmaker${
+      outcome.bookmakerCount === 1 ? "" : "s"
+    } averaged`,
+    bookmakerCount: outcome.bookmakerCount,
+    decimalOdds: outcome.averageDecimalOdds,
+    impliedProbability: outcome.normalisedImpliedProbability,
+    marketName: "World Cup winner",
+    medianDecimalOdds: outcome.medianDecimalOdds,
+    normalisedImpliedProbability: outcome.normalisedImpliedProbability,
+    rawImpliedProbability: outcome.rawImpliedProbability,
+    team: outcome.matchedInternalTeam ?? outcome.team,
+  };
+}
+
+async function loadTheOddsApiOutrights(participants: Participant[]) {
+  if (
+    cachedTheOddsApiOutrights &&
+    cachedTheOddsApiOutrights.expiresAt > Date.now()
+  ) {
+    return cachedTheOddsApiOutrights.value;
+  }
+
+  if (!process.env.THE_ODDS_API_KEY) {
+    return [];
+  }
+
+  try {
+    const discovery = await createTheOddsApiAdapter({
+      participants,
+    }).discoverWorldCupWinnerOutrights();
+    const value = discovery.allOutcomes.map(toOutrightOddsSummary);
+
+    cachedTheOddsApiOutrights = {
+      expiresAt: Date.now() + OUTRIGHT_CACHE_TTL_MS,
+      value,
+    };
+
+    return value;
+  } catch {
+    return cachedTheOddsApiOutrights?.value ?? [];
+  }
+}
+
 function emptyPreview(): OddsPreview {
   return {
     available: false,
@@ -271,6 +335,10 @@ export async function loadOddsPreview(
   }
 
   const discovery = cachedDiscovery.result;
+  const outrightOdds =
+    (await loadTheOddsApiOutrights(participants)) ?? discovery.outrightOdds;
+  const availableOutrightOdds =
+    outrightOdds.length > 0 ? outrightOdds : discovery.outrightOdds;
 
   return {
     available: discovery.fixtureOddsAvailable,
@@ -279,10 +347,11 @@ export async function loadOddsPreview(
     fixtureOddsByMatchup: buildFixtureOddsMap(discovery.oddsExamples, participants),
     marketWatchCards: buildMarketWatchCards(
       discovery.oddsExamples,
-      discovery.outrightOdds,
+      availableOutrightOdds,
       participants,
     ),
     oddsAreStale: cachedDiscovery.stale,
-    outrightWinnerAvailable: discovery.outrightWinnerAvailable,
+    outrightWinnerAvailable:
+      availableOutrightOdds.length > 0 || discovery.outrightWinnerAvailable,
   };
 }
