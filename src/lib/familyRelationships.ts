@@ -65,10 +65,22 @@ const siblingGroups = [
   ["Simran", "Avi"],
 ] as const;
 
+const households = [
+  ["Rita", "Bill", "Ajay", "Ayesha"],
+  ["Ajay", "Aditi"],
+  ["Ayesha", "Karan"],
+  ["Yash", "Asha", "Alisha", "Rohan", "Kavita"],
+  ["Kavita", "Yaad", "Veeran"],
+  ["Vijay", "Sunita", "Arun", "Priya"],
+  ["Arun", "Esha", "Sienna", "Layla"],
+  ["Priya", "Steve", "Simran", "Avi"],
+] as const;
+
 export type FamilyRelationshipType =
   | "different-branch"
   | "fallback"
   | "parent-child"
+  | "same-household"
   | "same-branch"
   | "sibling"
   | "spouse";
@@ -98,6 +110,14 @@ function sameSiblingGroup(a: string, b: string) {
   });
 }
 
+function sameHousehold(a: string, b: string) {
+  return households.some((household) => {
+    const members: readonly string[] = household;
+
+    return members.includes(a) && members.includes(b);
+  });
+}
+
 export function familyBranch(owner: string) {
   if (owner === "Nanaji") {
     return "Patriarch";
@@ -122,9 +142,9 @@ export function familyRelationshipInsight(
       branchA,
       branchB,
       copy: "Marriage temporarily suspended for 90 minutes.",
-      label: "Spouse v spouse",
+      label: "Spouse vs spouse",
       priority: 0,
-      title: "House Derby",
+      title: "Family Feud",
       type: "spouse",
     };
   }
@@ -134,10 +154,22 @@ export function familyRelationshipInsight(
       branchA,
       branchB,
       copy: "Parent-child bragging rights are on the line.",
-      label: "Parent v child",
+      label: "Parent vs child",
       priority: 1,
-      title: "Family Bragging Rights",
+      title: "Family Feud",
       type: "parent-child",
+    };
+  }
+
+  if (sameHousehold(ownerA, ownerB)) {
+    return {
+      branchA,
+      branchB,
+      copy: "Civil war in the household.",
+      label: "Same household",
+      priority: 2,
+      title: "Family Feud",
+      type: "same-household",
     };
   }
 
@@ -146,9 +178,9 @@ export function familyRelationshipInsight(
       branchA,
       branchB,
       copy: "Sibling rivalry has entered the chat.",
-      label: "Sibling v sibling",
-      priority: 2,
-      title: "Family Bragging Rights",
+      label: "Sibling vs sibling",
+      priority: 3,
+      title: "Family Feud",
       type: "sibling",
     };
   }
@@ -157,10 +189,10 @@ export function familyRelationshipInsight(
     return {
       branchA,
       branchB,
-      copy: `Civil war in the ${branchA} branch.`,
+      copy: "Civil war in the family branch.",
       label: "Same branch",
-      priority: 3,
-      title: "Family Branch Battle",
+      priority: 4,
+      title: "Family Feud",
       type: "same-branch",
     };
   }
@@ -169,10 +201,10 @@ export function familyRelationshipInsight(
     return {
       branchA,
       branchB,
-      copy: `The ${branchA} branch meets the ${branchB} branch.`,
-      label: "Branch v branch",
-      priority: 4,
-      title: "Family Branch Battle",
+      copy: "Branch bragging rights loading.",
+      label: "Branch vs branch",
+      priority: 5,
+      title: "Family Feud",
       type: "different-branch",
     };
   }
@@ -182,8 +214,8 @@ export function familyRelationshipInsight(
     branchB,
     copy: "Family bragging rights loading.",
     label: "Owned teams",
-    priority: 5,
-    title: "Family Bragging Rights",
+    priority: 6,
+    title: "Family Feud",
     type: "fallback",
   };
 }
