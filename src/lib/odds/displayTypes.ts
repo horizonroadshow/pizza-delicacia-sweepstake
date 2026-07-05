@@ -48,6 +48,7 @@ export type OddsPreview = {
     | "fresh-outrights"
     | "no-outrights"
     | "provider-error"
-    | "provider-rate-limited";
+    | "provider-rate-limited"
+    | "saved-outrights";
   outrightWinnerAvailable: boolean;
 };

@@ -27,7 +27,20 @@ type OutrightOddsState =
   | "fresh-outrights"
   | "no-outrights"
   | "provider-error"
-  | "provider-rate-limited";
+  | "provider-rate-limited"
+  | "saved-outrights";
+
+const PIZZA_DELICACIA_SAVED_OUTRIGHTS: Array<{
+  owner: string;
+  probability: number;
+  team: string;
+}> = [
+  { owner: "Steve", probability: 33.4, team: "France" },
+  { owner: "Yash", probability: 15.7, team: "Argentina" },
+  { owner: "Yash", probability: 2.2, team: "Norway" },
+  { owner: "Veeran", probability: 13.2, team: "Spain" },
+  { owner: "Veeran", probability: 2.5, team: "United States" },
+];
 
 let cachedTheOddsApiOutrights:
   | {
@@ -162,6 +175,8 @@ function buildOutrightCard(
       outrightOwnerRankings.length > 0
         ? outrightOddsState === "cached-outrights"
           ? "Using latest cached outright odds."
+          : outrightOddsState === "saved-outrights"
+            ? "Using latest saved outright odds."
           : undefined
         : "Outright odds temporarily unavailable. Check back shortly.",
     eyebrow: "Bookies' implied chance",
@@ -183,6 +198,45 @@ function buildOutrightCard(
         : undefined,
     title: "Most Likely to Win...",
   };
+}
+
+function toSavedOutrightSummary(team: string, probability: number): OutrightOddsSummary {
+  const decimalOdds = Math.round((100 / probability) * 100) / 100;
+
+  return {
+    bookmaker: "Latest saved outright odds",
+    bookmakerCount: 0,
+    decimalOdds,
+    impliedProbability: probability,
+    marketName: "World Cup winner",
+    normalisedImpliedProbability: probability,
+    team,
+  };
+}
+
+function savedPizzaDelicaciaOutrights(
+  config: SweepstakeConfig,
+  participants: Participant[],
+): OutrightOddsSummary[] {
+  if (config.id !== "pizza-delicacia") {
+    return [];
+  }
+
+  const canUsePizzaSnapshot = PIZZA_DELICACIA_SAVED_OUTRIGHTS.every(
+    (snapshot) => {
+      const owner = findOwnerForTeamName(snapshot.team, participants);
+
+      return owner === snapshot.owner;
+    },
+  );
+
+  if (!canUsePizzaSnapshot) {
+    return [];
+  }
+
+  return PIZZA_DELICACIA_SAVED_OUTRIGHTS.map((snapshot) =>
+    toSavedOutrightSummary(snapshot.team, snapshot.probability),
+  );
 }
 
 function buildUnderdogCard(
@@ -295,6 +349,51 @@ function buildMarketWatchCards(
   ];
 }
 
+function chooseOutrightOddsForDisplay({
+  config,
+  fallbackOutrightOdds,
+  fallbackOutrightState,
+  participants,
+  outrightResult,
+}: {
+  config: SweepstakeConfig;
+  fallbackOutrightOdds: OutrightOddsSummary[];
+  fallbackOutrightState: "cached-outrights" | "saved-outrights";
+  participants: Participant[];
+  outrightResult: {
+    odds: OutrightOddsSummary[];
+    state: OutrightOddsState;
+  };
+}) {
+  if (outrightResult.odds.length > 0) {
+    return {
+      odds: outrightResult.odds,
+      state: outrightResult.state,
+    };
+  }
+
+  if (fallbackOutrightOdds.length > 0) {
+    return {
+      odds: fallbackOutrightOdds,
+      state: fallbackOutrightState,
+    };
+  }
+
+  const savedOutrights = savedPizzaDelicaciaOutrights(config, participants);
+
+  if (savedOutrights.length > 0) {
+    return {
+      odds: savedOutrights,
+      state: "saved-outrights" as const,
+    };
+  }
+
+  return {
+    odds: [],
+    state: outrightResult.state,
+  };
+}
+
 function toOutrightOddsSummary(
   outcome: TheOddsApiOutrightSummary,
 ): OutrightOddsSummary {
@@ -389,12 +488,21 @@ export async function loadOddsPreview(
   config: SweepstakeConfig,
 ): Promise<OddsPreview> {
   const cachedDiscovery = await loadOddsDiscoveryWithCache();
+  const savedOutrights = savedPizzaDelicaciaOutrights(config, participants);
 
   if (!cachedDiscovery.result) {
+    const outrightResult = await loadTheOddsApiOutrights(participants);
+    const availableOutrights = chooseOutrightOddsForDisplay({
+      config,
+      fallbackOutrightOdds: savedOutrights,
+      fallbackOutrightState: "saved-outrights",
+      participants,
+      outrightResult,
+    });
     const marketWatchCards = buildMarketWatchCards(
       [],
-      [],
-      "no-outrights",
+      availableOutrights.odds,
+      availableOutrights.state,
       participants,
       config,
     );
@@ -403,28 +511,34 @@ export async function loadOddsPreview(
       ...emptyPreview(),
       bookiesCornerCardCount: marketWatchCards.length,
       marketWatchCards,
+      outrightOddsState: availableOutrights.state,
+      outrightWinnerAvailable: availableOutrights.odds.length > 0,
     };
   }
 
   const discovery = cachedDiscovery.result;
   const outrightResult = await loadTheOddsApiOutrights(participants);
-  const fallbackOutrightOdds = discovery.outrightOdds;
-  const availableOutrightOdds =
-    outrightResult.odds.length > 0 ? outrightResult.odds : fallbackOutrightOdds;
-  const outrightOddsState =
-    outrightResult.odds.length > 0
-      ? outrightResult.state
-      : fallbackOutrightOdds.length > 0
+  const availableOutrights = chooseOutrightOddsForDisplay({
+    config,
+    fallbackOutrightOdds:
+      discovery.outrightOdds.length > 0
+        ? discovery.outrightOdds
+        : savedOutrights,
+    fallbackOutrightState:
+      discovery.outrightOdds.length > 0
         ? "cached-outrights"
-        : outrightResult.state;
+        : "saved-outrights",
+    participants,
+    outrightResult,
+  });
   const fixtureOddsByMatchup = buildFixtureOddsMap(
     discovery.oddsExamples,
     participants,
   );
   const marketWatchCards = buildMarketWatchCards(
     discovery.oddsExamples,
-    availableOutrightOdds,
-    outrightOddsState,
+    availableOutrights.odds,
+    availableOutrights.state,
     participants,
     config,
   );
@@ -441,8 +555,8 @@ export async function loadOddsPreview(
         : "no-fixture-odds",
     marketWatchCards,
     oddsAreStale: cachedDiscovery.stale,
-    outrightOddsState,
+    outrightOddsState: availableOutrights.state,
     outrightWinnerAvailable:
-      availableOutrightOdds.length > 0 || discovery.outrightWinnerAvailable,
+      availableOutrights.odds.length > 0 || discovery.outrightWinnerAvailable,
   };
 }
