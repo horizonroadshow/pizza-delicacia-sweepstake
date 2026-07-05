@@ -7,16 +7,14 @@ import type {
 } from "@/lib/odds/displayTypes";
 import {
   allTeamOddsCandidates,
-  averageEventProbabilities,
   findOwnerForTeamName,
   normalisedMatchupKey,
+  rankOwnersByOutrightOdds,
   rankOwnersByAvailableOdds,
-  selectMarketFavourite,
-  selectUnderdog,
   toFixtureOddsDisplay,
 } from "@/lib/odds/helpers";
 import { OddsAdapterError } from "@/lib/odds/types";
-import type { OddsEventSummary } from "@/lib/odds/types";
+import type { OddsEventSummary, OutrightOddsSummary } from "@/lib/odds/types";
 
 const CACHE_TTL_MS = 10 * 60 * 1000;
 
@@ -50,9 +48,14 @@ function percentageLabel(value: number) {
 
 function buildMarketWatchCards(
   events: OddsEventSummary[],
+  outrightOdds: OutrightOddsSummary[],
   participants: Participant[],
 ): MarketWatchCard[] {
   const cards: MarketWatchCard[] = [];
+  const outrightOwnerRankings = rankOwnersByOutrightOdds(
+    outrightOdds,
+    participants,
+  );
   const ownerRankings = rankOwnersByAvailableOdds(events, participants);
   const teamCandidates = allTeamOddsCandidates(events, participants);
   const strongestTeam = [...teamCandidates].sort(
@@ -62,13 +65,30 @@ function buildMarketWatchCards(
     (a, b) => a.percentage - b.percentage,
   )[0];
 
-  if (ownerRankings[0]) {
+  if (outrightOwnerRankings.length > 0) {
+    cards.push({
+      detail: outrightOwnerRankings
+        .slice(0, 3)
+        .map((ranking, index) => {
+          const teams = ranking.teams
+            .map((team) => `${team.team} ${percentageLabel(team.percentage)}`)
+            .join(" + ");
+
+          return `${index + 1}. ${ranking.owner} ${percentageLabel(
+            ranking.percentage,
+          )} (${teams})`;
+        })
+        .join(" · "),
+      eyebrow: "Most likely to win the £100",
+      title: "Outright winner outlook",
+    });
+  } else if (ownerRankings[0]) {
     cards.push({
       detail: `${ownerRankings[0].team} is rated at ${percentageLabel(
         ownerRankings[0].percentage,
-      )} in their next match. Best available team chance only.`,
-      eyebrow: "Most likely to win the £100",
-      title: `${ownerRankings[0].owner}'s £100 dream is alive`,
+      )} for their next match. This is not an outright tournament chance.`,
+      eyebrow: "Best next-match position",
+      title: `${ownerRankings[0].owner} has the strongest next-fixture outlook`,
     });
   }
 
@@ -76,7 +96,7 @@ function buildMarketWatchCards(
     cards.push({
       detail: `${strongestTeam.owner} has ${strongestTeam.team}, currently ${percentageLabel(
         strongestTeam.percentage,
-      )} for their next fixture. The market likes this one.`,
+      )} for their next fixture. Based on upcoming match odds only.`,
       eyebrow: "Strongest remaining team",
       title: strongestTeam.team,
     });
@@ -117,39 +137,6 @@ function buildMarketWatchCards(
     });
   }
 
-  const underdogStory = events
-    .map((event) => {
-      const odds = averageEventProbabilities(event);
-      const favourite = selectMarketFavourite(event, odds);
-      const underdog = selectUnderdog(event, odds);
-
-      if (!favourite || !underdog) {
-        return undefined;
-      }
-
-      const underdogOwner = findOwnerForTeamName(underdog.team, participants);
-
-      return underdogOwner
-        ? {
-            owner: underdogOwner,
-            percentage: underdog.percentage,
-            team: underdog.team,
-          }
-        : undefined;
-    })
-    .filter((story): story is NonNullable<typeof story> => Boolean(story))
-    .sort((a, b) => a.percentage - b.percentage)[0];
-
-  if (underdogStory) {
-    cards.push({
-      detail: `${underdogStory.owner}'s ${underdogStory.team} are still alive at ${percentageLabel(
-        underdogStory.percentage,
-      )} for the next match.`,
-      eyebrow: "Underdog story",
-      title: "Still alive and dreaming",
-    });
-  }
-
   return cards.slice(0, 5);
 }
 
@@ -158,6 +145,7 @@ function emptyPreview(): OddsPreview {
     available: false,
     fixtureOddsByMatchup: {},
     marketWatchCards: [],
+    outrightWinnerAvailable: false,
   };
 }
 
@@ -174,7 +162,12 @@ export async function loadOddsPreview(
       available: discovery.fixtureOddsAvailable,
       fetchedAt: discovery.fetchedAt,
       fixtureOddsByMatchup: buildFixtureOddsMap(discovery.oddsExamples),
-      marketWatchCards: buildMarketWatchCards(discovery.oddsExamples, participants),
+      marketWatchCards: buildMarketWatchCards(
+        discovery.oddsExamples,
+        discovery.outrightOdds,
+        participants,
+      ),
+      outrightWinnerAvailable: discovery.outrightWinnerAvailable,
     };
 
     cachedPreview = {

@@ -117,7 +117,10 @@ function FixtureOddsPanel({ odds }: { odds?: FixtureOddsDisplay }) {
 
   return (
     <div className="mt-3 rounded-md border border-[#c7a653]/20 bg-[#111d19] p-3">
-      <div className="flex flex-wrap gap-2">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#c7a653]">
+        Fixture odds
+      </p>
+      <div className="mt-2 flex flex-wrap gap-2">
         {odds.probabilities.map((probability) => (
           <span
             className={`rounded-full border px-3 py-1 text-xs font-black uppercase tracking-wide ${
@@ -204,6 +207,10 @@ function MarketWatchSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
             Odds are for sweepstake entertainment only and may change.
           </p>
         </div>
+        <p className="mt-3 text-sm font-semibold leading-6 text-[#b8c0ae]">
+          Fixture odds are based on upcoming match markets. Outright winner odds
+          will be shown if available.
+        </p>
       </section>
     );
   }
@@ -223,6 +230,10 @@ function MarketWatchSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
           Odds are for sweepstake entertainment only and may change.
         </p>
       </div>
+      <p className="mt-3 text-sm font-semibold leading-6 text-[#b8c0ae]">
+        Fixture odds are based on upcoming match markets. Outright winner odds
+        will be shown if available.
+      </p>
 
       <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {oddsPreview.marketWatchCards.map((card) => (

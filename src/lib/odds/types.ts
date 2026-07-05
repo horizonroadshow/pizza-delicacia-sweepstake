@@ -14,6 +14,14 @@ export type OddsMarketSummary = {
   outcomes: OddsOutcome[];
 };
 
+export type OutrightOddsSummary = {
+  bookmaker: string;
+  decimalOdds: number;
+  impliedProbability: number;
+  marketName: string;
+  team: string;
+};
+
 export type OddsEventSummary = {
   away: string;
   eventId: string;
@@ -45,6 +53,7 @@ export type OddsDiscoveryResult = {
     status?: string;
   }>;
   oddsExamples: OddsEventSummary[];
+  outrightOdds: OutrightOddsSummary[];
   outrightWinnerAvailable: boolean;
   outrightWinnerSearchCount: number;
   provider: OddsProvider;

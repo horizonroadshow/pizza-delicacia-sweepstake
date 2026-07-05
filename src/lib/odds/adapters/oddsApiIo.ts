@@ -5,6 +5,7 @@ import {
   type OddsDiscoveryResult,
   type OddsEventSummary,
   type OddsMarketSummary,
+  type OutrightOddsSummary,
 } from "@/lib/odds/types";
 
 const DEFAULT_BASE_URL = "https://api.odds-api.io/v3";
@@ -185,6 +186,67 @@ function marketSummaries(event: OddsApiIoOddsEvent): OddsMarketSummary[] {
   );
 }
 
+function likelyOutrightMarketName(name: string | undefined) {
+  const normalisedMarket = normaliseName(name);
+
+  return (
+    normalisedMarket.includes("winner") ||
+    normalisedMarket.includes("outright") ||
+    normalisedMarket.includes("futures") ||
+    normalisedMarket.includes("champion") ||
+    normalisedMarket.includes("tournament")
+  );
+}
+
+function likelyOutrightEvent(event: OddsApiIoEvent) {
+  const name = normaliseName(
+    `${event.home ?? ""} ${event.away ?? ""} ${event.league?.name ?? ""} ${
+      event.league?.slug ?? ""
+    }`,
+  );
+
+  return (
+    name.includes("world cup") &&
+    (name.includes("winner") ||
+      name.includes("outright") ||
+      name.includes("future") ||
+      name.includes("champion") ||
+      name.includes("tournament"))
+  );
+}
+
+function outrightOddsSummaries(event: OddsApiIoOddsEvent): OutrightOddsSummary[] {
+  return Object.entries(event.bookmakers ?? {}).flatMap(([bookmaker, markets]) =>
+    markets.flatMap((market) => {
+      if (!likelyOutrightMarketName(market.name)) {
+        return [];
+      }
+
+      return (market.odds ?? []).flatMap((odds) =>
+        Object.entries(odds).flatMap(([team, value]) => {
+          if (["away", "draw", "home", "hdp", "max", "over", "under"].includes(team)) {
+            return [];
+          }
+
+          const parsedOdds = decimalOdds(value);
+
+          return parsedOdds
+            ? [
+                {
+                  bookmaker,
+                  decimalOdds: parsedOdds,
+                  impliedProbability: impliedProbability(parsedOdds),
+                  marketName: market.name ?? "Outright winner",
+                  team,
+                },
+              ]
+            : [];
+        }),
+      );
+    }),
+  );
+}
+
 function eventName(event: OddsApiIoEvent) {
   return `${event.home ?? ""} ${event.away ?? ""}`;
 }
@@ -360,8 +422,11 @@ export function createOddsApiIoAdapter(): OddsAdapter {
       const worldCupSearch = await request<unknown[]>("/events/search", {
         query: "World Cup",
       });
-      const outrightSearch = await request<unknown[]>("/events/search", {
+      const outrightWinnerSearch = await request<unknown[]>("/events/search", {
         query: "World Cup winner",
+      });
+      const outrightFuturesSearch = await request<unknown[]>("/events/search", {
+        query: "FIFA World Cup outright",
       });
       const dateRangeEvents = await request<unknown[]>("/events", {
         from: "2026-07-05T00:00:00Z",
@@ -411,7 +476,10 @@ export function createOddsApiIoAdapter(): OddsAdapter {
       const worldCupEvents = isEventArray(worldCupSearch)
         ? worldCupSearch.filter(likelyWorldCupEvent)
         : [];
-      const outrightEvents = isEventArray(outrightSearch) ? outrightSearch : [];
+      const outrightEvents = [
+        ...(isEventArray(outrightWinnerSearch) ? outrightWinnerSearch : []),
+        ...(isEventArray(outrightFuturesSearch) ? outrightFuturesSearch : []),
+      ];
       const eventLookup = new Map<string, OddsApiIoEvent>();
 
       for (const event of [...dateRangeEvents, ...worldCupLeagueEvents]) {
@@ -440,6 +508,20 @@ export function createOddsApiIoAdapter(): OddsAdapter {
       const oddsExamples = Array.isArray(oddsEvents)
         ? oddsEvents.map(toOddsEventSummary).filter((event) => event.markets.length > 0)
         : [];
+      const likelyOutrightEvents = outrightEvents.filter(likelyOutrightEvent);
+      const outrightOddsEvents =
+        likelyOutrightEvents.length > 0
+          ? await request<OddsApiIoOddsEvent[]>("/odds/multi", {
+              bookmakers: bookmakers.join(","),
+              eventIds: likelyOutrightEvents
+                .slice(0, 5)
+                .map((event) => String(event.id))
+                .join(","),
+            })
+          : [];
+      const outrightOdds = Array.isArray(outrightOddsEvents)
+        ? outrightOddsEvents.flatMap(outrightOddsSummaries)
+        : [];
 
       return {
         eventSearchCount: worldCupEvents.length,
@@ -448,7 +530,8 @@ export function createOddsApiIoAdapter(): OddsAdapter {
         likelyWorldCupLeagues,
         matchedFixtureEvents: matchedFixtureEvents.map(safeEventSummary),
         oddsExamples: oddsExamples.slice(0, 5),
-        outrightWinnerAvailable: outrightEvents.some(likelyWorldCupEvent),
+        outrightOdds,
+        outrightWinnerAvailable: outrightOdds.length > 0,
         outrightWinnerSearchCount: outrightEvents.length,
         provider: "odds-api-io",
         requestCount,

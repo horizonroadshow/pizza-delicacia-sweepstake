@@ -1,7 +1,11 @@
 import type { Participant } from "@/data/sweepstake";
 import { normaliseTeamName, ownerLookup } from "@/lib/football/ownerLabels";
 import type { FixtureOddsDisplay } from "@/lib/odds/displayTypes";
-import type { OddsEventSummary, OddsOutcome } from "@/lib/odds/types";
+import type {
+  OddsEventSummary,
+  OddsOutcome,
+  OutrightOddsSummary,
+} from "@/lib/odds/types";
 
 export type AveragedOdds = {
   away?: number;
@@ -14,6 +18,15 @@ export type TeamOddsCandidate = {
   owner: string;
   percentage: number;
   team: string;
+};
+
+export type OwnerOutrightCandidate = {
+  owner: string;
+  percentage: number;
+  teams: Array<{
+    percentage: number;
+    team: string;
+  }>;
 };
 
 export function decimalOddsToImpliedProbability(decimalOdds: number) {
@@ -204,4 +217,47 @@ export function allTeamOddsCandidates(
       ];
     });
   });
+}
+
+export function rankOwnersByOutrightOdds(
+  outrightOdds: OutrightOddsSummary[],
+  participants: Participant[],
+) {
+  const byOwner = new Map<string, OwnerOutrightCandidate>();
+
+  for (const odd of outrightOdds) {
+    const owner = findOwnerForTeamName(odd.team, participants);
+    const participant = participants.find(({ name }) => name === owner);
+    const allocatedTeam = participant?.teams.find(
+      (team) => normaliseTeamName(team.country) === normaliseTeamName(odd.team),
+    );
+
+    if (!owner || allocatedTeam?.status !== "still-in") {
+      continue;
+    }
+
+    const existing = byOwner.get(owner) ?? {
+      owner,
+      percentage: 0,
+      teams: [],
+    };
+
+    existing.percentage += odd.impliedProbability;
+    existing.teams.push({
+      percentage: odd.impliedProbability,
+      team: allocatedTeam.country,
+    });
+    byOwner.set(owner, existing);
+  }
+
+  return Array.from(byOwner.values())
+    .map((candidate) => ({
+      ...candidate,
+      percentage: Math.round(candidate.percentage * 10) / 10,
+      teams: candidate.teams.sort((a, b) => b.percentage - a.percentage),
+    }))
+    .sort(
+      (a, b) =>
+        b.percentage - a.percentage || a.owner.localeCompare(b.owner, "en-GB"),
+    );
 }

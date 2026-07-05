@@ -76,6 +76,12 @@ export async function GET(request: NextRequest) {
       matchedFixtureEvents: result.matchedFixtureEvents,
       oddsExamples: safeOddsExamples(result),
       ok: true,
+      outrightOdds: result.outrightOdds.slice(0, 12).map((odd) => ({
+        bookmaker: odd.bookmaker,
+        impliedProbability: `${odd.impliedProbability}%`,
+        marketName: odd.marketName,
+        team: odd.team,
+      })),
       outrightWinnerAvailable: result.outrightWinnerAvailable,
       outrightWinnerSearchCount: result.outrightWinnerSearchCount,
       provider: result.provider,

@@ -22,4 +22,5 @@ export type OddsPreview = {
   fetchedAt?: string;
   fixtureOddsByMatchup: Record<string, FixtureOddsDisplay>;
   marketWatchCards: MarketWatchCard[];
+  outrightWinnerAvailable: boolean;
 };
