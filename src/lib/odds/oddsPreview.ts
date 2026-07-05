@@ -1,4 +1,5 @@
 import type { Participant } from "@/data/sweepstake";
+import { familyRelationshipInsight } from "@/lib/familyRelationships";
 import { createOddsApiIoAdapter } from "@/lib/odds/adapters/oddsApiIo";
 import type {
   FixtureOddsDisplay,
@@ -44,6 +45,18 @@ function buildFixtureOddsMap(events: OddsEventSummary[]) {
 
 function percentageLabel(value: number) {
   return `${Math.round(value)}%`;
+}
+
+function fixtureOddsLabel(event: OddsEventSummary) {
+  const fixtureOdds = toFixtureOddsDisplay(event);
+
+  if (!fixtureOdds) {
+    return "Odds TBC";
+  }
+
+  return fixtureOdds.probabilities
+    .map((probability) => `${probability.label} ${percentageLabel(probability.percentage)}`)
+    .join(" · ");
 }
 
 function buildMarketWatchCards(
@@ -128,28 +141,37 @@ function buildMarketWatchCards(
     });
   }
 
-  const nextFamilyClash = events
+  const familyBranchBattle = events
     .map((event) => {
       const homeOwner = findOwnerForTeamName(event.home, participants);
       const awayOwner = findOwnerForTeamName(event.away, participants);
 
-      return homeOwner && awayOwner
-        ? {
-            awayOwner,
-            event,
-            homeOwner,
-            kickoffAt: event.kickoffAt ? new Date(event.kickoffAt).getTime() : Infinity,
-          }
-        : undefined;
+      if (!homeOwner || !awayOwner) {
+        return undefined;
+      }
+
+      const relationship = familyRelationshipInsight(homeOwner, awayOwner);
+
+      return {
+        awayOwner,
+        event,
+        homeOwner,
+        kickoffAt: event.kickoffAt ? new Date(event.kickoffAt).getTime() : Infinity,
+        relationship,
+      };
     })
     .filter((event): event is NonNullable<typeof event> => Boolean(event))
-    .sort((a, b) => a.kickoffAt - b.kickoffAt)[0];
+    .sort(
+      (a, b) =>
+        a.relationship.priority - b.relationship.priority ||
+        a.kickoffAt - b.kickoffAt,
+    )[0];
 
-  if (nextFamilyClash) {
+  if (familyBranchBattle) {
     cards.push({
-      detail: `${nextFamilyClash.event.home} v ${nextFamilyClash.event.away}. Family bragging rights loading.`,
-      eyebrow: "Next family clash",
-      title: `${nextFamilyClash.homeOwner} v ${nextFamilyClash.awayOwner}`,
+      detail: `${familyBranchBattle.event.home} (${familyBranchBattle.homeOwner}) v ${familyBranchBattle.event.away} (${familyBranchBattle.awayOwner}). ${familyBranchBattle.relationship.copy} ${fixtureOddsLabel(familyBranchBattle.event)}.`,
+      eyebrow: familyBranchBattle.relationship.label,
+      title: familyBranchBattle.relationship.title,
     });
   }
 
