@@ -278,7 +278,9 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
       <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {oddsPreview.marketWatchCards.map((card) => (
           <article
-            className="rounded-lg border border-[#c7a653]/20 bg-[#111d19] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.16)]"
+            className={`rounded-lg border border-[#c7a653]/20 bg-[#111d19] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.16)] ${
+              card.rankingRows ? "md:col-span-2 xl:col-span-2" : ""
+            }`}
             key={`${card.eyebrow}-${card.title}`}
           >
             <p className="text-xs font-black uppercase tracking-[0.18em] text-[#c7a653]">
@@ -287,9 +289,33 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
             <h3 className="mt-2 text-lg font-black text-[#fff4d7]">
               {card.title}
             </h3>
-            <p className="mt-2 text-sm font-semibold leading-6 text-[#b8c0ae]">
-              {card.detail}
-            </p>
+            {card.rankingRows ? (
+              <div className="mt-3 space-y-3">
+                {card.rankingRows.map((row) => (
+                  <div
+                    className="rounded-md border border-[#c7a653]/15 bg-[#0d1814] px-3 py-2"
+                    key={`${row.place}-${row.owner}`}
+                  >
+                    <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                      <p className="min-w-0 text-base font-black text-[#fff4d7]">
+                        <span className="text-[#c7a653]">{row.place}.</span>{" "}
+                        {row.owner}
+                      </p>
+                      <p className="text-base font-black text-[#f0d88b]">
+                        {row.percentage}
+                      </p>
+                    </div>
+                    <p className="mt-1 break-words text-sm font-bold leading-6 text-[#b8c0ae]">
+                      {row.teams}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-2 text-sm font-semibold leading-6 text-[#b8c0ae]">
+                {card.detail}
+              </p>
+            )}
           </article>
         ))}
       </div>

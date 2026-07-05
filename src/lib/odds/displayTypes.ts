@@ -14,6 +14,12 @@ export type FixtureOddsDisplay = {
 export type MarketWatchCard = {
   detail: string;
   eyebrow: string;
+  rankingRows?: Array<{
+    owner: string;
+    percentage: string;
+    place: number;
+    teams: string;
+  }>;
   title: string;
 };
 

@@ -137,24 +137,23 @@ function buildMarketWatchCards(
 
   if (outrightOwnerRankings.length > 0) {
     cards.push({
-      detail: outrightOwnerRankings
+      detail: "Normalised market-implied probabilities across remaining teams.",
+      eyebrow: "Bookies' implied chance",
+      rankingRows: outrightOwnerRankings
         .slice(0, 3)
-        .map((ranking, index) => {
-          const teams = ranking.teams
+        .map((ranking, index) => ({
+          owner: ranking.owner,
+          percentage: precisePercentageLabel(ranking.percentage),
+          place: index + 1,
+          teams: ranking.teams
             .map(
               (team) =>
                 `${teamDisplayName(team.team, participants)} ${precisePercentageLabel(
                   team.percentage,
                 )}`,
             )
-            .join(" + ");
-
-          return `${index + 1}. ${ranking.owner} ${precisePercentageLabel(
-            ranking.percentage,
-          )} (${teams})`;
-        })
-        .join(" · "),
-      eyebrow: "Bookies' implied chance",
+            .join(" + "),
+        })),
       title: "Market-implied £100 outlook",
     });
   } else {
