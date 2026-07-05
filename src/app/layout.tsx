@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
+import { activeSweepstakeConfig } from "@/data/sweepstakes";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Pizza Delicacia World Cup Sweepstake",
-  description:
-    "Track the Pizza Delicacia family World Cup sweepstake, including team owners, prizes, fixtures, results, and knockout progress.",
+  title: activeSweepstakeConfig.name,
+  description: `Track the ${activeSweepstakeConfig.name}, including team owners, prizes, fixtures, results, and knockout progress.`,
 };
 
 export default function RootLayout({
