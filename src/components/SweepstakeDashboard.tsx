@@ -278,27 +278,34 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
               {card.title}
             </h3>
             {card.rankingRows ? (
-              <div className="mt-3 space-y-2">
-                {card.rankingRows.map((row) => (
-                  <div
-                    className="rounded-md border border-[#c7a653]/15 bg-[#0d1814] px-3 py-1.5"
-                    key={`${row.place}-${row.owner}`}
-                  >
-                    <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                      <p className="min-w-0 text-base font-black text-[#fff4d7]">
-                        <span className="text-[#c7a653]">{row.place}.</span>{" "}
-                        {row.owner}
-                      </p>
-                      <p className="text-base font-black text-[#f0d88b]">
-                        {row.percentage}
+              <>
+                <div className="mt-3 space-y-2">
+                  {card.rankingRows.map((row) => (
+                    <div
+                      className="rounded-md border border-[#c7a653]/15 bg-[#0d1814] px-3 py-1.5"
+                      key={`${row.place}-${row.owner}`}
+                    >
+                      <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                        <p className="min-w-0 text-base font-black text-[#fff4d7]">
+                          <span className="text-[#c7a653]">{row.place}.</span>{" "}
+                          {row.owner}
+                        </p>
+                        <p className="text-base font-black text-[#f0d88b]">
+                          {row.percentage}
+                        </p>
+                      </div>
+                      <p className="mt-0.5 break-words text-xs font-bold leading-5 text-[#b8c0ae]">
+                        {row.teams}
                       </p>
                     </div>
-                    <p className="mt-0.5 break-words text-xs font-bold leading-5 text-[#b8c0ae]">
-                      {row.teams}
-                    </p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+                {card.detail ? (
+                  <p className="mt-3 text-xs font-bold leading-5 text-[#858d7d]">
+                    {card.detail}
+                  </p>
+                ) : null}
+              </>
             ) : card.feudLines ? (
               <div className="mt-3 space-y-2 text-sm font-semibold leading-6 text-[#b8c0ae]">
                 <p className="text-lg font-black text-[#fff4d7]">

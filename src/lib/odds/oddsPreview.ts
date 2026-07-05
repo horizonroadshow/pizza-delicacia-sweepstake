@@ -17,13 +17,22 @@ import {
   rankOwnersByOutrightOdds,
   toFixtureOddsDisplay,
 } from "@/lib/odds/helpers";
+import { OddsAdapterError } from "@/lib/odds/types";
 import type { OddsEventSummary, OutrightOddsSummary } from "@/lib/odds/types";
 
 const OUTRIGHT_CACHE_TTL_MS = 60 * 60 * 1000;
 
+type OutrightOddsState =
+  | "cached-outrights"
+  | "fresh-outrights"
+  | "no-outrights"
+  | "provider-error"
+  | "provider-rate-limited";
+
 let cachedTheOddsApiOutrights:
   | {
       expiresAt: number;
+      lastSuccessfulFetchAt: string;
       value: OutrightOddsSummary[];
     }
   | undefined;
@@ -141,6 +150,7 @@ function withFlaggedOddsLabels(
 function buildMarketWatchCards(
   events: OddsEventSummary[],
   outrightOdds: OutrightOddsSummary[],
+  outrightOddsState: OutrightOddsState,
   participants: Participant[],
   config: SweepstakeConfig,
 ): MarketWatchCard[] {
@@ -154,28 +164,32 @@ function buildMarketWatchCards(
     (a, b) => a.percentage - b.percentage,
   )[0];
 
-  if (outrightOwnerRankings.length > 0) {
-    cards.push({
-      detail: "Normalised market-implied probabilities across remaining teams.",
-      eyebrow: "Bookies' implied chance",
-      rankingRows: outrightOwnerRankings
-        .slice(0, 3)
-        .map((ranking, index) => ({
-          owner: ranking.owner,
-          percentage: precisePercentageLabel(ranking.percentage),
-          place: index + 1,
-          teams: ranking.teams
-            .map(
-              (team) =>
-                `${teamDisplayName(team.team, participants)} ${precisePercentageLabel(
-                  team.percentage,
-                )}`,
-            )
-            .join(" + "),
-        })),
-      title: "Most Likely to Win...",
-    });
-  }
+  cards.push({
+    detail:
+      outrightOwnerRankings.length > 0
+        ? outrightOddsState === "cached-outrights"
+          ? "Using latest cached outright odds."
+          : undefined
+        : "Outright odds temporarily unavailable. Check back shortly.",
+    eyebrow: "Bookies' implied chance",
+    rankingRows:
+      outrightOwnerRankings.length > 0
+        ? outrightOwnerRankings.slice(0, 3).map((ranking, index) => ({
+            owner: ranking.owner,
+            percentage: precisePercentageLabel(ranking.percentage),
+            place: index + 1,
+            teams: ranking.teams
+              .map(
+                (team) =>
+                  `${teamDisplayName(team.team, participants)} ${precisePercentageLabel(
+                    team.percentage,
+                  )}`,
+              )
+              .join(" + "),
+          }))
+        : undefined,
+    title: "Most Likely to Win...",
+  });
 
   if (biggestUnderdog) {
     cards.push({
@@ -264,16 +278,30 @@ function toOutrightOddsSummary(
   };
 }
 
-async function loadTheOddsApiOutrights(participants: Participant[]) {
+function cachedOutrights() {
+  if (!cachedTheOddsApiOutrights) {
+    return undefined;
+  }
+
+  return {
+    odds: cachedTheOddsApiOutrights.value,
+    state: "cached-outrights" as const,
+  };
+}
+
+async function loadTheOddsApiOutrights(participants: Participant[]): Promise<{
+  odds: OutrightOddsSummary[];
+  state: OutrightOddsState;
+}> {
   if (
     cachedTheOddsApiOutrights &&
     cachedTheOddsApiOutrights.expiresAt > Date.now()
   ) {
-    return cachedTheOddsApiOutrights.value;
+    return cachedOutrights() ?? { odds: [], state: "no-outrights" };
   }
 
   if (!process.env.THE_ODDS_API_KEY) {
-    return [];
+    return cachedOutrights() ?? { odds: [], state: "no-outrights" };
   }
 
   try {
@@ -284,12 +312,26 @@ async function loadTheOddsApiOutrights(participants: Participant[]) {
 
     cachedTheOddsApiOutrights = {
       expiresAt: Date.now() + OUTRIGHT_CACHE_TTL_MS,
+      lastSuccessfulFetchAt: discovery.fetchedAt,
       value,
     };
 
-    return value;
-  } catch {
-    return cachedTheOddsApiOutrights?.value ?? [];
+    return {
+      odds: value,
+      state: value.length > 0 ? "fresh-outrights" : "no-outrights",
+    };
+  } catch (error) {
+    const cached = cachedOutrights();
+
+    if (cached) {
+      return cached;
+    }
+
+    if (error instanceof OddsAdapterError && error.code === "rate-limit") {
+      return { odds: [], state: "provider-rate-limited" };
+    }
+
+    return { odds: [], state: "provider-error" };
   }
 }
 
@@ -298,6 +340,7 @@ function emptyPreview(): OddsPreview {
     available: false,
     fixtureOddsByMatchup: {},
     marketWatchCards: [],
+    outrightOddsState: "no-outrights",
     outrightWinnerAvailable: false,
   };
 }
@@ -309,14 +352,29 @@ export async function loadOddsPreview(
   const cachedDiscovery = await loadOddsDiscoveryWithCache();
 
   if (!cachedDiscovery.result) {
-    return emptyPreview();
+    return {
+      ...emptyPreview(),
+      marketWatchCards: buildMarketWatchCards(
+        [],
+        [],
+        "no-outrights",
+        participants,
+        config,
+      ),
+    };
   }
 
   const discovery = cachedDiscovery.result;
-  const outrightOdds =
-    (await loadTheOddsApiOutrights(participants)) ?? discovery.outrightOdds;
+  const outrightResult = await loadTheOddsApiOutrights(participants);
+  const fallbackOutrightOdds = discovery.outrightOdds;
   const availableOutrightOdds =
-    outrightOdds.length > 0 ? outrightOdds : discovery.outrightOdds;
+    outrightResult.odds.length > 0 ? outrightResult.odds : fallbackOutrightOdds;
+  const outrightOddsState =
+    outrightResult.odds.length > 0
+      ? outrightResult.state
+      : fallbackOutrightOdds.length > 0
+        ? "cached-outrights"
+        : outrightResult.state;
 
   return {
     available: discovery.fixtureOddsAvailable,
@@ -326,10 +384,12 @@ export async function loadOddsPreview(
     marketWatchCards: buildMarketWatchCards(
       discovery.oddsExamples,
       availableOutrightOdds,
+      outrightOddsState,
       participants,
       config,
     ),
     oddsAreStale: cachedDiscovery.stale,
+    outrightOddsState,
     outrightWinnerAvailable:
       availableOutrightOdds.length > 0 || discovery.outrightWinnerAvailable,
   };

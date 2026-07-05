@@ -12,7 +12,7 @@ export type FixtureOddsDisplay = {
 };
 
 export type MarketWatchCard = {
-  detail: string;
+  detail?: string;
   eyebrow: string;
   feudLines?: {
     banter: string;
@@ -41,5 +41,11 @@ export type OddsPreview = {
   fixtureOddsByMatchup: Record<string, FixtureOddsDisplay>;
   marketWatchCards: MarketWatchCard[];
   oddsAreStale?: boolean;
+  outrightOddsState?:
+    | "cached-outrights"
+    | "fresh-outrights"
+    | "no-outrights"
+    | "provider-error"
+    | "provider-rate-limited";
   outrightWinnerAvailable: boolean;
 };
