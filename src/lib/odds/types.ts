@@ -36,6 +36,26 @@ export type OddsEventSummary = {
 };
 
 export type OddsDiscoveryResult = {
+  diagnostics: {
+    fixtureOddsReturned: Array<{
+      away: string;
+      home: string;
+      matched: boolean;
+    }>;
+    fixturesNotMatched: Array<{
+      away: string;
+      home: string;
+    }>;
+    fixturesRequested: Array<{
+      away: string;
+      home: string;
+    }>;
+    targetFixtures: Array<{
+      away: string;
+      home: string;
+    }>;
+    teamNamesFailingOwnerMatch: string[];
+  };
   eventSearchCount: number;
   fetchedAt: string;
   fixtureOddsAvailable: boolean;

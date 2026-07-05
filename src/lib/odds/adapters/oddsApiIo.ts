@@ -1,4 +1,7 @@
 import type { Match, MatchStatus, Team, TeamId, TournamentStage } from "@/data/sweepstake";
+import { normaliseTeamName, ownerLookup } from "@/lib/football/ownerLabels";
+import { activeSweepstakeConfig } from "@/data/sweepstakes";
+import { createParticipants } from "@/data/sweepstake";
 import {
   OddsAdapterError,
   type OddsAdapter,
@@ -20,6 +23,9 @@ const TARGET_FIXTURES = [
   ["Switzerland", "Colombia"],
   ["France", "Morocco"],
 ];
+const targetFixtureSummaries = TARGET_FIXTURES.filter(
+  ([home]) => home !== "USA",
+).map(([home, away]) => ({ away, home }));
 
 type OddsApiIoLeague = {
   eventCount?: number;
@@ -260,6 +266,12 @@ function matchesTargetFixture(event: OddsApiIoEvent) {
 
     return name.includes(first) && name.includes(second);
   });
+}
+
+function matchupKey(home: string | undefined, away: string | undefined) {
+  return [normaliseTeamName(home ?? ""), normaliseTeamName(away ?? "")]
+    .sort()
+    .join("__");
 }
 
 function likelyWorldCupLeague(league: OddsApiIoLeague) {
@@ -522,14 +534,54 @@ export function createOddsApiIoAdapter(): OddsAdapter {
       const outrightOdds = Array.isArray(outrightOddsEvents)
         ? outrightOddsEvents.flatMap(outrightOddsSummaries)
         : [];
+      const oddsExampleKeys = new Set(
+        oddsExamples.map((event) => matchupKey(event.home, event.away)),
+      );
+      const matchedFixtureKeys = new Set(
+        matchedFixtureEvents.map((event) => matchupKey(event.home, event.away)),
+      );
+      const participants = createParticipants(activeSweepstakeConfig);
+      const ownersByTeam = ownerLookup(participants);
+      const teamNamesFailingOwnerMatch = Array.from(
+        new Set(
+          oddsExamples
+            .flatMap((event) => [event.home, event.away])
+            .filter(
+              (teamName) =>
+                !ownersByTeam.has(normaliseTeamName(teamName)) &&
+                targetFixtureSummaries.some(
+                  (fixture) =>
+                    normaliseTeamName(fixture.home) === normaliseTeamName(teamName) ||
+                    normaliseTeamName(fixture.away) === normaliseTeamName(teamName),
+                ),
+            ),
+        ),
+      ).sort((a, b) => a.localeCompare(b, "en-GB"));
 
       return {
+        diagnostics: {
+          fixtureOddsReturned: oddsExamples.map((event) => ({
+            away: event.away,
+            home: event.home,
+            matched: oddsExampleKeys.has(matchupKey(event.home, event.away)),
+          })),
+          fixturesNotMatched: targetFixtureSummaries.filter(
+            (fixture) =>
+              !matchedFixtureKeys.has(matchupKey(fixture.home, fixture.away)),
+          ),
+          fixturesRequested: matchedFixtureEvents.map((event) => ({
+            away: event.away ?? "Team TBC",
+            home: event.home ?? "Team TBC",
+          })),
+          targetFixtures: targetFixtureSummaries,
+          teamNamesFailingOwnerMatch,
+        },
         eventSearchCount: worldCupEvents.length,
         fetchedAt: new Date().toISOString(),
         fixtureOddsAvailable: oddsExamples.length > 0,
         likelyWorldCupLeagues,
         matchedFixtureEvents: matchedFixtureEvents.map(safeEventSummary),
-        oddsExamples: oddsExamples.slice(0, 5),
+        oddsExamples,
         outrightOdds,
         outrightWinnerAvailable: outrightOdds.length > 0,
         outrightWinnerSearchCount: outrightEvents.length,

@@ -9,8 +9,8 @@ import {
   allTeamOddsCandidates,
   findOwnerForTeamName,
   normalisedMatchupKey,
+  rankOwnersByAvailableNextMatchOdds,
   rankOwnersByOutrightOdds,
-  rankOwnersByAvailableOdds,
   toFixtureOddsDisplay,
 } from "@/lib/odds/helpers";
 import { OddsAdapterError } from "@/lib/odds/types";
@@ -56,7 +56,7 @@ function buildMarketWatchCards(
     outrightOdds,
     participants,
   );
-  const ownerRankings = rankOwnersByAvailableOdds(events, participants);
+  const ownerRankings = rankOwnersByAvailableNextMatchOdds(events, participants);
   const teamCandidates = allTeamOddsCandidates(events, participants);
   const strongestTeam = [...teamCandidates].sort(
     (a, b) => b.percentage - a.percentage,
@@ -83,11 +83,21 @@ function buildMarketWatchCards(
       title: "Outright winner outlook",
     });
   } else if (ownerRankings[0]) {
+    const rankedTeams = ownerRankings[0].teams
+      .map((team) => `${team.team} ${percentageLabel(team.percentage)}`)
+      .join(" + ");
+    const missingTeams =
+      ownerRankings[0].missingTeams.length > 0
+        ? ` Odds TBC for ${ownerRankings[0].missingTeams.join(" and ")}.`
+        : "";
+
     cards.push({
-      detail: `${ownerRankings[0].team} is rated at ${percentageLabel(
+      detail: `${rankedTeams || "No available next-match percentages"} gives ${
+        ownerRankings[0].owner
+      } a ${percentageLabel(
         ownerRankings[0].percentage,
-      )} for their next match. This is not an outright tournament chance.`,
-      eyebrow: "Best next-match position",
+      )} available next-match outlook.${missingTeams} This is not an outright tournament chance.`,
+      eyebrow: "Best next-match outlook",
       title: `${ownerRankings[0].owner} has the strongest next-fixture outlook`,
     });
   }
@@ -134,6 +144,22 @@ function buildMarketWatchCards(
       detail: `${nextFamilyClash.event.home} v ${nextFamilyClash.event.away}. Family bragging rights loading.`,
       eyebrow: "Next family clash",
       title: `${nextFamilyClash.homeOwner} v ${nextFamilyClash.awayOwner}`,
+    });
+  }
+
+  const firstMissingOdds = ownerRankings.find(
+    (ranking) => ranking.missingTeams.length > 0 && ranking.teams.length > 0,
+  );
+
+  if (firstMissingOdds) {
+    cards.push({
+      detail: `${firstMissingOdds.owner} has available odds for ${firstMissingOdds.teams
+        .map((team) => team.team)
+        .join(" and ")}, with Odds TBC for ${firstMissingOdds.missingTeams.join(
+        " and ",
+      )}.`,
+      eyebrow: "Odds gaps",
+      title: "Some teams are still TBC",
     });
   }
 

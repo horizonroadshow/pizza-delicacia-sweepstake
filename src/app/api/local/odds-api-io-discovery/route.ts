@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
     const result = await adapter.discoverWorldCup2026Odds();
 
     return NextResponse.json({
+      diagnostics: result.diagnostics,
       eventSearchCount: result.eventSearchCount,
       fetchedAt: result.fetchedAt,
       fixtureOddsAvailable: result.fixtureOddsAvailable,

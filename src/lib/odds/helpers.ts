@@ -20,6 +20,16 @@ export type TeamOddsCandidate = {
   team: string;
 };
 
+export type OwnerNextMatchCandidate = {
+  missingTeams: string[];
+  owner: string;
+  percentage: number;
+  teams: Array<{
+    percentage: number;
+    team: string;
+  }>;
+};
+
 export type OwnerOutrightCandidate = {
   owner: string;
   percentage: number;
@@ -187,6 +197,66 @@ export function rankOwnersByAvailableOdds(
   return Array.from(ownerCandidates.values()).sort(
     (a, b) => b.percentage - a.percentage || a.owner.localeCompare(b.owner, "en-GB"),
   );
+}
+
+export function rankOwnersByAvailableNextMatchOdds(
+  events: OddsEventSummary[],
+  participants: Participant[],
+) {
+  const availableOddsByTeam = new Map<string, number>();
+
+  for (const event of events) {
+    const odds = averageEventProbabilities(event);
+
+    for (const candidate of teamProbabilities(event, odds)) {
+      availableOddsByTeam.set(
+        normaliseTeamName(candidate.team),
+        candidate.percentage,
+      );
+    }
+  }
+
+  return participants
+    .map<OwnerNextMatchCandidate>((participant) => {
+      const remainingTeams = participant.teams.filter(
+        (team) => team.status === "still-in",
+      );
+      const teams: OwnerNextMatchCandidate["teams"] = [];
+      const missingTeams: string[] = [];
+
+      for (const team of remainingTeams) {
+        const percentage = availableOddsByTeam.get(normaliseTeamName(team.country));
+
+        if (percentage === undefined) {
+          missingTeams.push(team.country);
+        } else {
+          teams.push({
+            percentage,
+            team: team.country,
+          });
+        }
+      }
+
+      return {
+        missingTeams,
+        owner: participant.name,
+        percentage:
+          Math.round(
+            teams.reduce((total, team) => total + team.percentage, 0) * 10,
+          ) / 10,
+        teams: teams.sort((a, b) => b.percentage - a.percentage),
+      };
+    })
+    .filter(
+      (candidate) =>
+        candidate.teams.length > 0 || candidate.missingTeams.length > 0,
+    )
+    .sort(
+      (a, b) =>
+        b.percentage - a.percentage ||
+        b.teams.length - a.teams.length ||
+        a.owner.localeCompare(b.owner, "en-GB"),
+    );
 }
 
 export function allTeamOddsCandidates(

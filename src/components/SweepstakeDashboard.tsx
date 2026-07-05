@@ -208,8 +208,8 @@ function MarketWatchSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
           </p>
         </div>
         <p className="mt-3 text-sm font-semibold leading-6 text-[#b8c0ae]">
-          Fixture odds are based on upcoming match markets. Outright winner odds
-          will be shown if available.
+          Based on available upcoming match odds. Outright tournament odds are
+          not currently available.
         </p>
       </section>
     );
@@ -231,8 +231,8 @@ function MarketWatchSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
         </p>
       </div>
       <p className="mt-3 text-sm font-semibold leading-6 text-[#b8c0ae]">
-        Fixture odds are based on upcoming match markets. Outright winner odds
-        will be shown if available.
+        Based on available upcoming match odds. Outright tournament odds are not
+        currently available.
       </p>
 
       <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
