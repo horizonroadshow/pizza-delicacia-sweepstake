@@ -1,5 +1,6 @@
 import type { Participant } from "@/data/sweepstake";
 import { familyRelationshipInsight } from "@/lib/familyRelationships";
+import { normaliseTeamName } from "@/lib/football/ownerLabels";
 import type {
   FixtureOddsDisplay,
   MarketWatchCard,
@@ -16,7 +17,10 @@ import {
 } from "@/lib/odds/helpers";
 import type { OddsEventSummary, OutrightOddsSummary } from "@/lib/odds/types";
 
-function buildFixtureOddsMap(events: OddsEventSummary[]) {
+function buildFixtureOddsMap(
+  events: OddsEventSummary[],
+  participants: Participant[],
+) {
   const fixtureOddsByMatchup: Record<string, FixtureOddsDisplay> = {};
 
   for (const event of events) {
@@ -27,7 +31,7 @@ function buildFixtureOddsMap(events: OddsEventSummary[]) {
     }
 
     fixtureOddsByMatchup[normalisedMatchupKey(event.home, event.away)] =
-      displayOdds;
+      withFlaggedOddsLabels(displayOdds, participants);
   }
 
   return fixtureOddsByMatchup;
@@ -37,7 +41,31 @@ function percentageLabel(value: number) {
   return `${Math.round(value)}%`;
 }
 
-function fixtureOddsLabel(event: OddsEventSummary) {
+function teamFlag(teamName: string, participants: Participant[]) {
+  const allocatedTeam = participants
+    .flatMap((participant) => participant.teams)
+    .find(
+      (team) => normaliseTeamName(team.country) === normaliseTeamName(teamName),
+    );
+
+  return allocatedTeam?.flag;
+}
+
+function teamDisplayName(teamName: string, participants: Participant[]) {
+  if (teamName === "Draw") {
+    return teamName;
+  }
+
+  const flag = teamFlag(teamName, participants);
+
+  if (!flag || teamName.includes(flag)) {
+    return teamName;
+  }
+
+  return `${teamName} ${flag}`;
+}
+
+function fixtureOddsLabel(event: OddsEventSummary, participants: Participant[]) {
   const fixtureOdds = toFixtureOddsDisplay(event);
 
   if (!fixtureOdds) {
@@ -45,8 +73,32 @@ function fixtureOddsLabel(event: OddsEventSummary) {
   }
 
   return fixtureOdds.probabilities
-    .map((probability) => `${probability.label} ${percentageLabel(probability.percentage)}`)
+    .map(
+      (probability) =>
+        `${teamDisplayName(probability.label, participants)} ${percentageLabel(
+          probability.percentage,
+        )}`,
+    )
     .join(" · ");
+}
+
+function withFlaggedOddsLabels(
+  displayOdds: FixtureOddsDisplay,
+  participants: Participant[],
+): FixtureOddsDisplay {
+  return {
+    ...displayOdds,
+    favourite: displayOdds.favourite
+      ? teamDisplayName(displayOdds.favourite, participants)
+      : undefined,
+    probabilities: displayOdds.probabilities.map((probability) => ({
+      ...probability,
+      label: teamDisplayName(probability.label, participants),
+    })),
+    underdog: displayOdds.underdog
+      ? teamDisplayName(displayOdds.underdog, participants)
+      : undefined,
+  };
 }
 
 function buildMarketWatchCards(
@@ -74,7 +126,12 @@ function buildMarketWatchCards(
         .slice(0, 3)
         .map((ranking, index) => {
           const teams = ranking.teams
-            .map((team) => `${team.team} ${percentageLabel(team.percentage)}`)
+            .map(
+              (team) =>
+                `${teamDisplayName(team.team, participants)} ${percentageLabel(
+                  team.percentage,
+                )}`,
+            )
             .join(" + ");
 
           return `${index + 1}. ${ranking.owner} ${percentageLabel(
@@ -92,11 +149,18 @@ function buildMarketWatchCards(
 
     if (bestOwnerWithOdds) {
       const rankedTeams = bestOwnerWithOdds.teams
-        .map((team) => `${team.team} ${percentageLabel(team.percentage)}`)
+        .map(
+          (team) =>
+            `${teamDisplayName(team.team, participants)} ${percentageLabel(
+              team.percentage,
+            )}`,
+        )
         .join(" + ");
       const missingTeams =
         bestOwnerWithOdds.missingTeams.length > 0
-          ? ` Odds TBC for ${bestOwnerWithOdds.missingTeams.join(" and ")}.`
+          ? ` Odds TBC for ${bestOwnerWithOdds.missingTeams
+              .map((team) => teamDisplayName(team, participants))
+              .join(" and ")}.`
           : "";
 
       cards.push({
@@ -113,21 +177,25 @@ function buildMarketWatchCards(
 
   if (strongestTeam) {
     cards.push({
-      detail: `${strongestTeam.owner} has ${strongestTeam.team}, currently ${percentageLabel(
+      detail: `${strongestTeam.owner} has ${teamDisplayName(
+        strongestTeam.team,
+        participants,
+      )}, currently ${percentageLabel(
         strongestTeam.percentage,
       )} for their next fixture. Based on upcoming match odds only.`,
       eyebrow: "Strongest remaining team",
-      title: strongestTeam.team,
+      title: teamDisplayName(strongestTeam.team, participants),
     });
   }
 
   if (biggestUnderdog && biggestUnderdog.team !== strongestTeam?.team) {
     cards.push({
-      detail: `${biggestUnderdog.owner} has ${biggestUnderdog.team}, rated at ${percentageLabel(
-        biggestUnderdog.percentage,
-      )}. Underdog watch.`,
+      detail: `${biggestUnderdog.owner} has ${teamDisplayName(
+        biggestUnderdog.team,
+        participants,
+      )}, rated at ${percentageLabel(biggestUnderdog.percentage)}. Underdog watch.`,
       eyebrow: "Biggest underdog still alive",
-      title: biggestUnderdog.team,
+      title: teamDisplayName(biggestUnderdog.team, participants),
     });
   }
 
@@ -159,7 +227,7 @@ function buildMarketWatchCards(
 
   if (familyBranchBattle) {
     cards.push({
-      detail: `${familyBranchBattle.event.home} (${familyBranchBattle.homeOwner}) v ${familyBranchBattle.event.away} (${familyBranchBattle.awayOwner}). ${familyBranchBattle.relationship.copy} ${fixtureOddsLabel(familyBranchBattle.event)}.`,
+      detail: `${teamDisplayName(familyBranchBattle.event.home, participants)} (${familyBranchBattle.homeOwner}) v ${teamDisplayName(familyBranchBattle.event.away, participants)} (${familyBranchBattle.awayOwner}). ${familyBranchBattle.relationship.copy} ${fixtureOddsLabel(familyBranchBattle.event, participants)}.`,
       eyebrow: familyBranchBattle.relationship.label,
       title: familyBranchBattle.relationship.title,
     });
@@ -172,10 +240,10 @@ function buildMarketWatchCards(
   if (firstMissingOdds) {
     cards.push({
       detail: `${firstMissingOdds.owner} has available odds for ${firstMissingOdds.teams
-        .map((team) => team.team)
-        .join(" and ")}, with Odds TBC for ${firstMissingOdds.missingTeams.join(
-        " and ",
-      )}.`,
+        .map((team) => teamDisplayName(team.team, participants))
+        .join(" and ")}, with Odds TBC for ${firstMissingOdds.missingTeams
+        .map((team) => teamDisplayName(team, participants))
+        .join(" and ")}.`,
       eyebrow: "Odds gaps",
       title: "Some teams are still TBC",
     });
@@ -208,7 +276,7 @@ export async function loadOddsPreview(
     available: discovery.fixtureOddsAvailable,
     cacheState: cachedDiscovery.cacheState,
     fetchedAt: discovery.fetchedAt,
-    fixtureOddsByMatchup: buildFixtureOddsMap(discovery.oddsExamples),
+    fixtureOddsByMatchup: buildFixtureOddsMap(discovery.oddsExamples, participants),
     marketWatchCards: buildMarketWatchCards(
       discovery.oddsExamples,
       discovery.outrightOdds,

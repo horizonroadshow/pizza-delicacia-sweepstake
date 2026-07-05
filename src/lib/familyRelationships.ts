@@ -142,7 +142,7 @@ export function familyRelationshipInsight(
       branchA,
       branchB,
       copy: "Marriage temporarily suspended for 90 minutes.",
-      label: "Spouse vs spouse",
+      label: "HOMEWRECKER",
       priority: 0,
       title: "Family Feud",
       type: "spouse",

@@ -10,6 +10,7 @@ import type { FixtureOddsDisplay, OddsPreview } from "@/lib/odds/displayTypes";
 import { normalisedMatchupKey } from "@/lib/odds/helpers";
 
 export type FixturePreviewTeam = {
+  flag?: string;
   name: string;
   owner?: string;
 };
@@ -57,6 +58,18 @@ function teamName(
   }
 
   return teamsById.get(teamId)?.country ?? placeholder ?? "Team TBC";
+}
+
+function flagLookup(participants: Participant[]) {
+  const lookup = new Map<string, string>();
+
+  for (const participant of participants) {
+    for (const team of participant.teams) {
+      lookup.set(normaliseTeamName(team.country), team.flag);
+    }
+  }
+
+  return lookup;
 }
 
 function stageLabel(match: Match) {
@@ -137,15 +150,18 @@ function toPreviewItem(
   const homeName = teamName(match.homeTeamId, match.homeTeamPlaceholder, teamsById);
   const awayName = teamName(match.awayTeamId, match.awayTeamPlaceholder, teamsById);
   const parsedDate = kickoffDate(match);
+  const flagsByTeamName = flagLookup(participants);
 
   return {
     away: {
+      flag: flagsByTeamName.get(normaliseTeamName(awayName)),
       name: awayName,
       owner:
         ownersByTeamName.get(normaliseTeamName(awayName)) ??
         possibleOwnerLabel(awayName, participants),
     },
     home: {
+      flag: flagsByTeamName.get(normaliseTeamName(homeName)),
       name: homeName,
       owner:
         ownersByTeamName.get(normaliseTeamName(homeName)) ??

@@ -94,10 +94,12 @@ function sortParticipantsForFilter(
 }
 
 function FixtureTeam({ team }: { team: FixturePreviewItem["home"] }) {
+  const teamLabel = team.flag ? `${team.name} ${team.flag}` : team.name;
+
   return (
     <div className="min-w-0">
       <p className="truncate text-base font-black text-[#fff4d7]">
-        {team.name}
+        {teamLabel}
       </p>
       <p className="mt-1 truncate text-xs font-bold uppercase tracking-wide text-[#b8c0ae]">
         {team.owner ? team.owner : "TBC"}
