@@ -19,8 +19,14 @@ export type MarketWatchCard = {
 
 export type OddsPreview = {
   available: boolean;
+  cacheState?:
+    | "odds-rate-limited"
+    | "odds-unavailable"
+    | "using-cached-odds"
+    | "using-fresh-odds";
   fetchedAt?: string;
   fixtureOddsByMatchup: Record<string, FixtureOddsDisplay>;
   marketWatchCards: MarketWatchCard[];
+  oddsAreStale?: boolean;
   outrightWinnerAvailable: boolean;
 };

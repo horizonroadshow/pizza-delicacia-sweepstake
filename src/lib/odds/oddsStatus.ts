@@ -1,32 +1,31 @@
-import { createOddsApiIoAdapter } from "@/lib/odds/adapters/oddsApiIo";
-import { OddsAdapterError } from "@/lib/odds/types";
+import {
+  loadOddsDiscoveryWithCache,
+  readCachedOdds,
+} from "@/lib/odds/oddsCache";
+import type { OddsCacheState } from "@/lib/odds/oddsCache";
+import type { OddsDiscoveryResult } from "@/lib/odds/types";
 
 export type OddsStatusErrorCategory =
   | "mapping-error"
   | "missing-key"
   | "no-fixtures"
-  | "provider-error";
+  | "provider-error"
+  | "rate-limit";
 
 export type OddsStatus = {
+  cacheState: OddsCacheState;
   errorCategory?: OddsStatusErrorCategory;
   fixturesRequested: number;
   hasOddsKey: boolean;
   lastCheckedAt: string;
+  lastSuccessfulFetchAt?: string;
   matchedFixtures: number;
   oddsFixturesReturned: number;
   providerConfigured: boolean;
+  stale: boolean;
   teamNamesFailingOwnerMatch: string[];
   unmatchedFixtures: string[];
 };
-
-const STATUS_CACHE_TTL_MS = 10 * 60 * 1000;
-
-let cachedStatus:
-  | {
-      expiresAt: number;
-      value: OddsStatus;
-    }
-  | undefined;
 
 function fixtureName(fixture: { away: string; home: string }) {
   return `${fixture.home} v ${fixture.away}`;
@@ -37,6 +36,7 @@ function emptyStatus(
   errorCategory?: OddsStatusErrorCategory,
 ): OddsStatus {
   return {
+    cacheState: "odds-unavailable",
     errorCategory,
     fixturesRequested: 0,
     hasOddsKey,
@@ -44,68 +44,85 @@ function emptyStatus(
     matchedFixtures: 0,
     oddsFixturesReturned: 0,
     providerConfigured: hasOddsKey,
+    stale: false,
     teamNamesFailingOwnerMatch: [],
     unmatchedFixtures: [],
   };
 }
 
-function errorCategory(error: OddsAdapterError): OddsStatusErrorCategory {
-  if (error.code === "missing-api-key") {
-    return "missing-key";
-  }
+function statusFromDiscovery({
+  cacheState,
+  hasOddsKey,
+  result,
+  stale,
+}: {
+  cacheState: OddsCacheState;
+  hasOddsKey: boolean;
+  result: OddsDiscoveryResult;
+  stale: boolean;
+}): OddsStatus {
+  const oddsFixturesReturned = result.diagnostics.fixtureOddsReturned.length;
+  const matchedFixtures = result.diagnostics.fixtureOddsReturned.filter(
+    (fixture) => fixture.matched,
+  ).length;
 
-  if (error.code === "no-events") {
-    return "no-fixtures";
-  }
-
-  return "provider-error";
+  return {
+    cacheState,
+    errorCategory:
+      oddsFixturesReturned === 0
+        ? "no-fixtures"
+        : result.diagnostics.teamNamesFailingOwnerMatch.length > 0
+          ? "mapping-error"
+          : undefined,
+    fixturesRequested: result.diagnostics.targetFixtures.length,
+    hasOddsKey,
+    lastCheckedAt: new Date().toISOString(),
+    lastSuccessfulFetchAt: result.fetchedAt,
+    matchedFixtures,
+    oddsFixturesReturned,
+    providerConfigured: hasOddsKey,
+    stale,
+    teamNamesFailingOwnerMatch: result.diagnostics.teamNamesFailingOwnerMatch,
+    unmatchedFixtures: result.diagnostics.fixturesNotMatched.map(fixtureName),
+  };
 }
 
-export async function loadOddsStatus(): Promise<OddsStatus> {
-  if (cachedStatus && cachedStatus.expiresAt > Date.now()) {
-    return cachedStatus.value;
-  }
-
+export async function loadOddsStatus({
+  refresh = false,
+}: {
+  refresh?: boolean;
+} = {}): Promise<OddsStatus> {
   const hasOddsKey = Boolean(process.env.ODDS_API_IO_KEY);
 
-  if (!hasOddsKey) {
-    return emptyStatus(false, "missing-key");
-  }
+  if (!refresh) {
+    const cached = readCachedOdds();
 
-  try {
-    const result = await createOddsApiIoAdapter().discoverWorldCup2026Odds();
-    const oddsFixturesReturned = result.diagnostics.fixtureOddsReturned.length;
-    const matchedFixtures = result.diagnostics.fixtureOddsReturned.filter(
-      (fixture) => fixture.matched,
-    ).length;
-    const status: OddsStatus = {
-      errorCategory:
-        oddsFixturesReturned === 0
-          ? "no-fixtures"
-          : result.diagnostics.teamNamesFailingOwnerMatch.length > 0
-            ? "mapping-error"
-            : undefined,
-      fixturesRequested: result.diagnostics.targetFixtures.length,
-      hasOddsKey,
-      lastCheckedAt: result.fetchedAt,
-      matchedFixtures,
-      oddsFixturesReturned,
-      providerConfigured: true,
-      teamNamesFailingOwnerMatch: result.diagnostics.teamNamesFailingOwnerMatch,
-      unmatchedFixtures: result.diagnostics.fixturesNotMatched.map(fixtureName),
-    };
-
-    cachedStatus = {
-      expiresAt: Date.now() + STATUS_CACHE_TTL_MS,
-      value: status,
-    };
-
-    return status;
-  } catch (error) {
-    if (error instanceof OddsAdapterError) {
-      return emptyStatus(hasOddsKey, errorCategory(error));
+    if (cached) {
+      return statusFromDiscovery({
+        cacheState: "using-cached-odds",
+        hasOddsKey,
+        result: cached,
+        stale: false,
+      });
     }
 
-    return emptyStatus(hasOddsKey, "provider-error");
+    return emptyStatus(hasOddsKey, hasOddsKey ? undefined : "missing-key");
   }
+
+  const cachedResult = await loadOddsDiscoveryWithCache({ forceRefresh: true });
+
+  if (!cachedResult.result) {
+    return {
+      ...emptyStatus(hasOddsKey, cachedResult.errorCategory),
+      cacheState: cachedResult.cacheState,
+      stale: cachedResult.stale,
+    };
+  }
+
+  return statusFromDiscovery({
+    cacheState: cachedResult.cacheState,
+    hasOddsKey,
+    result: cachedResult.result,
+    stale: cachedResult.stale,
+  });
 }

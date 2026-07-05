@@ -110,6 +110,20 @@ function roundedPercentage(value: number) {
   return `${Math.round(value)}%`;
 }
 
+function oddsUpdatedLabel(fetchedAt?: string, stale = false) {
+  if (!fetchedAt) {
+    return undefined;
+  }
+
+  const timestamp = new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Europe/London",
+  }).format(new Date(fetchedAt));
+
+  return `${stale ? "Using cached odds" : "Odds last updated"}: ${timestamp}`;
+}
+
 function FixtureOddsPanel({ odds }: { odds?: FixtureOddsDisplay }) {
   if (!odds) {
     return (
@@ -195,6 +209,11 @@ function FixtureCard({
 }
 
 function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
+  const updatedLabel = oddsUpdatedLabel(
+    oddsPreview.fetchedAt,
+    oddsPreview.oddsAreStale,
+  );
+
   if (oddsPreview.marketWatchCards.length === 0) {
     return (
       <section className="mt-4 rounded-lg border border-[#c7a653]/20 bg-[#0d1814] p-4 sm:p-5">
@@ -219,6 +238,11 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
           Odds TBC for now. Fixtures still show as normal, and this corner will
           fill back in when the provider returns usable match markets.
         </p>
+        {updatedLabel ? (
+          <p className="mt-2 text-xs font-bold uppercase tracking-wide text-[#c7a653]">
+            {updatedLabel}
+          </p>
+        ) : null}
       </section>
     );
   }
@@ -242,6 +266,11 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
         Based on available upcoming match odds. Outright tournament odds are not
         currently available.
       </p>
+      {updatedLabel ? (
+        <p className="mt-2 text-xs font-bold uppercase tracking-wide text-[#c7a653]">
+          {updatedLabel}
+        </p>
+      ) : null}
 
       <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {oddsPreview.marketWatchCards.map((card) => (

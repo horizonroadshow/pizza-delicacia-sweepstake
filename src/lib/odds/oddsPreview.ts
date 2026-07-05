@@ -1,11 +1,11 @@
 import type { Participant } from "@/data/sweepstake";
 import { familyRelationshipInsight } from "@/lib/familyRelationships";
-import { createOddsApiIoAdapter } from "@/lib/odds/adapters/oddsApiIo";
 import type {
   FixtureOddsDisplay,
   MarketWatchCard,
   OddsPreview,
 } from "@/lib/odds/displayTypes";
+import { loadOddsDiscoveryWithCache } from "@/lib/odds/oddsCache";
 import {
   allTeamOddsCandidates,
   findOwnerForTeamName,
@@ -14,17 +14,7 @@ import {
   rankOwnersByOutrightOdds,
   toFixtureOddsDisplay,
 } from "@/lib/odds/helpers";
-import { OddsAdapterError } from "@/lib/odds/types";
 import type { OddsEventSummary, OutrightOddsSummary } from "@/lib/odds/types";
-
-const CACHE_TTL_MS = 10 * 60 * 1000;
-
-let cachedPreview:
-  | {
-      expiresAt: number;
-      value: OddsPreview;
-    }
-  | undefined;
 
 function buildFixtureOddsMap(events: OddsEventSummary[]) {
   const fixtureOddsByMatchup: Record<string, FixtureOddsDisplay> = {};
@@ -206,35 +196,25 @@ function emptyPreview(): OddsPreview {
 export async function loadOddsPreview(
   participants: Participant[],
 ): Promise<OddsPreview> {
-  if (cachedPreview && cachedPreview.expiresAt > Date.now()) {
-    return cachedPreview.value;
-  }
+  const cachedDiscovery = await loadOddsDiscoveryWithCache();
 
-  try {
-    const discovery = await createOddsApiIoAdapter().discoverWorldCup2026Odds();
-    const preview: OddsPreview = {
-      available: discovery.fixtureOddsAvailable,
-      fetchedAt: discovery.fetchedAt,
-      fixtureOddsByMatchup: buildFixtureOddsMap(discovery.oddsExamples),
-      marketWatchCards: buildMarketWatchCards(
-        discovery.oddsExamples,
-        discovery.outrightOdds,
-        participants,
-      ),
-      outrightWinnerAvailable: discovery.outrightWinnerAvailable,
-    };
-
-    cachedPreview = {
-      expiresAt: Date.now() + CACHE_TTL_MS,
-      value: preview,
-    };
-
-    return preview;
-  } catch (error) {
-    if (error instanceof OddsAdapterError) {
-      return emptyPreview();
-    }
-
+  if (!cachedDiscovery.result) {
     return emptyPreview();
   }
+
+  const discovery = cachedDiscovery.result;
+
+  return {
+    available: discovery.fixtureOddsAvailable,
+    cacheState: cachedDiscovery.cacheState,
+    fetchedAt: discovery.fetchedAt,
+    fixtureOddsByMatchup: buildFixtureOddsMap(discovery.oddsExamples),
+    marketWatchCards: buildMarketWatchCards(
+      discovery.oddsExamples,
+      discovery.outrightOdds,
+      participants,
+    ),
+    oddsAreStale: cachedDiscovery.stale,
+    outrightWinnerAvailable: discovery.outrightWinnerAvailable,
+  };
 }
