@@ -1,5 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { activeSweepstakeConfig } from "@/data/sweepstakes";
+import {
+  activeSweepstakeConfig,
+  getSweepstakeConfigBySlug,
+} from "@/data/sweepstakes";
 import { validateSweepstakeConfig } from "@/data/sweepstakes/validation";
 
 export const dynamic = "force-dynamic";
@@ -25,14 +28,29 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const result = validateSweepstakeConfig(activeSweepstakeConfig);
+  const requestedSlug = request.nextUrl.searchParams.get("slug");
+  const config = requestedSlug
+    ? getSweepstakeConfigBySlug(requestedSlug)
+    : activeSweepstakeConfig;
+
+  if (!config) {
+    return NextResponse.json(
+      {
+        error: `Unknown sweepstake slug: ${requestedSlug}`,
+        ok: false,
+      },
+      { status: 404 },
+    );
+  }
+
+  const result = validateSweepstakeConfig(config);
 
   return NextResponse.json({
     ...result,
     sweepstake: {
-      id: activeSweepstakeConfig.id,
-      name: activeSweepstakeConfig.name,
-      slug: activeSweepstakeConfig.slug,
+      id: config.id,
+      name: config.name,
+      slug: config.slug,
     },
   });
 }
