@@ -1,10 +1,15 @@
+import { formidableSweepstake } from "@/data/sweepstakes/formidable";
 import { norburyGroupSweepstake } from "@/data/sweepstakes/norbury-group";
 import { pizzaDelicaciaSweepstake } from "@/data/sweepstakes/pizza-delicacia";
 
 export type { SweepstakeConfig } from "@/data/sweepstakes/types";
-export { norburyGroupSweepstake, pizzaDelicaciaSweepstake };
+export { formidableSweepstake, norburyGroupSweepstake, pizzaDelicaciaSweepstake };
 
-export const sweepstakeConfigs = [pizzaDelicaciaSweepstake, norburyGroupSweepstake];
+export const sweepstakeConfigs = [
+  pizzaDelicaciaSweepstake,
+  norburyGroupSweepstake,
+  formidableSweepstake,
+];
 
 export function getSweepstakeConfigBySlug(slug: string) {
   return sweepstakeConfigs.find((config) => config.slug === slug);

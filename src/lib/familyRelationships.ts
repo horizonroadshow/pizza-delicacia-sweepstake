@@ -1,6 +1,7 @@
 import type { SweepstakeRelationshipConfig } from "@/data/sweepstakes/types";
 
 export type FamilyRelationshipType =
+  | "custom-social"
   | "different-branch"
   | "fallback"
   | "parent-child"
@@ -68,6 +69,22 @@ export function familyRelationshipInsight(
       priority: 0,
       title: "Family Feud",
       type: "spouse",
+    };
+  }
+
+  const socialPair = relationships?.socialPairs?.find(({ pair }) =>
+    pairMatches(ownerA, ownerB, pair),
+  );
+
+  if (socialPair) {
+    return {
+      branchA,
+      branchB,
+      copy: socialPair.copy,
+      label: socialPair.label,
+      priority: socialPair.priority,
+      title: "Family Feud",
+      type: "custom-social",
     };
   }
 

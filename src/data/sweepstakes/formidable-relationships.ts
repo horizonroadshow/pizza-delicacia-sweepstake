@@ -1,0 +1,103 @@
+import type { SweepstakeRelationshipConfig } from "@/data/sweepstakes/types";
+
+export const formidableRelationships: SweepstakeRelationshipConfig = {
+  branches: {
+    "School friends": ["Ajay", "Joe", "Simon", "Sam", "Jonah", "Harry"],
+    "Partners and pals": [
+      "Aditi",
+      "Emily",
+      "Suchita",
+      "Alaleh",
+      "Pippa",
+      "Anna",
+      "Molly",
+    ],
+    "Formidáble crew": ["Milo", "Kish", "Alasdair"],
+  },
+  households: [
+    ["Ajay", "Aditi"],
+    ["Joe", "Pippa"],
+    ["Simon", "Emily", "Milo"],
+    ["Sam", "Anna"],
+    ["Kish", "Suchita"],
+    ["Jonah", "Molly"],
+    ["Alasdair", "Alaleh"],
+  ],
+  parentChildPairs: [
+    ["Simon", "Milo"],
+    ["Emily", "Milo"],
+  ],
+  socialPairs: [
+    {
+      copy: "Date-night bragging rights are on the line.",
+      label: "Couple clash",
+      pair: ["Jonah", "Molly"],
+      priority: 1,
+      type: "dating",
+    },
+    {
+      copy: "Old school bragging rights are back on the timetable.",
+      label: "School friends",
+      pair: ["Harry", "Ajay"],
+      priority: 5,
+      type: "school-friend",
+    },
+    {
+      copy: "Old school bragging rights are back on the timetable.",
+      label: "School friends",
+      pair: ["Harry", "Joe"],
+      priority: 5,
+      type: "school-friend",
+    },
+    {
+      copy: "Old school bragging rights are back on the timetable.",
+      label: "School friends",
+      pair: ["Harry", "Simon"],
+      priority: 5,
+      type: "school-friend",
+    },
+    {
+      copy: "Old school bragging rights are back on the timetable.",
+      label: "School friends",
+      pair: ["Harry", "Sam"],
+      priority: 5,
+      type: "school-friend",
+    },
+    {
+      copy: "Old school bragging rights are back on the timetable.",
+      label: "School friends",
+      pair: ["Harry", "Jonah"],
+      priority: 5,
+      type: "school-friend",
+    },
+    {
+      copy: "Old school bragging rights are back on the timetable.",
+      label: "School friends",
+      pair: ["Aditi", "Emily"],
+      priority: 5,
+      type: "school-friend",
+    },
+    {
+      copy: "Old school bragging rights are back on the timetable.",
+      label: "School friends",
+      pair: ["Aditi", "Suchita"],
+      priority: 5,
+      type: "school-friend",
+    },
+    {
+      copy: "Old school bragging rights are back on the timetable.",
+      label: "School friends",
+      pair: ["Aditi", "Alaleh"],
+      priority: 5,
+      type: "school-friend",
+    },
+  ],
+  spousePairs: [
+    ["Ajay", "Aditi"],
+    ["Joe", "Pippa"],
+    ["Simon", "Emily"],
+    ["Sam", "Anna"],
+    ["Kish", "Suchita"],
+    ["Alasdair", "Alaleh"],
+  ],
+};

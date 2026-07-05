@@ -7,6 +7,13 @@ export type SweepstakeRelationshipConfig = {
   households?: string[][];
   parentChildPairs?: [string, string][];
   siblingGroups?: string[][];
+  socialPairs?: {
+    copy: string;
+    label: string;
+    pair: [string, string];
+    priority: number;
+    type: string;
+  }[];
   spousePairs?: [string, string][];
 };
 
