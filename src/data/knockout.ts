@@ -32,13 +32,14 @@ export type KnockoutRound = {
   id: string;
   matches: KnockoutMatch[];
   name: string;
-  side: "left" | "right";
+  side: "full" | "left" | "right";
 };
 
 export type KnockoutDraw = {
   currentRoundId: TournamentStage;
   leftRounds: KnockoutRound[];
   final: KnockoutMatch;
+  rounds: KnockoutRound[];
   thirdPlace?: KnockoutMatch;
   rightRounds: KnockoutRound[];
 };
@@ -498,7 +499,7 @@ function toKnockoutMatch(
 function round(
   id: string,
   name: string,
-  side: "left" | "right",
+  side: "full" | "left" | "right",
   matches: Match[],
   options: Required<KnockoutDrawOptions>,
 ): KnockoutRound {
@@ -566,6 +567,38 @@ export function createKnockoutDraw(
 
   return {
     currentRoundId: currentRoundId(groupedMatches),
+    // Full-round arrays are the source of truth for complete desktop/mobile
+    // counts. The mirrored left/right arrays below are layout helpers only.
+    rounds: [
+      round(
+        "round-of-32",
+        roundNames["round-of-32"],
+        "full",
+        roundOf32,
+        drawOptions,
+      ),
+      round(
+        "round-of-16",
+        roundNames["round-of-16"],
+        "full",
+        roundOf16,
+        drawOptions,
+      ),
+      round(
+        "quarter-finals",
+        roundNames["quarter-finals"],
+        "full",
+        quarterFinals,
+        drawOptions,
+      ),
+      round(
+        "semi-finals",
+        roundNames["semi-finals"],
+        "full",
+        semiFinals,
+        drawOptions,
+      ),
+    ],
     leftRounds: [
       round(
         "left-round-of-32",
