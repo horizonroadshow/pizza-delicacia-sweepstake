@@ -31,6 +31,36 @@ export const norburyGroupRelationships: SweepstakeRelationshipConfig = {
       "Riyan & Mira",
     ],
   },
+  cousinGroups: [
+    [
+      "Aditi",
+      "Pratik",
+      "Mitan",
+      "Gayatri",
+      "Darshan",
+      "Honeysha",
+      "Deepa",
+      "Ajay",
+      "Deepti",
+      "Niruban",
+      "Dilen",
+      "Aakarsh",
+    ],
+  ],
+  generationGroups: {
+    child: ["Shreeya", "Shayan", "Anaya", "Rohan", "Riyan & Mira"],
+    middle: [
+      "Aditi",
+      "Pratik",
+      "Mitan",
+      "Gayatri",
+      "Darshan",
+      "Honeysha",
+      "Deepa",
+    ],
+    olderSibling: ["Krushna Masi", "Uri Masi", "Asmita", "Bhanu Mama"],
+  },
+  genericBraggingRightsCopy: "Family bragging rights are on the line.",
   households: [
     ["Asmita", "Aditi", "Ajay"],
     ["Jayshree Mami", "Bhanu Mama", "Pratik", "Mitan"],
@@ -66,13 +96,94 @@ export const norburyGroupRelationships: SweepstakeRelationshipConfig = {
     ["Deepa", "Riyan & Mira"],
     ["Aakarsh", "Riyan & Mira"],
   ],
+  participantContext: {
+    "Krushna Masi": {
+      ageBand: "60s",
+      gender: "female",
+      generation: "older-sibling",
+    },
+    "Uri Masi": {
+      ageBand: "60s",
+      gender: "female",
+      generation: "older-sibling",
+    },
+    Asmita: {
+      ageBand: "60s",
+      gender: "female",
+      generation: "older-sibling",
+    },
+    "Bhanu Mama": {
+      ageBand: "60s",
+      gender: "male",
+      generation: "older-sibling",
+    },
+    Aditi: { ageBand: "30-45", generation: "middle" },
+    Pratik: { ageBand: "30-45", generation: "middle" },
+    Mitan: { ageBand: "30-45", generation: "middle" },
+    Gayatri: { ageBand: "30-45", generation: "middle" },
+    Darshan: { ageBand: "30-45", generation: "middle" },
+    Honeysha: { ageBand: "30-45", generation: "middle" },
+    Deepa: { ageBand: "30-45", generation: "middle" },
+    Shreeya: { ageBand: "1-15", generation: "child" },
+    Shayan: { ageBand: "1-15", generation: "child" },
+    Anaya: { ageBand: "1-15", generation: "child" },
+    Rohan: { ageBand: "1-15", generation: "child" },
+    "Riyan & Mira": {
+      ageBand: "1-15",
+      gender: "mixed",
+      generation: "child",
+    },
+  },
   siblingGroups: [
+    ["Krushna Masi", "Uri Masi", "Asmita", "Bhanu Mama"],
     ["Pratik", "Mitan"],
     ["Shreeya", "Shayan"],
     ["Gayatri", "Darshan"],
     ["Honeysha", "Deepa"],
     ["Anaya", "Rohan"],
   ],
+  relationshipCopy: {
+    cousin: {
+      copy: "The cousins' table has a new talking point.",
+      label: "Cousin Watch",
+    },
+    "different-branch": {
+      copy: "The family WhatsApp may need a referee.",
+      label: "Family Bragging Rights",
+    },
+    fallback: {
+      copy: "One match, several family messages incoming.",
+      label: "Family Matchup",
+    },
+    "older-sibling": {
+      copy: "Sibling bragging rights, 60 years in the making.",
+      label: "Sibling Bragging Rights",
+    },
+    "parent-child": {
+      copy: "Experience versus youthful confidence.",
+      label: "Generation Game",
+    },
+    "same-branch": {
+      copy: "A very polite family rivalry, until the final whistle.",
+      label: "Family Bragging Rights",
+    },
+    "same-household": {
+      copy: "One household, two very different football agendas.",
+      label: "Family Bragging Rights",
+    },
+    sibling: {
+      copy: "The sibling group chat may get noisy.",
+      label: "Sibling Bragging Rights",
+    },
+    spouse: {
+      copy: "Dinner table bragging rights are on the line.",
+      label: "Next Homewrecker",
+    },
+    "young-child": {
+      copy: "Junior entry, major main-character energy.",
+      label: "Next Generation",
+    },
+  },
   spousePairs: [
     ["Aditi", "Ajay"],
     ["Jayshree Mami", "Bhanu Mama"],
@@ -83,4 +194,5 @@ export const norburyGroupRelationships: SweepstakeRelationshipConfig = {
     ["Honeysha", "Dilen"],
     ["Deepa", "Aakarsh"],
   ],
+  title: "Family Feud",
 };

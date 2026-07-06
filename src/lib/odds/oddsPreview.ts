@@ -371,6 +371,7 @@ function buildFamilyFeudCard(
       : "Fixture watch";
     const feudTitle =
       familyBranchBattle.relationship.label === "HOMEWRECKER" ||
+      familyBranchBattle.relationship.label === "Next Homewrecker" ||
       familyBranchBattle.relationship.socialType === "dating"
         ? "Next Homewrecker"
         : familyBranchBattle.relationship.socialType === "school-friend"
@@ -378,7 +379,7 @@ function buildFamilyFeudCard(
           : isRelationshipConfigured && isFriendsSweepstake
             ? "Friendship on the line"
             : isRelationshipConfigured
-              ? "Next Homewrecker"
+              ? familyBranchBattle.relationship.label
               : "Next owned-team matchup";
     const odds = fixtureOddsLabel(familyBranchBattle.event, participants);
 
