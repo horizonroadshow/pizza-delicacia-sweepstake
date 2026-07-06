@@ -18,7 +18,11 @@ import type {
   FixturePreviewRoundGroup,
   FixturesPreview,
 } from "@/lib/football/fixturePreview";
-import type { FixtureOddsDisplay, OddsPreview } from "@/lib/odds/displayTypes";
+import type {
+  FixtureOddsDisplay,
+  MarketWatchCard,
+  OddsPreview,
+} from "@/lib/odds/displayTypes";
 
 type FilterId = "still-in" | "all" | "eliminated" | `remaining-${number}`;
 
@@ -52,6 +56,26 @@ function filtersForTeamsPerParticipant(teamsPerParticipant: number) {
 
 function compactTitleLine(line: string) {
   return line.replace(/\s*[🍕⚽️]+/gu, "").trim();
+}
+
+function PremiumTitleLine({ line }: { line: string }) {
+  const footballMatch = line.match(/\s*⚽️?$/u);
+
+  if (!footballMatch) {
+    return <span className="block formidable-gold-text">{line}</span>;
+  }
+
+  const text = line.slice(0, footballMatch.index).trimEnd();
+  const football = footballMatch[0].trim();
+
+  return (
+    <span className="block">
+      <span className="formidable-gold-text">{text}</span>{" "}
+      <span aria-label="football" className="inline-block text-[#fff4d7]" role="img">
+        {football}
+      </span>
+    </span>
+  );
 }
 
 function remainingTeams(participant: Participant) {
@@ -210,15 +234,165 @@ function FixtureCard({
   );
 }
 
-function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
+function featurePercentageFromDetail(detail?: string) {
+  return detail?.match(/rated at ([\d.]+%)/)?.[1];
+}
+
+function PremiumBookiesCard({ card, index }: { card: MarketWatchCard; index: number }) {
+  if (card.rankingRows) {
+    const [leader, ...rest] = card.rankingRows;
+
+    return (
+      <article className="formidable-metal-card flex h-full flex-col rounded-lg border p-4">
+        <p className="formidable-section-kicker text-xs font-black uppercase tracking-[0.18em]">
+          {card.eyebrow}
+        </p>
+        <h3 className="mt-2 text-xl font-black text-[#fff4d7]">{card.title}</h3>
+        {leader ? (
+          <div className="mt-3 rounded-lg border border-[#d6a93a]/35 bg-[#050504]/90 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)]">
+            <div className="flex min-w-0 flex-wrap items-end justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-[#c7a653]">
+                  1st place
+                </p>
+                <p className="mt-1 text-3xl font-black leading-tight text-[#fff4d7]">
+                  {leader.owner}
+                </p>
+              </div>
+              <p className="formidable-gold-text text-4xl font-black leading-none">
+                {leader.percentage}
+              </p>
+            </div>
+            <p className="mt-2 break-words text-sm font-bold leading-5 text-[#d4c9ad]">
+              {leader.teams}
+            </p>
+          </div>
+        ) : null}
+        {rest.length > 0 ? (
+          <div className="mt-2 grid gap-2">
+            {rest.map((row) => (
+              <div
+                className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-md border border-[#d6a93a]/18 bg-[#080705]/90 px-3 py-2"
+                key={`${row.place}-${row.owner}`}
+              >
+                <p className="min-w-0 text-sm font-black text-[#fff4d7]">
+                  <span className="text-[#c7a653]">{row.place}.</span>{" "}
+                  {row.owner}
+                </p>
+                <p className="font-black text-[#f0d88b]">{row.percentage}</p>
+                <p className="basis-full break-words text-xs font-bold text-[#9f9786]">
+                  {row.teams}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {card.detail ? (
+          <p className="mt-3 text-xs font-bold leading-5 text-[#858d7d]">
+            {card.detail}
+          </p>
+        ) : null}
+      </article>
+    );
+  }
+
+  if (card.feudLines) {
+    return (
+      <article className="formidable-metal-card flex h-full flex-col rounded-lg border p-4">
+        <p className="formidable-section-kicker text-xs font-black uppercase tracking-[0.18em]">
+          {card.eyebrow}
+        </p>
+        <h3 className="mt-2 text-base font-black uppercase tracking-[0.14em] text-[#c7a653]">
+          {card.title}
+        </h3>
+        <div className="mt-3 rounded-lg border border-[#d6a93a]/25 bg-[#050504]/80 p-3 text-center">
+          <p className="text-3xl font-black leading-tight text-[#fff4d7] xl:text-4xl">
+            {card.feudLines.owners}
+          </p>
+          <p className="mt-2 text-sm font-black text-[#d9dccf]">
+            {card.feudLines.fixture}
+          </p>
+          {card.feudLines.date ? (
+            <p className="mt-1 text-xs font-black uppercase tracking-wide text-[#c7a653]">
+              {card.feudLines.date}
+            </p>
+          ) : null}
+        </div>
+        <p className="mt-3 text-center text-sm font-semibold leading-6 text-[#d4c9ad]">
+          {card.feudLines.banter}
+        </p>
+        {card.feudLines.odds ? (
+          <p className="mt-2 break-words rounded-md border border-[#d6a93a]/18 bg-[#080705] px-3 py-2 text-xs font-black uppercase tracking-wide text-[#f0d88b]">
+            {card.feudLines.odds}
+          </p>
+        ) : null}
+      </article>
+    );
+  }
+
+  const percentage = featurePercentageFromDetail(card.detail);
+  const isUnderdog = index === 1;
+
+  return (
+    <article className="formidable-metal-card flex h-full flex-col rounded-lg border p-4">
+      <p className="formidable-section-kicker text-xs font-black uppercase tracking-[0.18em]">
+        {card.eyebrow}
+      </p>
+      <div className={isUnderdog ? "flex flex-1 flex-col justify-center py-3 text-center" : "mt-3"}>
+        <h3
+          className={`font-black leading-tight text-[#fff4d7] ${
+            isUnderdog ? "text-5xl" : "text-2xl"
+          }`}
+        >
+          {card.title}
+        </h3>
+        {percentage ? (
+          <p className="formidable-gold-text mt-2 text-6xl font-black leading-none">
+            {percentage}
+          </p>
+        ) : null}
+        {card.detail ? (
+          <p className="mx-auto mt-4 max-w-sm text-sm font-semibold leading-6 text-[#d4c9ad]">
+            {card.detail}
+          </p>
+        ) : null}
+      </div>
+      {!isUnderdog && card.detail ? (
+        <p className="mt-4 text-sm font-semibold leading-6 text-[#d4c9ad]">
+          {card.detail}
+        </p>
+      ) : null}
+    </article>
+  );
+}
+
+function BookiesCornerSection({
+  oddsPreview,
+  premium = false,
+}: {
+  oddsPreview: OddsPreview;
+  premium?: boolean;
+}) {
   const updatedLabel = oddsUpdatedLabel(
     oddsPreview.fetchedAt,
     oddsPreview.oddsAreStale,
   );
+  const sectionClass = premium
+    ? "formidable-metal-card mt-4 rounded-lg border p-4 sm:p-5"
+    : "mt-4 rounded-lg border border-[#c7a653]/25 bg-[#0d1814] p-4 shadow-[0_22px_70px_rgba(0,0,0,0.18)] sm:p-5";
+  const emptySectionClass = premium
+    ? "mt-4 rounded-lg border border-[#d6a93a]/30 bg-[#050504] p-4 sm:p-5"
+    : "mt-4 rounded-lg border border-[#c7a653]/20 bg-[#0d1814] p-4 sm:p-5";
+  const cardClass = premium
+    ? "formidable-metal-card rounded-lg border p-3.5"
+    : "rounded-lg border border-[#c7a653]/20 bg-[#111d19] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.16)]";
+  const rankingClass = premium
+    ? "rounded-md border border-[#d6a93a]/25 bg-[#050504]/90 px-3 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.055)]"
+    : "rounded-md border border-[#c7a653]/15 bg-[#0d1814] px-3 py-1.5";
 
   if (oddsPreview.marketWatchCards.length === 0) {
     return (
-      <section className="mt-4 rounded-lg border border-[#c7a653]/20 bg-[#0d1814] p-4 sm:p-5">
+      <section className={emptySectionClass}>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-black uppercase tracking-[0.2em] text-[#c7a653]">
@@ -245,13 +419,21 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
   }
 
   return (
-    <section className="mt-4 rounded-lg border border-[#c7a653]/25 bg-[#0d1814] p-4 shadow-[0_22px_70px_rgba(0,0,0,0.18)] sm:p-5">
+    <section className={sectionClass}>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-black uppercase tracking-[0.2em] text-[#c7a653]">
+          <p
+            className={`text-sm font-black uppercase tracking-[0.2em] ${
+              premium ? "formidable-section-kicker" : "text-[#c7a653]"
+            }`}
+          >
             Odds update
           </p>
-          <h2 className="mt-1 text-2xl font-black text-[#fff4d7]">
+          <h2
+            className={`mt-1 text-2xl font-black ${
+              premium ? "formidable-gold-text" : "text-[#fff4d7]"
+            }`}
+          >
             Bookies&apos; Corner
           </h2>
         </div>
@@ -266,12 +448,24 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
       ) : null}
 
       <div className="mt-4 grid gap-3 lg:grid-cols-3">
-        {oddsPreview.marketWatchCards.map((card) => (
+        {premium
+          ? oddsPreview.marketWatchCards.map((card, index) => (
+              <PremiumBookiesCard
+                card={card}
+                index={index}
+                key={`${card.eyebrow}-${card.title}`}
+              />
+            ))
+          : oddsPreview.marketWatchCards.map((card) => (
           <article
-            className="rounded-lg border border-[#c7a653]/20 bg-[#111d19] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.16)]"
+            className={cardClass}
             key={`${card.eyebrow}-${card.title}`}
           >
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#c7a653]">
+            <p
+              className={`text-xs font-black uppercase tracking-[0.18em] ${
+                premium ? "formidable-section-kicker" : "text-[#c7a653]"
+              }`}
+            >
               {card.eyebrow}
             </p>
             <h3 className="mt-2 text-lg font-black text-[#fff4d7]">
@@ -282,7 +476,7 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
                 <div className="mt-3 space-y-2">
                   {card.rankingRows.map((row) => (
                     <div
-                      className="rounded-md border border-[#c7a653]/15 bg-[#0d1814] px-3 py-1.5"
+                      className={rankingClass}
                       key={`${row.place}-${row.owner}`}
                     >
                       <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
@@ -290,7 +484,11 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
                           <span className="text-[#c7a653]">{row.place}.</span>{" "}
                           {row.owner}
                         </p>
-                        <p className="text-base font-black text-[#f0d88b]">
+                        <p
+                          className={`text-base font-black ${
+                            premium ? "formidable-gold-text" : "text-[#f0d88b]"
+                          }`}
+                        >
                           {row.percentage}
                         </p>
                       </div>
@@ -334,7 +532,7 @@ function BookiesCornerSection({ oddsPreview }: { oddsPreview: OddsPreview }) {
               </p>
             )}
           </article>
-        ))}
+          ))}
       </div>
     </section>
   );
@@ -427,8 +625,13 @@ export function SweepstakeDashboard({
   const memberLabelPlural = config.copy?.memberLabelPlural ?? "family members";
   const leaderboardTitle = config.copy?.leaderboardTitle ?? "Family leaderboard";
   const playerStatDetail = config.copy?.playerStatDetail ?? "Family members";
-  const isWideCompact = config.layoutVariant === "wide-compact";
-  const pageMaxWidth = isWideCompact ? "max-w-[1600px]" : "max-w-7xl";
+  const isPremium = config.themeVariant === "premium-black-gold";
+  const isWideCompact = config.layoutVariant === "wide-compact" || isPremium;
+  const pageMaxWidth = isPremium
+    ? "max-w-[1680px]"
+    : isWideCompact
+      ? "max-w-[1600px]"
+      : "max-w-7xl";
   const sectionGap = isWideCompact ? "mt-4" : "mt-5";
   const dreamSentence =
     config.copy?.firstPrizeDreamText ??
@@ -458,8 +661,20 @@ export function SweepstakeDashboard({
   }, [activeFilter, participants, searchTerm]);
 
   return (
-    <div className="min-h-screen bg-[#07110f] text-[#fff4d7]">
-      <header className="sticky top-0 z-20 border-b border-[#c7a653]/20 bg-[#07110f]/95 px-4 py-3 backdrop-blur">
+    <div
+      className={`min-h-screen text-[#fff4d7] ${
+        isPremium ? "formidable-theme " : ""
+      }${
+        isPremium ? "bg-[#030303]" : "bg-[#07110f]"
+      }`}
+    >
+      <header
+        className={`sticky top-0 z-20 border-b px-4 backdrop-blur ${
+          isPremium
+            ? "border-[#d6a93a]/25 bg-[#030303]/95 py-2.5"
+            : "border-[#c7a653]/20 bg-[#07110f]/95 py-3"
+        }`}
+      >
         <div
           className={`mx-auto flex ${pageMaxWidth} items-center justify-between gap-4`}
         >
@@ -467,7 +682,13 @@ export function SweepstakeDashboard({
             className="flex items-center gap-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d7b85f]"
             href="#top"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-md border border-[#d7b85f]/45 bg-[#13211c] text-xl">
+            <span
+              className={`flex h-10 w-10 items-center justify-center rounded-md border text-xl ${
+                isPremium
+                  ? "border-[#f0c75e]/45 bg-[#080806] shadow-[0_0_24px_rgba(214,169,58,0.18)]"
+                  : "border-[#d7b85f]/45 bg-[#13211c]"
+              }`}
+            >
               ⚽
             </span>
             <span>
@@ -484,30 +705,49 @@ export function SweepstakeDashboard({
             aria-label="Page sections"
             className="hidden items-center gap-2 text-sm font-bold text-[#d9dccf] md:flex"
           >
-            <a className="rounded-md px-3 py-2 hover:bg-[#13211c]" href="#top">
+            <a
+              className={`rounded-md px-3 py-2 ${
+                isPremium
+                  ? "formidable-nav-link-active"
+                  : "hover:bg-[#13211c]"
+              }`}
+              href="#top"
+            >
               Home
             </a>
             <a
-              className="rounded-md px-3 py-2 hover:bg-[#13211c]"
+              className={`rounded-md px-3 py-2 ${
+                isPremium ? "formidable-nav-link" : "hover:bg-[#13211c]"
+              }`}
               href="#entrants"
             >
               Entrants
             </a>
             <a
-              className="rounded-md px-3 py-2 hover:bg-[#13211c]"
+              className={`rounded-md px-3 py-2 ${
+                isPremium ? "formidable-nav-link" : "hover:bg-[#13211c]"
+              }`}
               href="#knockout"
             >
               Knockout
             </a>
             <a
-              className="rounded-md px-3 py-2 hover:bg-[#13211c]"
+              className={`rounded-md px-3 py-2 ${
+                isPremium ? "formidable-nav-link" : "hover:bg-[#13211c]"
+              }`}
               href="#fixtures"
             >
               Fixtures
             </a>
           </nav>
 
-          <div className="hidden rounded-md border border-[#d7b85f]/35 bg-[#171f18] px-3 py-2 text-sm font-black text-[#f0d88b] sm:block">
+          <div
+            className={`hidden rounded-md border px-3 py-2 text-sm font-black text-[#f0d88b] sm:block ${
+              isPremium
+                ? "border-[#d6a93a]/35 bg-[#0b0906] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                : "border-[#d7b85f]/35 bg-[#171f18]"
+            }`}
+          >
             {sweepstakeSummary.prizePot} pot
           </div>
         </div>
@@ -516,21 +756,37 @@ export function SweepstakeDashboard({
       <main
         id="top"
         className={`mx-auto ${pageMaxWidth} px-4 ${
-          isWideCompact ? "py-4 sm:py-5" : "py-5 sm:py-7"
+          isPremium ? "py-3 sm:py-4" : isWideCompact ? "py-4 sm:py-5" : "py-5 sm:py-7"
         }`}
       >
         <section
-          className={`rounded-lg border border-[#c7a653]/25 bg-[#0d1814] shadow-[0_22px_70px_rgba(0,0,0,0.28)] ${
-            isWideCompact ? "p-4 sm:p-5" : "p-5 sm:p-6"
+          className={`relative overflow-hidden rounded-lg border shadow-[0_22px_70px_rgba(0,0,0,0.28)] ${
+            isPremium
+              ? "formidable-metal-card p-4 sm:p-5"
+              : `border-[#c7a653]/25 bg-[#0d1814] ${
+                  isWideCompact ? "p-4 sm:p-5" : "p-5 sm:p-6"
+                }`
           }`}
         >
+          {isPremium ? (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute right-5 top-4 hidden text-7xl opacity-[0.08] drop-shadow-[0_0_28px_rgba(214,169,58,0.35)] lg:block"
+            >
+              ⚽
+            </div>
+          ) : null}
           <div
             className={`grid lg:grid-cols-[1.4fr_0.6fr] lg:items-end ${
               isWideCompact ? "gap-4" : "gap-5"
             }`}
           >
             <div>
-              <p className="text-sm font-black uppercase tracking-[0.2em] text-[#c7a653]">
+              <p
+                className={`text-sm font-black uppercase tracking-[0.2em] ${
+                  isPremium ? "formidable-section-kicker" : "text-[#c7a653]"
+                }`}
+              >
                 {heroEyebrow}
               </p>
               <h1
@@ -539,23 +795,45 @@ export function SweepstakeDashboard({
                 }`}
               >
                 {config.displayTitleLines.map((line) => (
-                  <span className="block" key={line}>
-                    {line}
-                  </span>
+                  isPremium ? (
+                    <PremiumTitleLine key={line} line={line} />
+                  ) : (
+                    <span className="block" key={line}>
+                      {line}
+                    </span>
+                  )
                 ))}
               </h1>
-              <p className="mt-3 max-w-3xl text-lg leading-8 text-[#d9dccf]">
+              <p
+                className={`mt-3 max-w-3xl text-lg ${
+                  isPremium ? "leading-7 text-[#ddd3b8]" : "leading-8 text-[#d9dccf]"
+                }`}
+              >
                 {sweepstakeSummary.teamCount} teams started, {teamsEliminated}{" "}
                 have been eliminated, {teamsRemaining} remain.
               </p>
-              <p className="mt-2 max-w-3xl text-lg leading-8 text-[#d9dccf]">
+              <p
+                className={`mt-2 max-w-3xl text-lg ${
+                  isPremium ? "leading-7 text-[#c7bfaa]" : "leading-8 text-[#d9dccf]"
+                }`}
+              >
                 {sweepstakeSummary.playerCount} {memberLabelPlural},{" "}
                 {sweepstakeSummary.teamsPerParticipant} teams each.{" "}
                 {eliminatedParticipants} are out, {participantsRemaining} remain.
               </p>
             </div>
-            <div className="rounded-lg border border-[#d7b85f]/35 bg-[#171f18] p-4">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#c7a653]">
+            <div
+              className={`rounded-lg border p-4 ${
+                isPremium
+                  ? "formidable-metal-card"
+                  : "border-[#d7b85f]/35 bg-[#171f18]"
+              }`}
+            >
+              <p
+                className={`text-xs font-black uppercase tracking-[0.18em] ${
+                  isPremium ? "formidable-section-kicker" : "text-[#c7a653]"
+                }`}
+              >
                 Rules snapshot
               </p>
               <div className="mt-3 grid gap-2 text-base font-bold text-[#fff4d7]">
@@ -567,62 +845,113 @@ export function SweepstakeDashboard({
           </div>
         </section>
 
-        <section className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            compact={isWideCompact}
-            detail={playerStatDetail}
-            icon="★"
-            label="Players"
-            value={`${sweepstakeSummary.playerCount}`}
-          />
-          <StatCard
-            compact={isWideCompact}
-            detail={`${numberWord(sweepstakeSummary.teamsPerParticipant)} teams each`}
-            icon="◆"
-            label="Teams"
-            value={`${sweepstakeSummary.teamCount}`}
-          />
-          <StatCard
-            compact={isWideCompact}
-            detail={`${sweepstakeSummary.entryFee} per player`}
-            icon="£"
-            label="Prize pot"
-            value={sweepstakeSummary.prizePot}
-          />
-          <StatCard
-            compact={isWideCompact}
-            detail={`${teamsEliminated} teams eliminated`}
-            icon="●"
-            label="Tournament status"
-            value={`${teamsRemaining} teams remain`}
-          />
-        </section>
+        {isPremium ? (
+          <section className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-[repeat(4,minmax(0,1fr))_minmax(320px,1.55fr)_minmax(150px,0.78fr)]">
+            <StatCard
+              compact
+              detail={playerStatDetail}
+              icon="★"
+              label="Players"
+              variant="premium"
+              value={`${sweepstakeSummary.playerCount}`}
+            />
+            <StatCard
+              compact
+              detail={`${numberWord(sweepstakeSummary.teamsPerParticipant)} teams each`}
+              icon="◆"
+              label="Teams"
+              variant="premium"
+              value={`${sweepstakeSummary.teamCount}`}
+            />
+            <StatCard
+              compact
+              detail={`${sweepstakeSummary.entryFee} per player`}
+              icon="£"
+              label="Prize pot"
+              variant="premium"
+              value={sweepstakeSummary.prizePot}
+            />
+            <StatCard
+              compact
+              detail={`${teamsEliminated} teams eliminated`}
+              icon="●"
+              label="Tournament status"
+              variant="premium"
+              value={`${teamsRemaining} teams remain`}
+            />
+            <PrizeCard
+              compact
+              place="First prize"
+              prize={config.prizeSplit.first}
+              variant="premium"
+            />
+            <PrizeCard
+              compact
+              place="Second prize"
+              prize={config.prizeSplit.second}
+              variant="premium"
+            />
+          </section>
+        ) : (
+          <>
+            <section className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <StatCard
+                detail={playerStatDetail}
+                icon="★"
+                label="Players"
+                value={`${sweepstakeSummary.playerCount}`}
+              />
+              <StatCard
+                detail={`${numberWord(sweepstakeSummary.teamsPerParticipant)} teams each`}
+                icon="◆"
+                label="Teams"
+                value={`${sweepstakeSummary.teamCount}`}
+              />
+              <StatCard
+                detail={`${sweepstakeSummary.entryFee} per player`}
+                icon="£"
+                label="Prize pot"
+                value={sweepstakeSummary.prizePot}
+              />
+              <StatCard
+                detail={`${teamsEliminated} teams eliminated`}
+                icon="●"
+                label="Tournament status"
+                value={`${teamsRemaining} teams remain`}
+              />
+            </section>
 
-        <section className="mt-4 grid gap-3 md:grid-cols-2">
-          <PrizeCard
-            compact={isWideCompact}
-            place="First prize"
-            prize={config.prizeSplit.first}
-          />
-          <PrizeCard
-            compact={isWideCompact}
-            place="Second prize"
-            prize={config.prizeSplit.second}
-          />
-        </section>
+            <section className="mt-4 grid gap-3 md:grid-cols-2">
+              <PrizeCard place="First prize" prize={config.prizeSplit.first} />
+              <PrizeCard place="Second prize" prize={config.prizeSplit.second} />
+            </section>
+          </>
+        )}
 
-        <BookiesCornerSection oddsPreview={oddsPreview} />
+        <BookiesCornerSection oddsPreview={oddsPreview} premium={isPremium} />
 
         <section
-          className={`${sectionGap} rounded-lg border border-[#c7a653]/25 bg-[#0d1814] p-4 shadow-[0_22px_70px_rgba(0,0,0,0.24)] sm:p-5`}
+          className={`${sectionGap} rounded-lg border p-4 shadow-[0_22px_70px_rgba(0,0,0,0.24)] sm:p-5 ${
+            isPremium
+              ? "formidable-metal-card"
+              : "border-[#c7a653]/25 bg-[#0d1814]"
+          }`}
           id="entrants"
         >
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0">
-              <p className="text-sm font-black uppercase tracking-[0.2em] text-[#c7a653]">
+              <p
+                className={`text-sm font-black uppercase tracking-[0.2em] ${
+                  isPremium ? "formidable-section-kicker" : "text-[#c7a653]"
+                }`}
+              >
                 Who is still in?
               </p>
-              <h2 className="mt-2 text-3xl font-black text-[#fff4d7]">
+              <h2
+                className={`mt-2 text-3xl font-black ${
+                  isPremium ? "formidable-gold-text" : "text-[#fff4d7]"
+                }`}
+              >
                 {leaderboardTitle}
               </h2>
               <p className="mt-2 max-w-2xl text-base font-semibold leading-7 text-[#d9dccf]">
@@ -681,7 +1010,11 @@ export function SweepstakeDashboard({
           </div>
 
           {filteredParticipants.length > 0 ? (
-            <div className="mt-5 grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div
+              className={`mt-5 grid min-w-0 gap-3 md:grid-cols-2 ${
+                isPremium ? "xl:grid-cols-4" : "xl:grid-cols-3"
+              }`}
+            >
               {filteredParticipants.map((participant) => (
                 <ParticipantCard
                   key={participant.name}
@@ -700,7 +1033,17 @@ export function SweepstakeDashboard({
           sectionId === "fixtures" ? (
             <section className={sectionGap} key={sectionId}>
               <div id="fixtures">
-                <PlaceholderPanel title="Fixtures and results">
+                <div
+                  className={
+                    isPremium
+                      ? "rounded-lg border border-[#d6a93a]/30 bg-[#060605] p-1 shadow-[0_20px_60px_rgba(0,0,0,0.38),0_0_40px_rgba(214,169,58,0.05)]"
+                      : undefined
+                  }
+                >
+                  <PlaceholderPanel
+                    title="Fixtures and results"
+                    variant={isPremium ? "premium" : "default"}
+                  >
                   <div className="grid gap-5">
                     <div
                       className={`grid gap-3 ${
@@ -722,12 +1065,23 @@ export function SweepstakeDashboard({
                       data. Updates may lag official results.
                     </p>
                   </div>
-                </PlaceholderPanel>
+                  </PlaceholderPanel>
+                </div>
               </div>
             </section>
           ) : (
-            <div className={sectionGap} key={sectionId}>
-              <KnockoutWallChart draw={knockoutDraw} />
+            <div
+              className={`${sectionGap} ${
+                isPremium
+                  ? "rounded-lg border border-[#d6a93a]/25 bg-[#050504] p-1 shadow-[0_20px_70px_rgba(0,0,0,0.42),0_0_45px_rgba(214,169,58,0.05)]"
+                  : ""
+              }`}
+              key={sectionId}
+            >
+              <KnockoutWallChart
+                compactDesktop={isPremium}
+                draw={knockoutDraw}
+              />
             </div>
           ),
         )}

@@ -3,13 +3,27 @@ type StatCardProps = {
   detail?: string;
   icon: string;
   label: string;
+  variant?: "default" | "premium";
   value: string;
 };
 
-export function StatCard({ compact = false, detail, icon, label, value }: StatCardProps) {
+export function StatCard({
+  compact = false,
+  detail,
+  icon,
+  label,
+  value,
+  variant = "default",
+}: StatCardProps) {
+  const isPremium = variant === "premium";
+
   return (
     <div
-      className={`rounded-lg border border-[#c7a653]/30 bg-[#16241f] shadow-[0_18px_45px_rgba(0,0,0,0.18)] transition hover:border-[#d7b85f]/60 hover:bg-[#1b2b25] ${
+      className={`rounded-lg border shadow-[0_18px_45px_rgba(0,0,0,0.18)] transition ${
+        isPremium
+          ? "formidable-metal-card"
+          : "border-[#c7a653]/30 bg-[#16241f] hover:border-[#d7b85f]/60 hover:bg-[#1b2b25]"
+      } ${
         compact ? "p-3 lg:p-3.5" : "p-4"
       }`}
     >
@@ -17,19 +31,32 @@ export function StatCard({ compact = false, detail, icon, label, value }: StatCa
         <p className="text-xs font-black uppercase tracking-[0.18em] text-[#c7a653]">
           {label}
         </p>
-        <span aria-hidden="true" className="text-lg text-[#f0d88b]">
+        <span
+          aria-hidden="true"
+          className={`flex h-8 w-8 items-center justify-center rounded-full text-lg ${
+            isPremium
+              ? "border border-[#d6a93a]/30 bg-[#0d0a06] text-[#f0d88b] shadow-[0_0_18px_rgba(214,169,58,0.12)]"
+              : "text-[#f0d88b]"
+          }`}
+        >
           {icon}
         </span>
       </div>
       <p
         className={`mt-3 break-words font-black text-[#fff4d7] ${
           compact ? "text-2xl" : "text-3xl"
-        }`}
+        } ${isPremium ? "formidable-gold-text" : ""}`}
       >
         {value}
       </p>
       {detail ? (
-        <p className="mt-1 text-sm font-semibold text-[#b8c0ae]">{detail}</p>
+        <p
+          className={`mt-1 text-sm font-semibold ${
+            isPremium ? "text-[#bfb7a0]" : "text-[#b8c0ae]"
+          }`}
+        >
+          {detail}
+        </p>
       ) : null}
     </div>
   );

@@ -31,3 +31,170 @@ html {
   background: #d7b85f;
   color: #07110f;
 }
+
+.formidable-theme {
+  background:
+    radial-gradient(circle at 11% -4%, rgba(255, 214, 116, 0.2), transparent 30rem),
+    radial-gradient(circle at 92% 8%, rgba(34, 64, 75, 0.28), transparent 32rem),
+    radial-gradient(circle at 48% -14%, rgba(255, 244, 215, 0.08), transparent 24rem),
+    radial-gradient(circle at 70% 70%, rgba(5, 48, 34, 0.2), transparent 34rem),
+    linear-gradient(145deg, #020202 0%, #090806 40%, #020403 100%);
+}
+
+.formidable-theme::before {
+  background:
+    linear-gradient(112deg, transparent 0 17%, rgba(246, 213, 126, 0.105) 19%, transparent 22% 100%),
+    linear-gradient(72deg, transparent 0 62%, rgba(255, 255, 255, 0.035) 64%, transparent 67% 100%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 52px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.012) 0 1px, transparent 1px 64px);
+  content: "";
+  inset: 0;
+  opacity: 0.46;
+  pointer-events: none;
+  position: fixed;
+  z-index: 0;
+}
+
+.formidable-theme::after {
+  background:
+    radial-gradient(ellipse at center top, rgba(246, 213, 126, 0.12), transparent 36rem),
+    radial-gradient(ellipse at 20% 55%, rgba(255, 255, 255, 0.035), transparent 20rem),
+    radial-gradient(ellipse at center bottom, rgba(5, 28, 22, 0.4), transparent 38rem);
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: fixed;
+  z-index: 0;
+}
+
+.formidable-theme > * {
+  position: relative;
+  z-index: 1;
+}
+
+.formidable-metal-card {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.012) 42%, rgba(214, 169, 58, 0.055)),
+    linear-gradient(180deg, rgba(15, 13, 10, 0.98), rgba(4, 4, 3, 0.98));
+  border-color: rgba(214, 169, 58, 0.34);
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.52),
+    0 0 34px rgba(214, 169, 58, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(214, 169, 58, 0.08);
+  overflow: hidden;
+  position: relative;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.formidable-metal-card::before {
+  background:
+    linear-gradient(110deg, rgba(255, 255, 255, 0.13), transparent 26%),
+    linear-gradient(180deg, rgba(255, 235, 173, 0.08), transparent 46%);
+  content: "";
+  height: 1px;
+  inset: 0 0 auto;
+  pointer-events: none;
+  position: absolute;
+}
+
+.formidable-metal-card::after {
+  background: radial-gradient(circle at 18% 0%, rgba(246, 213, 126, 0.13), transparent 16rem);
+  content: "";
+  inset: 0;
+  opacity: 0.46;
+  pointer-events: none;
+  position: absolute;
+}
+
+.formidable-metal-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.formidable-metal-card:hover {
+  border-color: rgba(240, 199, 94, 0.62);
+  box-shadow:
+    0 26px 70px rgba(0, 0, 0, 0.5),
+    0 0 36px rgba(214, 169, 58, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.formidable-gold-text {
+  background: linear-gradient(92deg, #fff8d2 0%, #f3ce66 36%, #b77b25 70%, #ffe5a3 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 10px 34px rgba(214, 169, 58, 0.12);
+}
+
+.formidable-nav-link {
+  border: 1px solid rgba(214, 169, 58, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.006)),
+    rgba(8, 7, 5, 0.68);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
+.formidable-nav-link:hover {
+  border-color: rgba(240, 199, 94, 0.52);
+  background:
+    linear-gradient(180deg, rgba(246, 213, 126, 0.09), rgba(255, 255, 255, 0.01)),
+    rgba(14, 11, 6, 0.88);
+  color: #f0d88b;
+}
+
+.formidable-nav-link-active {
+  border-color: rgba(240, 199, 94, 0.56);
+  background:
+    linear-gradient(180deg, rgba(246, 213, 126, 0.18), rgba(166, 107, 31, 0.08)),
+    #0c0905;
+  box-shadow:
+    0 0 22px rgba(214, 169, 58, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  color: #f7df9a;
+}
+
+.formidable-prize-chip {
+  background:
+    linear-gradient(180deg, rgba(246, 213, 126, 0.13), rgba(255, 255, 255, 0.018)),
+    #0f0b06;
+  border-color: rgba(214, 169, 58, 0.32);
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.formidable-section-kicker {
+  background: linear-gradient(90deg, #fff1b8, #c9952e, #f7df9a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.formidable-theme #entrants article,
+.formidable-theme #fixtures article,
+.formidable-theme #knockout article {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.038), rgba(255, 255, 255, 0.008)),
+    #080806;
+  border-color: rgba(214, 169, 58, 0.24);
+  box-shadow:
+    0 16px 44px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.formidable-theme #entrants li {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.formidable-theme input[type="search"] {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent),
+    #070706;
+  border-color: rgba(214, 169, 58, 0.28);
+}

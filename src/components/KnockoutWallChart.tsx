@@ -29,11 +29,11 @@ const desktopRoundCardSlots: Record<string, number[]> = {
 };
 
 const desktopBracketRowCount = 32;
-const desktopBracketRowHeight = 180;
-const desktopBracketHeight = desktopBracketRowCount * desktopBracketRowHeight;
+const defaultDesktopBracketRowHeight = 180;
+const compactDesktopBracketRowHeight = 132;
 
-function desktopSlotCentre(slot: number) {
-  return slot * desktopBracketRowHeight;
+function desktopSlotCentre(slot: number, rowHeight: number) {
+  return slot * rowHeight;
 }
 
 type DesktopConnection = {
@@ -203,7 +203,13 @@ function buildDesktopProgression(
   };
 }
 
-function TeamLine({ team }: { team: KnockoutTeam }) {
+function TeamLine({
+  compactDesktop = false,
+  team,
+}: {
+  compactDesktop?: boolean;
+  team: KnockoutTeam;
+}) {
   const stateLabel =
     team.state === "winner"
       ? "Winner"
@@ -213,7 +219,9 @@ function TeamLine({ team }: { team: KnockoutTeam }) {
 
   return (
     <div
-      className={`rounded-md border px-3 py-3 ${
+      className={`rounded-md border ${
+        compactDesktop ? "px-2 py-2" : "px-3 py-3"
+      } ${
         team.state === "winner"
           ? "border-[#70b36f]/45 bg-[#14351f]"
           : team.state === "eliminated"
@@ -225,21 +233,31 @@ function TeamLine({ team }: { team: KnockoutTeam }) {
         <span
           aria-hidden={team.flag === "◇"}
           aria-label={team.flag === "◇" ? undefined : `${team.label} flag`}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-[#c7a653]/25 bg-[#172820] text-2xl text-[#f0d88b]"
+          className={`flex shrink-0 items-center justify-center rounded-md border border-[#c7a653]/25 bg-[#172820] text-[#f0d88b] ${
+            compactDesktop ? "h-9 w-9 text-xl" : "h-11 w-11 text-2xl"
+          }`}
           role={team.flag === "◇" ? undefined : "img"}
         >
           {team.flag}
         </span>
         <div className="min-w-0 flex-1">
           <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-            <p className="min-w-0 truncate text-base font-black text-[#fff4d7]">
+            <p
+              className={`min-w-0 truncate font-black text-[#fff4d7] ${
+                compactDesktop ? "text-sm" : "text-base"
+              }`}
+            >
               {team.label}
             </p>
             <span className="shrink-0 rounded-full border border-[#c7a653]/25 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#c7a653]">
               {stateLabel}
             </span>
           </div>
-          <p className="mt-0.5 truncate text-sm font-semibold text-[#b8c0ae]">
+          <p
+            className={`mt-0.5 truncate font-semibold text-[#b8c0ae] ${
+              compactDesktop ? "text-xs" : "text-sm"
+            }`}
+          >
             {team.owner}
           </p>
         </div>
@@ -249,10 +267,12 @@ function TeamLine({ team }: { team: KnockoutTeam }) {
 }
 
 function MatchCard({
+  compactDesktop = false,
   match,
   mobile = false,
   prominent = false,
 }: {
+  compactDesktop?: boolean;
   match: KnockoutMatch;
   mobile?: boolean;
   prominent?: boolean;
@@ -261,38 +281,68 @@ function MatchCard({
     <article
       className={`relative rounded-lg border shadow-[0_16px_38px_rgba(0,0,0,0.2)] ${
         prominent
-          ? "border-[#d7b85f]/75 bg-[#1d2318] p-5"
-          : `border-[#c7a653]/25 bg-[#111d19] ${mobile ? "p-4" : "p-3"}`
+          ? `border-[#d7b85f]/75 bg-[#1d2318] ${
+              compactDesktop ? "p-3" : "p-5"
+            }`
+          : `border-[#c7a653]/25 bg-[#111d19] ${
+              compactDesktop ? "p-2.5" : mobile ? "p-4" : "p-3"
+            }`
       }`}
       data-match-card="true"
     >
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0">
-          <p className="truncate text-xs font-black uppercase tracking-[0.16em] text-[#c7a653]">
+          <p
+            className={`truncate font-black uppercase tracking-[0.16em] text-[#c7a653] ${
+              compactDesktop ? "text-[10px]" : "text-xs"
+            }`}
+          >
             {match.label}
           </p>
-          <p className="mt-1 truncate text-xs font-bold text-[#b8c0ae]">
+          <p
+            className={`mt-1 truncate font-bold text-[#b8c0ae] ${
+              compactDesktop ? "text-[10px]" : "text-xs"
+            }`}
+          >
             {match.dateTimeLabel}
           </p>
         </div>
-        <span className="rounded-md border border-[#d7b85f]/25 bg-[#251f12] px-2 py-1 text-xs font-black uppercase tracking-wide text-[#f0d88b]">
+        <span
+          className={`rounded-md border border-[#d7b85f]/25 bg-[#251f12] font-black uppercase tracking-wide text-[#f0d88b] ${
+            compactDesktop ? "px-1.5 py-1 text-[10px]" : "px-2 py-1 text-xs"
+          }`}
+        >
           {match.scoreLabel}
         </span>
       </div>
 
-      <div className={`mt-3 grid ${prominent ? "gap-3" : "gap-2"}`}>
-        <TeamLine team={match.home} />
+      <div
+        className={`${compactDesktop ? "mt-2" : "mt-3"} grid ${
+          compactDesktop ? "gap-1.5" : prominent ? "gap-3" : "gap-2"
+        }`}
+      >
+        <TeamLine compactDesktop={compactDesktop} team={match.home} />
         <div className="text-center text-xs font-black uppercase tracking-[0.18em] text-[#7f8a79]">
           v
         </div>
-        <TeamLine team={match.away} />
+        <TeamLine compactDesktop={compactDesktop} team={match.away} />
       </div>
 
-      <div className="mt-3 grid gap-2 sm:grid-cols-2">
-        <span className="truncate rounded-md border border-[#70b36f]/25 bg-[#112617] px-3 py-2 text-xs font-black uppercase tracking-wide text-[#bff2a5]">
+      <div
+        className={`${compactDesktop ? "mt-2 gap-1.5" : "mt-3 gap-2"} grid sm:grid-cols-2`}
+      >
+        <span
+          className={`truncate rounded-md border border-[#70b36f]/25 bg-[#112617] font-black uppercase tracking-wide text-[#bff2a5] ${
+            compactDesktop ? "px-2 py-1.5 text-[10px]" : "px-3 py-2 text-xs"
+          }`}
+        >
           {match.winnerLabel}
         </span>
-        <span className="truncate rounded-md border border-[#8f6355]/25 bg-[#201817] px-3 py-2 text-xs font-black uppercase tracking-wide text-[#caa79b]">
+        <span
+          className={`truncate rounded-md border border-[#8f6355]/25 bg-[#201817] font-black uppercase tracking-wide text-[#caa79b] ${
+            compactDesktop ? "px-2 py-1.5 text-[10px]" : "px-3 py-2 text-xs"
+          }`}
+        >
           {match.statusLabel}
         </span>
       </div>
@@ -302,26 +352,34 @@ function MatchCard({
 
 function RoundHeader({
   children,
+  compactDesktop = false,
   isCurrent = false,
 }: {
   children: React.ReactNode;
+  compactDesktop?: boolean;
   isCurrent?: boolean;
 }) {
   return (
     <div
       aria-current={isCurrent ? "step" : undefined}
-      className={`sticky top-0 z-10 rounded-lg border px-3 py-3 ${
+      className={`sticky top-0 z-10 rounded-lg border ${
+        compactDesktop ? "px-2 py-2" : "px-3 py-3"
+      } ${
         isCurrent
           ? "border-[#d7b85f]/80 bg-[#251f12] shadow-[0_0_0_1px_rgba(215,184,95,0.22),0_16px_34px_rgba(0,0,0,0.2)]"
           : "border-[#c7a653]/25 bg-[#16241f]"
       }`}
       data-current-round={isCurrent ? "true" : undefined}
     >
-      <p className="text-center text-sm font-black uppercase tracking-[0.18em] text-[#f0d88b]">
+      <p
+        className={`text-center font-black uppercase tracking-[0.18em] text-[#f0d88b] ${
+          compactDesktop ? "text-xs" : "text-sm"
+        }`}
+      >
         {children}
       </p>
       {isCurrent ? (
-        <p className="mt-1 text-center text-[10px] font-black uppercase tracking-[0.18em] text-[#d7b85f]">
+        <p className="mt-1 text-center text-[9px] font-black uppercase tracking-[0.18em] text-[#d7b85f]">
           Current round
         </p>
       ) : null}
@@ -330,25 +388,33 @@ function RoundHeader({
 }
 
 function DesktopRoundColumn({
+  compactDesktop = false,
   isCurrent = false,
   round,
+  rowHeight,
   slotsByMatchId,
 }: {
+  compactDesktop?: boolean;
   isCurrent?: boolean;
   round: KnockoutRound;
+  rowHeight: number;
   slotsByMatchId: Map<string, number>;
 }) {
   return (
     <div
-      className="grid w-[320px] shrink-0 grid-rows-[auto_1fr] gap-4"
+      className={`grid shrink-0 grid-rows-[auto_1fr] ${
+        compactDesktop ? "w-[268px] gap-2" : "w-[320px] gap-4"
+      }`}
       data-desktop-round-column="true"
       data-round-id={round.id}
     >
-      <RoundHeader isCurrent={isCurrent}>{round.name}</RoundHeader>
+      <RoundHeader compactDesktop={compactDesktop} isCurrent={isCurrent}>
+        {round.name}
+      </RoundHeader>
       <div
         className="grid"
         style={{
-          gridTemplateRows: `repeat(${desktopBracketRowCount}, ${desktopBracketRowHeight}px)`,
+          gridTemplateRows: `repeat(${desktopBracketRowCount}, ${rowHeight}px)`,
         }}
       >
         {round.matches.map((match, index) => (
@@ -363,7 +429,7 @@ function DesktopRoundColumn({
                 1,
             }}
           >
-            <MatchCard match={match} />
+            <MatchCard compactDesktop={compactDesktop} match={match} />
           </div>
         ))}
       </div>
@@ -372,26 +438,37 @@ function DesktopRoundColumn({
 }
 
 function DesktopConnectorColumn({
+  compactDesktop = false,
   connections,
+  rowHeight,
 }: {
+  compactDesktop?: boolean;
   connections: DesktopConnection[];
+  rowHeight: number;
 }) {
+  const desktopBracketHeight = desktopBracketRowCount * rowHeight;
+
   return (
     <div
       aria-hidden="true"
-      className="grid w-20 shrink-0 grid-rows-[auto_1fr] gap-4"
+      className={`grid shrink-0 grid-rows-[auto_1fr] ${
+        compactDesktop ? "w-12 gap-2" : "w-20 gap-4"
+      }`}
       data-desktop-connector-column="true"
     >
-      <div className="h-[46px]" />
+      <div className={compactDesktop ? "h-[38px]" : "h-[46px]"} />
       <div
         className="relative"
         style={{ height: desktopBracketHeight }}
       >
         {connections.map((connection) => {
           const [firstSourceSlot, secondSourceSlot] = connection.fromSlots;
-          const firstSourceCentre = desktopSlotCentre(firstSourceSlot);
-          const secondSourceCentre = desktopSlotCentre(secondSourceSlot);
-          const targetCentre = desktopSlotCentre(connection.toSlot);
+          const firstSourceCentre = desktopSlotCentre(firstSourceSlot, rowHeight);
+          const secondSourceCentre = desktopSlotCentre(
+            secondSourceSlot,
+            rowHeight,
+          );
+          const targetCentre = desktopSlotCentre(connection.toSlot, rowHeight);
           const top = Math.min(firstSourceCentre, secondSourceCentre);
           const height = Math.abs(secondSourceCentre - firstSourceCentre);
 
@@ -423,16 +500,20 @@ function DesktopConnectorColumn({
 }
 
 function DesktopCentreColumn({
+  compactDesktop = false,
   final,
   finalConnections,
   finalSlot,
   currentRoundId,
+  rowHeight,
   thirdPlace,
 }: {
+  compactDesktop?: boolean;
   currentRoundId: KnockoutDraw["currentRoundId"];
   final: KnockoutMatch;
   finalConnections: DesktopConnection[];
   finalSlot: number;
+  rowHeight: number;
   thirdPlace?: KnockoutMatch;
 }) {
   const isFinalCurrent = currentRoundId === "final";
@@ -440,25 +521,37 @@ function DesktopCentreColumn({
 
   return (
     <div
-      className="flex shrink-0 gap-4"
+      className={`flex shrink-0 ${compactDesktop ? "gap-2" : "gap-4"}`}
       data-desktop-final-group="true"
     >
-      <DesktopConnectorColumn connections={finalConnections} />
+      <DesktopConnectorColumn
+        compactDesktop={compactDesktop}
+        connections={finalConnections}
+        rowHeight={rowHeight}
+      />
       <div
-        className="grid w-[440px] shrink-0 grid-rows-[auto_1fr] gap-4"
+        className={`grid shrink-0 grid-rows-[auto_1fr] ${
+          compactDesktop ? "w-[360px] gap-2" : "w-[440px] gap-4"
+        }`}
         data-desktop-round-column="true"
         data-round-id="finals"
       >
         <div
           aria-current={isFinalCurrent ? "step" : undefined}
-          className={`rounded-lg border px-3 py-4 ${
+          className={`rounded-lg border ${
+            compactDesktop ? "px-2 py-2.5" : "px-3 py-4"
+          } ${
             isFinalCurrent
               ? "border-[#d7b85f] bg-[#2b2415] shadow-[0_0_0_1px_rgba(215,184,95,0.25),0_18px_38px_rgba(0,0,0,0.22)]"
               : "border-[#d7b85f]/70 bg-[#251f12]"
           }`}
           data-current-round={isFinalCurrent ? "true" : undefined}
         >
-          <p className="text-center text-base font-black uppercase tracking-[0.2em] text-[#f0d88b]">
+          <p
+            className={`text-center font-black uppercase tracking-[0.2em] text-[#f0d88b] ${
+              compactDesktop ? "text-sm" : "text-base"
+            }`}
+          >
             Final
           </p>
           {isFinalCurrent ? (
@@ -470,7 +563,7 @@ function DesktopCentreColumn({
         <div
           className="grid"
           style={{
-            gridTemplateRows: `repeat(${desktopBracketRowCount}, ${desktopBracketRowHeight}px)`,
+            gridTemplateRows: `repeat(${desktopBracketRowCount}, ${rowHeight}px)`,
           }}
         >
           <div
@@ -479,12 +572,14 @@ function DesktopCentreColumn({
             data-round-id="final"
             style={{ gridRowStart: finalSlot }}
           >
-            <MatchCard match={final} prominent />
+            <MatchCard compactDesktop={compactDesktop} match={final} prominent />
           </div>
           {thirdPlace ? (
             <div
               aria-current={isThirdPlaceCurrent ? "step" : undefined}
-              className={`row-span-3 self-start rounded-lg border border-dashed p-3 ${
+              className={`row-span-3 self-start rounded-lg border border-dashed ${
+                compactDesktop ? "p-2" : "p-3"
+              } ${
                 isThirdPlaceCurrent
                   ? "border-[#d7b85f]/75 bg-[#251f12]"
                   : "border-[#c7a653]/35 bg-[#0e1915]"
@@ -496,7 +591,7 @@ function DesktopCentreColumn({
               <p className="mb-3 text-center text-xs font-black uppercase tracking-[0.18em] text-[#c7a653]">
                 Optional third-place match
               </p>
-              <MatchCard match={thirdPlace} />
+              <MatchCard compactDesktop={compactDesktop} match={thirdPlace} />
             </div>
           ) : null}
         </div>
@@ -630,7 +725,13 @@ function MobileConnectorColumn({ slots }: { slots: number[] }) {
   );
 }
 
-export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
+export function KnockoutWallChart({
+  compactDesktop = false,
+  draw,
+}: {
+  compactDesktop?: boolean;
+  draw: KnockoutDraw;
+}) {
   const desktopScrollerRef = useRef<HTMLDivElement>(null);
   const mobileScrollerRef = useRef<HTMLDivElement>(null);
   const mobilePanelRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -643,6 +744,9 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
       : window.matchMedia("(max-width: 1023px)").matches,
   );
   const desktopRounds = draw.rounds;
+  const desktopRowHeight = compactDesktop
+    ? compactDesktopBracketRowHeight
+    : defaultDesktopBracketRowHeight;
   const desktopProgression = useMemo(
     () => buildDesktopProgression(desktopRounds, draw.final),
     [desktopRounds, draw.final],
@@ -804,7 +908,9 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
   return (
     <section
       aria-labelledby="knockout-heading"
-      className="scroll-mt-24 rounded-lg border border-[#c7a653]/30 bg-[#111d19] p-4 shadow-[0_22px_70px_rgba(0,0,0,0.24)] sm:p-5"
+      className={`scroll-mt-24 rounded-lg border border-[#c7a653]/30 bg-[#111d19] shadow-[0_22px_70px_rgba(0,0,0,0.24)] ${
+        compactDesktop ? "p-3 sm:p-4" : "p-4 sm:p-5"
+      }`}
       id="knockout"
     >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
@@ -877,14 +983,22 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
         })}
       </div>
 
-      <div className="mt-5 rounded-lg border border-[#c7a653]/20 bg-[#0b1512] p-3">
+      <div
+        className={`mt-5 rounded-lg border border-[#c7a653]/20 bg-[#0b1512] ${
+          compactDesktop ? "p-2.5" : "p-3"
+        }`}
+      >
         <div
           aria-label="Scrollable complete knockout bracket"
           className="hidden overflow-x-auto scroll-smooth pb-2 lg:block"
           ref={desktopScrollerRef}
           tabIndex={0}
         >
-          <div className="flex min-w-[2072px] items-start gap-4">
+          <div
+            className={`flex items-start ${
+              compactDesktop ? "min-w-[1680px] gap-2" : "min-w-[2072px] gap-4"
+            }`}
+          >
             {desktopRounds.map((round, index) => {
               const nextRound = desktopRounds[index + 1];
               const connections = nextRound
@@ -893,23 +1007,36 @@ export function KnockoutWallChart({ draw }: { draw: KnockoutDraw }) {
                 : [];
 
               return (
-                <div className="flex shrink-0 gap-4" key={round.id}>
+                <div
+                  className={`flex shrink-0 ${
+                    compactDesktop ? "gap-2" : "gap-4"
+                  }`}
+                  key={round.id}
+                >
                   <DesktopRoundColumn
+                    compactDesktop={compactDesktop}
                     isCurrent={draw.currentRoundId === round.id}
                     round={round}
+                    rowHeight={desktopRowHeight}
                     slotsByMatchId={desktopProgression.slotsByMatchId}
                   />
                   {nextRound ? (
-                    <DesktopConnectorColumn connections={connections} />
+                    <DesktopConnectorColumn
+                      compactDesktop={compactDesktop}
+                      connections={connections}
+                      rowHeight={desktopRowHeight}
+                    />
                   ) : null}
                 </div>
               );
             })}
             <DesktopCentreColumn
+              compactDesktop={compactDesktop}
               currentRoundId={draw.currentRoundId}
               final={draw.final}
               finalConnections={desktopProgression.finalConnections}
               finalSlot={desktopProgression.finalSlot}
+              rowHeight={desktopRowHeight}
               thirdPlace={draw.thirdPlace}
             />
           </div>

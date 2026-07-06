@@ -66,5 +66,6 @@ export const formidableSweepstake: SweepstakeConfig = {
   sectionOrder: ["fixtures", "knockout"],
   slug: "formidable",
   teamsPerParticipant: 3,
+  themeVariant: "premium-black-gold",
   totalPrizePot: "£80",
 };
