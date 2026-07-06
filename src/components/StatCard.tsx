@@ -3,7 +3,7 @@ type StatCardProps = {
   detail?: string;
   icon: string;
   label: string;
-  variant?: "default" | "glass" | "premium";
+  variant?: "default" | "futuristic" | "glass" | "premium";
   value: string;
 };
 
@@ -17,6 +17,7 @@ export function StatCard({
 }: StatCardProps) {
   const isPremium = variant === "premium";
   const isGlass = variant === "glass";
+  const isFuturistic = variant === "futuristic";
 
   return (
     <div
@@ -25,6 +26,8 @@ export function StatCard({
           ? "formidable-metal-card"
           : isGlass
             ? "apple-glass-card"
+            : isFuturistic
+              ? "futuristic-card"
           : "border-[#c7a653]/30 bg-[#16241f] hover:border-[#d7b85f]/60 hover:bg-[#1b2b25]"
       } ${
         compact ? "p-3 lg:p-3.5" : "p-4"
@@ -41,6 +44,8 @@ export function StatCard({
               ? "border border-[#d6a93a]/30 bg-[#0d0a06] text-[#f0d88b] shadow-[0_0_18px_rgba(214,169,58,0.12)]"
               : isGlass
                 ? "apple-glass-chip text-[#f8fbff]"
+                : isFuturistic
+                  ? "futuristic-chip text-[#8ff4ff]"
               : "text-[#f0d88b]"
           }`}
         >
@@ -52,6 +57,8 @@ export function StatCard({
           compact ? "text-2xl" : "text-3xl"
         } ${isPremium ? "formidable-gold-text" : ""} ${
           isGlass ? "apple-glass-value" : ""
+        } ${
+          isFuturistic ? "futuristic-value" : ""
         }`}
       >
         {value}
@@ -59,7 +66,11 @@ export function StatCard({
       {detail ? (
         <p
           className={`mt-1 text-sm font-semibold ${
-            isPremium ? "text-[#bfb7a0]" : "text-[#b8c0ae]"
+            isPremium
+              ? "text-[#bfb7a0]"
+              : isFuturistic
+                ? "text-[#aebfd4]"
+                : "text-[#b8c0ae]"
           }`}
         >
           {detail}

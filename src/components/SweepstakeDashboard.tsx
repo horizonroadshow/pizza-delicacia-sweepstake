@@ -368,23 +368,35 @@ function PremiumBookiesCard({ card, index }: { card: MarketWatchCard; index: num
 
 function CompactBookiesCard({
   card,
+  futuristic = false,
   glass = false,
   index,
 }: {
   card: MarketWatchCard;
+  futuristic?: boolean;
   glass?: boolean;
   index: number;
 }) {
   const articleClass = glass
     ? "apple-glass-card flex h-full flex-col rounded-lg border p-4"
+    : futuristic
+      ? "futuristic-insight-card flex h-full flex-col rounded-lg border p-4"
     : "flex h-full flex-col rounded-lg border border-[#c7a653]/20 bg-[#111d19] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.16)]";
   const featureRowClass = glass
     ? "apple-glass-row mt-3 rounded-lg border p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+    : futuristic
+      ? "futuristic-feature-row mt-3 rounded-lg border p-3"
     : "mt-3 rounded-lg border border-[#d7b85f]/35 bg-[#171f18] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]";
   const compactRowClass = glass
     ? "apple-glass-row flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-md border px-3 py-2"
+    : futuristic
+      ? "futuristic-row flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-md border px-3 py-2"
     : "flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-md border border-[#c7a653]/15 bg-[#0d1814] px-3 py-2";
-  const accentTextClass = glass ? "text-[#ffe8bf]" : "text-[#f0d88b]";
+  const accentTextClass = glass
+    ? "text-[#ffe8bf]"
+    : futuristic
+      ? "text-[#8ff4ff] drop-shadow-[0_0_18px_rgba(90,220,255,0.24)]"
+      : "text-[#f0d88b]";
 
   if (card.rankingRows) {
     const [leader, ...rest] = card.rankingRows;
@@ -475,6 +487,8 @@ function CompactBookiesCard({
             className={`mt-2 break-words rounded-md border px-3 py-2 text-xs font-black uppercase tracking-wide ${
               glass
                 ? "apple-glass-row text-[#ffe8bf]"
+                : futuristic
+                  ? "futuristic-row text-[#f3c4ff]"
                 : "border-[#c7a653]/15 bg-[#0d1814] text-[#c7a653]"
             }`}
           >
@@ -518,11 +532,13 @@ function CompactBookiesCard({
 
 function BookiesCornerSection({
   compact = false,
+  futuristic = false,
   glass = false,
   oddsPreview,
   premium = false,
 }: {
   compact?: boolean;
+  futuristic?: boolean;
   glass?: boolean;
   oddsPreview: OddsPreview;
   premium?: boolean;
@@ -535,17 +551,25 @@ function BookiesCornerSection({
     ? "formidable-metal-card mt-4 rounded-lg border p-4 sm:p-5"
     : glass
       ? "apple-glass-panel mt-4 rounded-lg border p-4 sm:p-5"
+      : futuristic
+        ? "futuristic-panel mt-4 rounded-lg border p-4 sm:p-5"
     : "mt-4 rounded-lg border border-[#c7a653]/25 bg-[#0d1814] p-4 shadow-[0_22px_70px_rgba(0,0,0,0.18)] sm:p-5";
   const emptySectionClass = premium
     ? "mt-4 rounded-lg border border-[#d6a93a]/30 bg-[#050504] p-4 sm:p-5"
     : glass
       ? "apple-glass-panel mt-4 rounded-lg border p-4 sm:p-5"
+      : futuristic
+        ? "futuristic-panel mt-4 rounded-lg border p-4 sm:p-5"
     : "mt-4 rounded-lg border border-[#c7a653]/20 bg-[#0d1814] p-4 sm:p-5";
   const cardClass = premium
     ? "formidable-metal-card rounded-lg border p-3.5"
+    : futuristic
+      ? "futuristic-card rounded-lg border p-4"
     : "rounded-lg border border-[#c7a653]/20 bg-[#111d19] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.16)]";
   const rankingClass = premium
     ? "rounded-md border border-[#d6a93a]/25 bg-[#050504]/90 px-3 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.055)]"
+    : futuristic
+      ? "futuristic-row rounded-md border px-3 py-1.5"
     : "rounded-md border border-[#c7a653]/15 bg-[#0d1814] px-3 py-1.5";
 
   if (oddsPreview.marketWatchCards.length === 0) {
@@ -618,6 +642,7 @@ function BookiesCornerSection({
             ? oddsPreview.marketWatchCards.map((card, index) => (
                 <CompactBookiesCard
                   card={card}
+                  futuristic={futuristic}
                   glass={glass}
                   index={index}
                   key={`${card.eyebrow}-${card.title}`}
@@ -794,9 +819,13 @@ export function SweepstakeDashboard({
   const playerStatDetail = config.copy?.playerStatDetail ?? "Family members";
   const isPremium = config.themeVariant === "premium-black-gold";
   const isAppleGlass = config.themeVariant === "apple-glass";
-  const isWideCompact = config.layoutVariant === "wide-compact" || isPremium;
+  const isFuturistic = config.themeVariant === "futuristic-premium";
+  const isWideCompact =
+    config.layoutVariant === "wide-compact" || isPremium || isFuturistic;
   const pageMaxWidth = isPremium
     ? "max-w-[1680px]"
+    : isFuturistic
+      ? "max-w-[1660px]"
     : isWideCompact
       ? "max-w-[1600px]"
       : "max-w-7xl";
@@ -831,9 +860,21 @@ export function SweepstakeDashboard({
   return (
     <div
       className={`min-h-screen text-[#fff4d7] ${
-        isPremium ? "formidable-theme " : isAppleGlass ? "apple-glass-theme " : ""
+        isPremium
+          ? "formidable-theme "
+          : isAppleGlass
+            ? "apple-glass-theme "
+            : isFuturistic
+              ? "futuristic-theme "
+              : ""
       }${
-        isPremium ? "bg-[#030303]" : isAppleGlass ? "bg-[#101826]" : "bg-[#07110f]"
+        isPremium
+          ? "bg-[#030303]"
+          : isAppleGlass
+            ? "bg-[#101826]"
+            : isFuturistic
+              ? "bg-[#030812]"
+              : "bg-[#07110f]"
       }`}
     >
       <header
@@ -842,6 +883,8 @@ export function SweepstakeDashboard({
             ? "border-[#d6a93a]/25 bg-[#030303]/95 py-2.5"
             : isAppleGlass
               ? "apple-glass-nav border-white/10 bg-transparent py-2.5"
+              : isFuturistic
+                ? "futuristic-nav border-cyan-300/15 bg-[#030812]/88 py-2.5"
             : "border-[#c7a653]/20 bg-[#07110f]/95 py-3"
         }`}
       >
@@ -858,6 +901,8 @@ export function SweepstakeDashboard({
                   ? "border-[#f0c75e]/45 bg-[#080806] shadow-[0_0_24px_rgba(214,169,58,0.18)]"
                   : isAppleGlass
                     ? "apple-glass-chip border-white/20 bg-white/10"
+                    : isFuturistic
+                      ? "futuristic-chip border-cyan-300/25 bg-cyan-300/10"
                   : "border-[#d7b85f]/45 bg-[#13211c]"
               }`}
             >
@@ -883,6 +928,8 @@ export function SweepstakeDashboard({
                   ? "formidable-nav-link-active"
                   : isAppleGlass
                     ? "apple-glass-nav-pill-active"
+                    : isFuturistic
+                      ? "futuristic-nav-pill-active"
                   : "hover:bg-[#13211c]"
               }`}
               href="#top"
@@ -895,6 +942,8 @@ export function SweepstakeDashboard({
                   ? "formidable-nav-link"
                   : isAppleGlass
                     ? "apple-glass-nav-pill"
+                    : isFuturistic
+                      ? "futuristic-nav-pill"
                     : "hover:bg-[#13211c]"
               }`}
               href="#entrants"
@@ -907,6 +956,8 @@ export function SweepstakeDashboard({
                   ? "formidable-nav-link"
                   : isAppleGlass
                     ? "apple-glass-nav-pill"
+                    : isFuturistic
+                      ? "futuristic-nav-pill"
                     : "hover:bg-[#13211c]"
               }`}
               href="#knockout"
@@ -919,6 +970,8 @@ export function SweepstakeDashboard({
                   ? "formidable-nav-link"
                   : isAppleGlass
                     ? "apple-glass-nav-pill"
+                    : isFuturistic
+                      ? "futuristic-nav-pill"
                     : "hover:bg-[#13211c]"
               }`}
               href="#fixtures"
@@ -933,6 +986,8 @@ export function SweepstakeDashboard({
                 ? "border-[#d6a93a]/35 bg-[#0b0906] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
                 : isAppleGlass
                   ? "apple-glass-chip border-white/20 text-[#f8fbff]"
+                  : isFuturistic
+                    ? "futuristic-chip border-cyan-300/25 text-[#8ff4ff]"
                 : "border-[#d7b85f]/35 bg-[#171f18]"
             }`}
           >
@@ -953,15 +1008,21 @@ export function SweepstakeDashboard({
               ? "formidable-metal-card p-4 sm:p-5"
               : isAppleGlass
                 ? "apple-glass-hero apple-glass-panel p-4 sm:p-5"
+                : isFuturistic
+                  ? "futuristic-hero futuristic-panel p-4 sm:p-5"
               : `border-[#c7a653]/25 bg-[#0d1814] ${
                   isWideCompact ? "p-4 sm:p-5" : "p-5 sm:p-6"
                 }`
           }`}
         >
-          {isPremium ? (
+          {isPremium || isFuturistic ? (
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute right-5 top-4 hidden text-7xl opacity-[0.08] drop-shadow-[0_0_28px_rgba(214,169,58,0.35)] lg:block"
+              className={`pointer-events-none absolute right-5 top-4 hidden text-7xl lg:block ${
+                isFuturistic
+                  ? "opacity-[0.12] drop-shadow-[0_0_32px_rgba(67,221,255,0.35)]"
+                  : "opacity-[0.08] drop-shadow-[0_0_28px_rgba(214,169,58,0.35)]"
+              }`}
             >
               ⚽
             </div>
@@ -974,14 +1035,22 @@ export function SweepstakeDashboard({
             <div>
               <p
                 className={`text-sm font-black uppercase tracking-[0.2em] ${
-                  isPremium ? "formidable-section-kicker" : "text-[#c7a653]"
+                  isPremium
+                    ? "formidable-section-kicker"
+                    : isFuturistic
+                      ? "futuristic-kicker"
+                      : "text-[#c7a653]"
                 }`}
               >
                 {heroEyebrow}
               </p>
               <h1
                 className={`mt-2 max-w-4xl font-black leading-tight ${
-                  isAppleGlass ? "apple-glass-heading" : "text-[#fff4d7]"
+                  isAppleGlass
+                    ? "apple-glass-heading"
+                    : isFuturistic
+                      ? "futuristic-heading"
+                      : "text-[#fff4d7]"
                 } ${
                   isWideCompact ? "text-3xl sm:text-4xl xl:text-5xl" : "text-3xl sm:text-5xl"
                 }`}
@@ -1002,6 +1071,8 @@ export function SweepstakeDashboard({
                     ? "leading-7 text-[#ddd3b8]"
                     : isAppleGlass
                       ? "leading-7 text-[#eef5ff]/90"
+                      : isFuturistic
+                        ? "leading-7 text-[#dce7f5]"
                       : "leading-8 text-[#d9dccf]"
                 }`}
               >
@@ -1014,6 +1085,8 @@ export function SweepstakeDashboard({
                     ? "leading-7 text-[#c7bfaa]"
                     : isAppleGlass
                       ? "leading-7 text-[#dce8f6]/82"
+                      : isFuturistic
+                        ? "leading-7 text-[#aebfd4]"
                       : "leading-8 text-[#d9dccf]"
                 }`}
               >
@@ -1028,6 +1101,8 @@ export function SweepstakeDashboard({
                   ? "formidable-metal-card"
                   : isAppleGlass
                     ? "apple-glass-card"
+                    : isFuturistic
+                      ? "futuristic-card"
                   : "border-[#d7b85f]/35 bg-[#171f18]"
               }`}
             >
@@ -1037,6 +1112,8 @@ export function SweepstakeDashboard({
                   ? "formidable-section-kicker"
                   : isAppleGlass
                     ? "text-[#d9ebff]"
+                    : isFuturistic
+                      ? "futuristic-kicker"
                     : "text-[#c7a653]"
               }`}
               >
@@ -1105,7 +1182,9 @@ export function SweepstakeDashboard({
               detail={playerStatDetail}
               icon="★"
               label="Players"
-              variant={isAppleGlass ? "glass" : "default"}
+              variant={
+                isAppleGlass ? "glass" : isFuturistic ? "futuristic" : "default"
+              }
               value={`${sweepstakeSummary.playerCount}`}
             />
             <StatCard
@@ -1113,7 +1192,9 @@ export function SweepstakeDashboard({
               detail={`${numberWord(sweepstakeSummary.teamsPerParticipant)} teams each`}
               icon="◆"
               label="Teams"
-              variant={isAppleGlass ? "glass" : "default"}
+              variant={
+                isAppleGlass ? "glass" : isFuturistic ? "futuristic" : "default"
+              }
               value={`${sweepstakeSummary.teamCount}`}
             />
             <StatCard
@@ -1121,7 +1202,9 @@ export function SweepstakeDashboard({
               detail={`${sweepstakeSummary.entryFee} per player`}
               icon="£"
               label="Prize pot"
-              variant={isAppleGlass ? "glass" : "default"}
+              variant={
+                isAppleGlass ? "glass" : isFuturistic ? "futuristic" : "default"
+              }
               value={sweepstakeSummary.prizePot}
             />
             <StatCard
@@ -1129,20 +1212,26 @@ export function SweepstakeDashboard({
               detail={`${teamsEliminated} teams eliminated`}
               icon="●"
               label="Tournament status"
-              variant={isAppleGlass ? "glass" : "default"}
+              variant={
+                isAppleGlass ? "glass" : isFuturistic ? "futuristic" : "default"
+              }
               value={`${teamsRemaining} teams remain`}
             />
             <PrizeCard
               compact
               place="First prize"
               prize={config.prizeSplit.first}
-              variant={isAppleGlass ? "glass" : "default"}
+              variant={
+                isAppleGlass ? "glass" : isFuturistic ? "futuristic" : "default"
+              }
             />
             <PrizeCard
               compact
               place="Second prize"
               prize={config.prizeSplit.second}
-              variant={isAppleGlass ? "glass" : "default"}
+              variant={
+                isAppleGlass ? "glass" : isFuturistic ? "futuristic" : "default"
+              }
             />
           </section>
         ) : (
@@ -1183,6 +1272,7 @@ export function SweepstakeDashboard({
 
         <BookiesCornerSection
           compact={isWideCompact}
+          futuristic={isFuturistic}
           glass={isAppleGlass}
           oddsPreview={oddsPreview}
           premium={isPremium}
@@ -1194,6 +1284,8 @@ export function SweepstakeDashboard({
               ? "formidable-metal-card"
               : isAppleGlass
                 ? "apple-glass-panel"
+                : isFuturistic
+                  ? "futuristic-panel"
               : "border-[#c7a653]/25 bg-[#0d1814]"
           }`}
           id="entrants"
@@ -1206,6 +1298,8 @@ export function SweepstakeDashboard({
                     ? "formidable-section-kicker"
                     : isAppleGlass
                       ? "text-[#d9ebff]"
+                      : isFuturistic
+                        ? "futuristic-kicker"
                       : "text-[#c7a653]"
                 }`}
               >
@@ -1217,6 +1311,8 @@ export function SweepstakeDashboard({
                     ? "formidable-gold-text"
                     : isAppleGlass
                       ? "apple-glass-heading"
+                      : isFuturistic
+                        ? "futuristic-heading"
                       : "text-[#fff4d7]"
                 }`}
               >
@@ -1307,13 +1403,21 @@ export function SweepstakeDashboard({
                       ? "rounded-lg border border-[#d6a93a]/30 bg-[#060605] p-1 shadow-[0_20px_60px_rgba(0,0,0,0.38),0_0_40px_rgba(214,169,58,0.05)]"
                       : isAppleGlass
                         ? "apple-glass-section-frame rounded-lg p-1"
+                        : isFuturistic
+                          ? "futuristic-section-frame rounded-lg p-1"
                       : undefined
                   }
                 >
                   <PlaceholderPanel
                     title="Fixtures and results"
                     variant={
-                      isPremium ? "premium" : isAppleGlass ? "glass" : "default"
+                      isPremium
+                        ? "premium"
+                        : isAppleGlass
+                          ? "glass"
+                          : isFuturistic
+                            ? "futuristic"
+                            : "default"
                     }
                   >
                   <div className="grid gap-5">
@@ -1348,6 +1452,8 @@ export function SweepstakeDashboard({
                   ? "rounded-lg border border-[#d6a93a]/25 bg-[#050504] p-1 shadow-[0_20px_70px_rgba(0,0,0,0.42),0_0_45px_rgba(214,169,58,0.05)]"
                   : isAppleGlass
                     ? "apple-glass-section-frame rounded-lg p-1"
+                    : isFuturistic
+                      ? "futuristic-section-frame rounded-lg p-1"
                   : ""
               }`}
               key={sectionId}
@@ -1355,7 +1461,9 @@ export function SweepstakeDashboard({
               <KnockoutWallChart
                 compactDesktop={isWideCompact}
                 draw={knockoutDraw}
-                variant={isAppleGlass ? "glass" : "default"}
+                variant={
+                  isAppleGlass ? "glass" : isFuturistic ? "futuristic" : "default"
+                }
               />
             </div>
           ),

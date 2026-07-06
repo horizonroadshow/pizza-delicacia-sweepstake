@@ -2,7 +2,7 @@ type PlaceholderPanelProps = {
   children?: React.ReactNode;
   description?: string;
   title: string;
-  variant?: "default" | "glass" | "premium";
+  variant?: "default" | "futuristic" | "glass" | "premium";
 };
 
 export function PlaceholderPanel({
@@ -13,6 +13,7 @@ export function PlaceholderPanel({
 }: PlaceholderPanelProps) {
   const isPremium = variant === "premium";
   const isGlass = variant === "glass";
+  const isFuturistic = variant === "futuristic";
 
   return (
     <section
@@ -21,6 +22,8 @@ export function PlaceholderPanel({
           ? "formidable-metal-card p-4"
           : isGlass
             ? "apple-glass-panel p-4"
+            : isFuturistic
+              ? "futuristic-panel p-4"
           : "border-[#c7a653]/30 bg-[#111d19] p-5"
       }`}
     >
@@ -33,6 +36,8 @@ export function PlaceholderPanel({
             ? "formidable-gold-text"
             : isGlass
               ? "apple-glass-heading"
+              : isFuturistic
+                ? "futuristic-heading"
               : "text-[#fff4d7]"
         }`}
       >
@@ -44,7 +49,7 @@ export function PlaceholderPanel({
         </p>
       ) : null}
       {children ? (
-        <div className={isPremium || isGlass ? "mt-3" : "mt-4"}>
+        <div className={isPremium || isGlass || isFuturistic ? "mt-3" : "mt-4"}>
           {children}
         </div>
       ) : null}

@@ -732,9 +732,10 @@ export function KnockoutWallChart({
 }: {
   compactDesktop?: boolean;
   draw: KnockoutDraw;
-  variant?: "default" | "glass";
+  variant?: "default" | "futuristic" | "glass";
 }) {
   const isGlass = variant === "glass";
+  const isFuturistic = variant === "futuristic";
   const desktopScrollerRef = useRef<HTMLDivElement>(null);
   const mobileScrollerRef = useRef<HTMLDivElement>(null);
   const mobilePanelRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -913,7 +914,9 @@ export function KnockoutWallChart({
       aria-labelledby="knockout-heading"
       className={`scroll-mt-24 rounded-lg border border-[#c7a653]/30 bg-[#111d19] shadow-[0_22px_70px_rgba(0,0,0,0.24)] ${
         compactDesktop ? "p-3 sm:p-4" : "p-4 sm:p-5"
-      } ${isGlass ? "apple-glass-panel" : ""}`}
+      } ${isGlass ? "apple-glass-panel" : ""} ${
+        isFuturistic ? "futuristic-panel" : ""
+      }`}
       id="knockout"
     >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
@@ -989,7 +992,9 @@ export function KnockoutWallChart({
       <div
         className={`mt-5 rounded-lg border border-[#c7a653]/20 bg-[#0b1512] ${
           compactDesktop ? "p-2.5" : "p-3"
-        } ${isGlass ? "apple-glass-bracket-frame" : ""}`}
+        } ${isGlass ? "apple-glass-bracket-frame" : ""} ${
+          isFuturistic ? "futuristic-bracket-frame" : ""
+        }`}
       >
         <div
           aria-label="Scrollable complete knockout bracket"

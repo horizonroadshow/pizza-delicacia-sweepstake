@@ -52,6 +52,6 @@ export type SweepstakeConfig = {
   sectionOrder?: SweepstakeSectionId[];
   slug: string;
   teamsPerParticipant: number;
-  themeVariant?: "apple-glass" | "default" | "premium-black-gold";
+  themeVariant?: "apple-glass" | "default" | "futuristic-premium" | "premium-black-gold";
   totalPrizePot: string;
 };

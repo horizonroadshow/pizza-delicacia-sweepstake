@@ -199,6 +199,314 @@ html {
   border-color: rgba(214, 169, 58, 0.28);
 }
 
+.futuristic-theme {
+  background:
+    radial-gradient(circle at 12% 7%, rgba(0, 224, 255, 0.16), transparent 26rem),
+    radial-gradient(circle at 87% 18%, rgba(151, 84, 255, 0.16), transparent 30rem),
+    radial-gradient(circle at 74% 76%, rgba(255, 202, 117, 0.11), transparent 28rem),
+    radial-gradient(circle at 18% 82%, rgba(0, 178, 132, 0.16), transparent 32rem),
+    linear-gradient(145deg, #02050b 0%, #06101d 44%, #02080d 100%);
+  color: #f7fbff;
+  position: relative;
+}
+
+.futuristic-theme::before {
+  background:
+    linear-gradient(110deg, transparent 0 17%, rgba(99, 221, 255, 0.09) 18%, transparent 21% 100%),
+    linear-gradient(72deg, transparent 0 62%, rgba(183, 128, 255, 0.065) 64%, transparent 67% 100%),
+    repeating-linear-gradient(90deg, rgba(142, 244, 255, 0.035) 0 1px, transparent 1px 58px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 68px);
+  content: "";
+  inset: 0;
+  opacity: 0.38;
+  pointer-events: none;
+  position: fixed;
+  z-index: 0;
+}
+
+.futuristic-theme::after {
+  background:
+    radial-gradient(ellipse at center top, rgba(74, 202, 255, 0.14), transparent 34rem),
+    radial-gradient(ellipse at 70% 40%, rgba(137, 80, 255, 0.1), transparent 26rem),
+    radial-gradient(ellipse at center bottom, rgba(0, 0, 0, 0.66), transparent 46rem),
+    radial-gradient(ellipse at center, transparent 48%, rgba(0, 0, 0, 0.42) 100%);
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: fixed;
+  z-index: 0;
+}
+
+.futuristic-theme > * {
+  position: relative;
+  z-index: 1;
+}
+
+.futuristic-panel,
+.futuristic-card,
+.futuristic-insight-card,
+.futuristic-row,
+.futuristic-feature-row,
+.futuristic-chip,
+.futuristic-nav,
+.futuristic-section-frame {
+  position: relative;
+}
+
+.futuristic-panel,
+.futuristic-card,
+.futuristic-insight-card {
+  background:
+    linear-gradient(145deg, rgba(105, 241, 255, 0.105), rgba(255, 255, 255, 0.025) 38%, rgba(151, 84, 255, 0.085)),
+    linear-gradient(180deg, rgba(9, 21, 36, 0.96), rgba(4, 10, 18, 0.98));
+  border-color: rgba(108, 235, 255, 0.28);
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.5),
+    0 0 46px rgba(58, 213, 255, 0.09),
+    0 0 70px rgba(126, 83, 255, 0.055),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(91, 240, 255, 0.07);
+  overflow: hidden;
+}
+
+.futuristic-panel::before,
+.futuristic-card::before,
+.futuristic-insight-card::before {
+  background:
+    linear-gradient(90deg, rgba(143, 244, 255, 0.62), transparent 36%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent);
+  content: "";
+  height: 1px;
+  inset: 0 0 auto;
+  pointer-events: none;
+  position: absolute;
+}
+
+.futuristic-panel::after,
+.futuristic-card::after,
+.futuristic-insight-card::after {
+  background:
+    radial-gradient(circle at 15% 0%, rgba(85, 221, 255, 0.14), transparent 15rem),
+    radial-gradient(circle at 88% 18%, rgba(174, 95, 255, 0.12), transparent 16rem);
+  content: "";
+  inset: 0;
+  opacity: 0.68;
+  pointer-events: none;
+  position: absolute;
+}
+
+.futuristic-panel > *,
+.futuristic-card > *,
+.futuristic-insight-card > *,
+.futuristic-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.futuristic-card,
+.futuristic-insight-card {
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.futuristic-card:hover,
+.futuristic-insight-card:hover,
+.futuristic-theme #entrants article:hover {
+  border-color: rgba(143, 244, 255, 0.56);
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.5),
+    0 0 48px rgba(74, 221, 255, 0.14),
+    0 0 70px rgba(151, 84, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  transform: translateY(-1px);
+}
+
+.futuristic-hero {
+  background:
+    radial-gradient(circle at 12% 20%, rgba(0, 224, 255, 0.18), transparent 22rem),
+    radial-gradient(circle at 82% 40%, rgba(169, 95, 255, 0.15), transparent 25rem),
+    linear-gradient(145deg, rgba(12, 31, 50, 0.98), rgba(4, 10, 19, 0.98));
+}
+
+.futuristic-heading,
+.futuristic-value {
+  color: #f9fdff;
+  text-shadow:
+    0 0 30px rgba(67, 221, 255, 0.18),
+    0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+.futuristic-value {
+  background: linear-gradient(92deg, #ffffff 0%, #8ff4ff 38%, #b99cff 70%, #ffe3a3 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.futuristic-prize-value {
+  color: #ffe5a8;
+  text-shadow: 0 0 26px rgba(255, 210, 117, 0.2);
+}
+
+.futuristic-kicker {
+  background: linear-gradient(90deg, #8ff4ff, #b99cff, #ffe2a5);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.futuristic-chip,
+.futuristic-nav-pill,
+.futuristic-nav-pill-active {
+  background:
+    linear-gradient(180deg, rgba(143, 244, 255, 0.14), rgba(185, 156, 255, 0.045)),
+    rgba(4, 13, 24, 0.82);
+  border: 1px solid rgba(143, 244, 255, 0.24);
+  box-shadow:
+    0 12px 34px rgba(0, 0, 0, 0.26),
+    0 0 24px rgba(67, 221, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.futuristic-nav {
+  box-shadow:
+    0 18px 64px rgba(0, 0, 0, 0.42),
+    0 0 38px rgba(67, 221, 255, 0.055),
+    inset 0 -1px 0 rgba(143, 244, 255, 0.08);
+}
+
+.futuristic-nav-pill {
+  color: rgba(229, 242, 255, 0.82);
+}
+
+.futuristic-nav-pill:hover,
+.futuristic-nav-pill-active {
+  background:
+    linear-gradient(180deg, rgba(143, 244, 255, 0.22), rgba(151, 84, 255, 0.08)),
+    rgba(8, 20, 34, 0.94);
+  border-color: rgba(143, 244, 255, 0.54);
+  color: #ffffff;
+}
+
+.futuristic-nav-pill-active {
+  box-shadow:
+    0 0 0 1px rgba(143, 244, 255, 0.1),
+    0 0 28px rgba(67, 221, 255, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.futuristic-feature-row,
+.futuristic-row {
+  background:
+    linear-gradient(145deg, rgba(143, 244, 255, 0.08), rgba(255, 255, 255, 0.018)),
+    rgba(3, 13, 23, 0.78);
+  border-color: rgba(143, 244, 255, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+.futuristic-prize-card {
+  border-color: rgba(255, 218, 145, 0.32);
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.5),
+    0 0 46px rgba(255, 200, 105, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.futuristic-section-frame {
+  background:
+    linear-gradient(145deg, rgba(143, 244, 255, 0.075), rgba(151, 84, 255, 0.035)),
+    rgba(2, 9, 17, 0.78);
+  border: 1px solid rgba(143, 244, 255, 0.16);
+  box-shadow:
+    0 24px 76px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.futuristic-bracket-frame {
+  background:
+    linear-gradient(145deg, rgba(143, 244, 255, 0.075), rgba(139, 87, 255, 0.045)),
+    rgba(1, 8, 15, 0.88);
+  border-color: rgba(143, 244, 255, 0.18);
+}
+
+.futuristic-theme .text-\[\#c7a653\] {
+  color: #8ff4ff;
+}
+
+.futuristic-theme .text-\[\#b8c0ae\],
+.futuristic-theme .text-\[\#858d7d\],
+.futuristic-theme .text-\[\#d9dccf\] {
+  color: rgba(220, 233, 247, 0.78);
+}
+
+.futuristic-theme .text-\[\#f0d88b\] {
+  color: #ffe5a8;
+}
+
+.futuristic-theme input[type="search"] {
+  background:
+    linear-gradient(180deg, rgba(143, 244, 255, 0.09), transparent),
+    rgba(2, 12, 22, 0.94);
+  border-color: rgba(143, 244, 255, 0.28);
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.28),
+    0 0 28px rgba(67, 221, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.futuristic-theme #entrants article,
+.futuristic-theme #fixtures article,
+.futuristic-theme #knockout article,
+.futuristic-theme #knockout [data-mobile-round-column="true"],
+.futuristic-theme #knockout [data-desktop-round-column="true"] > div:first-child,
+.futuristic-theme #knockout [data-round-id="finals"] > div:first-child {
+  background:
+    linear-gradient(145deg, rgba(143, 244, 255, 0.08), rgba(255, 255, 255, 0.018) 42%, rgba(151, 84, 255, 0.055)),
+    rgba(5, 15, 27, 0.96);
+  border-color: rgba(143, 244, 255, 0.2);
+  box-shadow:
+    0 18px 54px rgba(0, 0, 0, 0.34),
+    0 0 32px rgba(67, 221, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.futuristic-theme #entrants li {
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.futuristic-theme #entrants li:has([class*="text-\\[\\#bff2a5\\]"]) {
+  border-color: rgba(80, 255, 184, 0.36);
+  background:
+    linear-gradient(145deg, rgba(80, 255, 184, 0.11), rgba(8, 31, 27, 0.92));
+}
+
+.futuristic-theme #entrants li:has([class*="text-\\[\\#ffb5a8\\]"]) {
+  border-color: rgba(255, 117, 117, 0.24);
+  background:
+    linear-gradient(145deg, rgba(255, 117, 117, 0.07), rgba(24, 11, 16, 0.9));
+}
+
+.futuristic-theme #fixtures details,
+.futuristic-theme #fixtures summary,
+.futuristic-theme #knockout [data-match-card="true"] > div,
+.futuristic-theme #knockout [data-match-card="true"] span,
+.futuristic-theme #knockout [data-mobile-connector-column="true"] > div,
+.futuristic-theme #knockout [data-desktop-connector-column="true"] > div {
+  border-color: rgba(143, 244, 255, 0.14);
+}
+
+.futuristic-theme #knockout [data-desktop-connector-line="true"] span,
+.futuristic-theme #knockout [data-mobile-connector-line="true"] {
+  background: rgba(143, 244, 255, 0.54);
+  box-shadow: 0 0 14px rgba(67, 221, 255, 0.22);
+}
+
 .apple-glass-theme {
   background:
     radial-gradient(circle at 10% 8%, rgba(202, 224, 245, 0.28), transparent 24rem),

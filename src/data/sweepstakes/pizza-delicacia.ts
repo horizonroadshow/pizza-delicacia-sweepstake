@@ -37,6 +37,7 @@ export const pizzaDelicaciaSweepstake: SweepstakeConfig = {
   ],
   entryFee: "£5",
   id: "pizza-delicacia",
+  layoutVariant: "wide-compact",
   name: "Pizza Delicacia World Cup Sweepstake",
   participants: [
     { id: "nanaji", name: "Nanaji" },
@@ -70,7 +71,9 @@ export const pizzaDelicaciaSweepstake: SweepstakeConfig = {
     summary: "£100 first, £20 second",
   },
   relationships: pizzaDelicaciaRelationships,
+  sectionOrder: ["fixtures", "knockout"],
   slug: "pizza-delicacia",
   teamsPerParticipant: 2,
+  themeVariant: "futuristic-premium",
   totalPrizePot: "£120",
 };

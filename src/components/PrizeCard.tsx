@@ -3,7 +3,7 @@ type PrizeCardProps = {
   note?: string;
   place: string;
   prize: string;
-  variant?: "default" | "glass" | "premium";
+  variant?: "default" | "futuristic" | "glass" | "premium";
 };
 
 function premiumPrizeChipLabel(label: string) {
@@ -30,6 +30,7 @@ export function PrizeCard({
 }: PrizeCardProps) {
   const isPremium = variant === "premium";
   const isGlass = variant === "glass";
+  const isFuturistic = variant === "futuristic";
   const prizeParts = isPremium ? prize.split(" / ") : [prize];
   const mainPrize = prizeParts[0];
   const extras = prizeParts.slice(1);
@@ -41,6 +42,8 @@ export function PrizeCard({
           ? "formidable-metal-card"
           : isGlass
             ? "apple-glass-card apple-glass-prize-card"
+            : isFuturistic
+              ? "futuristic-card futuristic-prize-card"
           : "border-[#c7a653]/35 bg-[#111d19]"
       } ${
         compact ? "p-4" : "p-5"
@@ -71,7 +74,9 @@ export function PrizeCard({
         <p
           className={`mt-2 break-words font-black leading-tight text-[#fff4d7] ${
             compact ? "text-2xl xl:text-3xl" : "text-4xl"
-          } ${isGlass ? "apple-glass-value" : ""}`}
+          } ${isGlass ? "apple-glass-value" : ""} ${
+            isFuturistic ? "futuristic-prize-value" : ""
+          }`}
         >
           {prize}
         </p>
@@ -79,7 +84,11 @@ export function PrizeCard({
       {note ? (
         <p
           className={`mt-2 text-base leading-7 ${
-            isPremium ? "text-[#bfb7a0]" : "text-[#b8c0ae]"
+            isPremium
+              ? "text-[#bfb7a0]"
+              : isFuturistic
+                ? "text-[#aebfd4]"
+                : "text-[#b8c0ae]"
           }`}
         >
           {note}
