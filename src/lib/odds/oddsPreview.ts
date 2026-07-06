@@ -324,12 +324,21 @@ function buildFamilyFeudCard(
   participants: Participant[],
   config: SweepstakeConfig,
 ): MarketWatchCard {
+  const excludedOwners = new Set(
+    config.relationships?.excludedInsightParticipants ?? [],
+  );
+  const isExcludedOwner = (owner: string) => excludedOwners.has(owner);
   const familyBranchBattle = events
     .map((event) => {
       const homeOwner = findOwnerForTeamName(event.home, participants);
       const awayOwner = findOwnerForTeamName(event.away, participants);
 
-      if (!homeOwner || !awayOwner) {
+      if (
+        !homeOwner ||
+        !awayOwner ||
+        isExcludedOwner(homeOwner) ||
+        isExcludedOwner(awayOwner)
+      ) {
         return undefined;
       }
 
@@ -387,7 +396,10 @@ function buildFamilyFeudCard(
     };
   }
 
-  const ownerRankings = rankOwnersByOutrightOdds(outrightOdds, participants);
+  const ownerRankings = rankOwnersByOutrightOdds(
+    outrightOdds,
+    participants,
+  ).filter((ranking) => !isExcludedOwner(ranking.owner));
   const [leader, chaser] = ownerRankings;
 
   if (leader && chaser) {

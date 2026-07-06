@@ -25,6 +25,7 @@ export const formidableSweepstake: SweepstakeConfig = {
   ],
   commissioner: "Ajay",
   copy: {
+    firstPrizeDreamText: "The £70 dream is still alive.",
     feudEyebrow: "Friends Feud",
     genericBraggingRightsCopy: "Friendship on the line.",
     groupStyleLabel: "friends",
@@ -56,11 +57,13 @@ export const formidableSweepstake: SweepstakeConfig = {
     { id: "harry", name: "Harry" },
   ],
   prizeSplit: {
-    first: "£70",
+    first: "£70 / Team Shirt / Sports Direct Mug / A date with Trevor🦶🏻",
     second: "£10",
     summary: "£70 first, £10 second",
   },
   relationships: formidableRelationships,
+  layoutVariant: "wide-compact",
+  sectionOrder: ["fixtures", "knockout"],
   slug: "formidable",
   teamsPerParticipant: 3,
   totalPrizePot: "£80",

@@ -100,6 +100,7 @@ export const formidableRelationships: SweepstakeRelationshipConfig = {
     ["Kish", "Suchita"],
     ["Alasdair", "Alaleh"],
   ],
+  excludedInsightParticipants: ["Ajay", "Aditi"],
   genericBraggingRightsCopy: "Friendship on the line.",
   title: "Friends Feud",
 };

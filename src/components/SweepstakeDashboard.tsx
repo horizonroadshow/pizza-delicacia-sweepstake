@@ -427,6 +427,13 @@ export function SweepstakeDashboard({
   const memberLabelPlural = config.copy?.memberLabelPlural ?? "family members";
   const leaderboardTitle = config.copy?.leaderboardTitle ?? "Family leaderboard";
   const playerStatDetail = config.copy?.playerStatDetail ?? "Family members";
+  const isWideCompact = config.layoutVariant === "wide-compact";
+  const pageMaxWidth = isWideCompact ? "max-w-[1600px]" : "max-w-7xl";
+  const sectionGap = isWideCompact ? "mt-4" : "mt-5";
+  const dreamSentence =
+    config.copy?.firstPrizeDreamText ??
+    `The ${config.prizeSplit.first} dream is still alive.`;
+  const sectionOrder = config.sectionOrder ?? ["knockout", "fixtures"];
 
   const filteredParticipants = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -453,7 +460,9 @@ export function SweepstakeDashboard({
   return (
     <div className="min-h-screen bg-[#07110f] text-[#fff4d7]">
       <header className="sticky top-0 z-20 border-b border-[#c7a653]/20 bg-[#07110f]/95 px-4 py-3 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+        <div
+          className={`mx-auto flex ${pageMaxWidth} items-center justify-between gap-4`}
+        >
           <a
             className="flex items-center gap-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d7b85f]"
             href="#top"
@@ -504,14 +513,31 @@ export function SweepstakeDashboard({
         </div>
       </header>
 
-      <main id="top" className="mx-auto max-w-7xl px-4 py-5 sm:py-7">
-        <section className="rounded-lg border border-[#c7a653]/25 bg-[#0d1814] p-5 shadow-[0_22px_70px_rgba(0,0,0,0.28)] sm:p-6">
-          <div className="grid gap-5 lg:grid-cols-[1.4fr_0.6fr] lg:items-end">
+      <main
+        id="top"
+        className={`mx-auto ${pageMaxWidth} px-4 ${
+          isWideCompact ? "py-4 sm:py-5" : "py-5 sm:py-7"
+        }`}
+      >
+        <section
+          className={`rounded-lg border border-[#c7a653]/25 bg-[#0d1814] shadow-[0_22px_70px_rgba(0,0,0,0.28)] ${
+            isWideCompact ? "p-4 sm:p-5" : "p-5 sm:p-6"
+          }`}
+        >
+          <div
+            className={`grid lg:grid-cols-[1.4fr_0.6fr] lg:items-end ${
+              isWideCompact ? "gap-4" : "gap-5"
+            }`}
+          >
             <div>
               <p className="text-sm font-black uppercase tracking-[0.2em] text-[#c7a653]">
                 {heroEyebrow}
               </p>
-              <h1 className="mt-2 max-w-4xl text-3xl font-black leading-tight text-[#fff4d7] sm:text-5xl">
+              <h1
+                className={`mt-2 max-w-4xl font-black leading-tight text-[#fff4d7] ${
+                  isWideCompact ? "text-3xl sm:text-4xl xl:text-5xl" : "text-3xl sm:text-5xl"
+                }`}
+              >
                 {config.displayTitleLines.map((line) => (
                   <span className="block" key={line}>
                     {line}
@@ -543,24 +569,28 @@ export function SweepstakeDashboard({
 
         <section className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
+            compact={isWideCompact}
             detail={playerStatDetail}
             icon="★"
             label="Players"
             value={`${sweepstakeSummary.playerCount}`}
           />
           <StatCard
+            compact={isWideCompact}
             detail={`${numberWord(sweepstakeSummary.teamsPerParticipant)} teams each`}
             icon="◆"
             label="Teams"
             value={`${sweepstakeSummary.teamCount}`}
           />
           <StatCard
+            compact={isWideCompact}
             detail={`${sweepstakeSummary.entryFee} per player`}
             icon="£"
             label="Prize pot"
             value={sweepstakeSummary.prizePot}
           />
           <StatCard
+            compact={isWideCompact}
             detail={`${teamsEliminated} teams eliminated`}
             icon="●"
             label="Tournament status"
@@ -569,14 +599,22 @@ export function SweepstakeDashboard({
         </section>
 
         <section className="mt-4 grid gap-3 md:grid-cols-2">
-          <PrizeCard place="First prize" prize={config.prizeSplit.first} />
-          <PrizeCard place="Second prize" prize={config.prizeSplit.second} />
+          <PrizeCard
+            compact={isWideCompact}
+            place="First prize"
+            prize={config.prizeSplit.first}
+          />
+          <PrizeCard
+            compact={isWideCompact}
+            place="Second prize"
+            prize={config.prizeSplit.second}
+          />
         </section>
 
         <BookiesCornerSection oddsPreview={oddsPreview} />
 
         <section
-          className="mt-5 rounded-lg border border-[#c7a653]/25 bg-[#0d1814] p-4 shadow-[0_22px_70px_rgba(0,0,0,0.24)] sm:p-5"
+          className={`${sectionGap} rounded-lg border border-[#c7a653]/25 bg-[#0d1814] p-4 shadow-[0_22px_70px_rgba(0,0,0,0.24)] sm:p-5`}
           id="entrants"
         >
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -589,7 +627,7 @@ export function SweepstakeDashboard({
               </h2>
               <p className="mt-2 max-w-2xl text-base font-semibold leading-7 text-[#d9dccf]">
                 These are the players who still have at least one team left.
-                The {config.prizeSplit.first} dream is still alive.
+                {` ${dreamSentence}`}
               </p>
               <p className="mt-2 text-base font-semibold text-[#b8c0ae]">
                 Showing {filteredParticipants.length} of {participants.length}
@@ -658,35 +696,41 @@ export function SweepstakeDashboard({
           )}
         </section>
 
-        <div className="mt-5">
-          <KnockoutWallChart draw={knockoutDraw} />
-        </div>
-
-        <section className="mt-5">
-          <div id="fixtures">
-            <PlaceholderPanel
-              title="Fixtures and results"
-            >
-              <div className="grid gap-5">
-                <div className="grid gap-3">
-                  {fixturesPreview.roundGroups.map((group) => (
-                    <FixtureRoundGroup group={group} key={group.id} />
-                  ))}
-                </div>
-                {fixturesPreview.roundGroups.length === 0 ? (
-                  <div className="rounded-lg border border-[#c7a653]/25 bg-[#0e1915] p-4 text-base font-bold text-[#d9dccf]">
-                    Knockout fixtures are not available from OpenFootball
-                    static data right now.
+        {sectionOrder.map((sectionId) =>
+          sectionId === "fixtures" ? (
+            <section className={sectionGap} key={sectionId}>
+              <div id="fixtures">
+                <PlaceholderPanel title="Fixtures and results">
+                  <div className="grid gap-5">
+                    <div
+                      className={`grid gap-3 ${
+                        isWideCompact ? "xl:grid-cols-2" : ""
+                      }`}
+                    >
+                      {fixturesPreview.roundGroups.map((group) => (
+                        <FixtureRoundGroup group={group} key={group.id} />
+                      ))}
+                    </div>
+                    {fixturesPreview.roundGroups.length === 0 ? (
+                      <div className="rounded-lg border border-[#c7a653]/25 bg-[#0e1915] p-4 text-base font-bold text-[#d9dccf]">
+                        Knockout fixtures are not available from OpenFootball
+                        static data right now.
+                      </div>
+                    ) : null}
+                    <p className="text-xs font-bold leading-5 text-[#858d7d]">
+                      Fixture and result data is provided by OpenFootball static
+                      data. Updates may lag official results.
+                    </p>
                   </div>
-                ) : null}
-                <p className="text-xs font-bold leading-5 text-[#858d7d]">
-                  Fixture and result data is provided by OpenFootball static
-                  data. Updates may lag official results.
-                </p>
+                </PlaceholderPanel>
               </div>
-            </PlaceholderPanel>
-          </div>
-        </section>
+            </section>
+          ) : (
+            <div className={sectionGap} key={sectionId}>
+              <KnockoutWallChart draw={knockoutDraw} />
+            </div>
+          ),
+        )}
       </main>
     </div>
   );

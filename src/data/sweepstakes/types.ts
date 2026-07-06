@@ -4,6 +4,7 @@ export type ParticipantRecord = Pick<Participant, "id" | "name">;
 
 export type SweepstakeRelationshipConfig = {
   branches?: Record<string, string[]>;
+  excludedInsightParticipants?: string[];
   genericBraggingRightsCopy?: string;
   households?: string[][];
   parentChildPairs?: [string, string][];
@@ -20,6 +21,7 @@ export type SweepstakeRelationshipConfig = {
 };
 
 export type SweepstakeCopyConfig = {
+  firstPrizeDreamText?: string;
   feudEyebrow?: string;
   genericBraggingRightsCopy?: string;
   groupStyleLabel?: string;
@@ -28,6 +30,8 @@ export type SweepstakeCopyConfig = {
   memberLabelPlural?: string;
   playerStatDetail?: string;
 };
+
+export type SweepstakeSectionId = "fixtures" | "knockout";
 
 export type SweepstakeConfig = {
   allocations: Allocation[];
@@ -44,6 +48,8 @@ export type SweepstakeConfig = {
     summary: string;
   };
   relationships?: SweepstakeRelationshipConfig;
+  layoutVariant?: "default" | "wide-compact";
+  sectionOrder?: SweepstakeSectionId[];
   slug: string;
   teamsPerParticipant: number;
   totalPrizePot: string;
