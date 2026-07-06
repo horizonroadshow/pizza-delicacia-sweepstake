@@ -368,22 +368,35 @@ function PremiumBookiesCard({ card, index }: { card: MarketWatchCard; index: num
 
 function CompactBookiesCard({
   card,
+  glass = false,
   index,
 }: {
   card: MarketWatchCard;
+  glass?: boolean;
   index: number;
 }) {
+  const articleClass = glass
+    ? "apple-glass-card flex h-full flex-col rounded-lg border p-4"
+    : "flex h-full flex-col rounded-lg border border-[#c7a653]/20 bg-[#111d19] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.16)]";
+  const featureRowClass = glass
+    ? "apple-glass-row mt-3 rounded-lg border p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+    : "mt-3 rounded-lg border border-[#d7b85f]/35 bg-[#171f18] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]";
+  const compactRowClass = glass
+    ? "apple-glass-row flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-md border px-3 py-2"
+    : "flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-md border border-[#c7a653]/15 bg-[#0d1814] px-3 py-2";
+  const accentTextClass = glass ? "text-[#ffe8bf]" : "text-[#f0d88b]";
+
   if (card.rankingRows) {
     const [leader, ...rest] = card.rankingRows;
 
     return (
-      <article className="flex h-full flex-col rounded-lg border border-[#c7a653]/20 bg-[#111d19] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.16)]">
+      <article className={articleClass}>
         <p className="text-xs font-black uppercase tracking-[0.18em] text-[#c7a653]">
           {card.eyebrow}
         </p>
         <h3 className="mt-2 text-xl font-black text-[#fff4d7]">{card.title}</h3>
         {leader ? (
-          <div className="mt-3 rounded-lg border border-[#d7b85f]/35 bg-[#171f18] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+          <div className={featureRowClass}>
             <div className="flex min-w-0 flex-wrap items-end justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-xs font-black uppercase tracking-[0.16em] text-[#c7a653]">
@@ -393,7 +406,7 @@ function CompactBookiesCard({
                   {leader.owner}
                 </p>
               </div>
-              <p className="text-4xl font-black leading-none text-[#f0d88b]">
+              <p className={`text-4xl font-black leading-none ${accentTextClass}`}>
                 {leader.percentage}
               </p>
             </div>
@@ -406,14 +419,16 @@ function CompactBookiesCard({
           <div className="mt-2 grid gap-2">
             {rest.map((row) => (
               <div
-                className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-md border border-[#c7a653]/15 bg-[#0d1814] px-3 py-2"
+                className={compactRowClass}
                 key={`${row.place}-${row.owner}`}
               >
                 <p className="min-w-0 text-sm font-black text-[#fff4d7]">
                   <span className="text-[#c7a653]">{row.place}.</span>{" "}
                   {row.owner}
                 </p>
-                <p className="font-black text-[#f0d88b]">{row.percentage}</p>
+                <p className={`font-black ${accentTextClass}`}>
+                  {row.percentage}
+                </p>
                 <p className="basis-full break-words text-xs font-bold text-[#b8c0ae]">
                   {row.teams}
                 </p>
@@ -432,14 +447,14 @@ function CompactBookiesCard({
 
   if (card.feudLines) {
     return (
-      <article className="flex h-full flex-col rounded-lg border border-[#c7a653]/20 bg-[#111d19] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.16)]">
+      <article className={articleClass}>
         <p className="text-xs font-black uppercase tracking-[0.18em] text-[#c7a653]">
           {card.eyebrow}
         </p>
         <h3 className="mt-2 text-base font-black uppercase tracking-[0.14em] text-[#c7a653]">
           {card.title}
         </h3>
-        <div className="mt-3 rounded-lg border border-[#d7b85f]/25 bg-[#171f18] p-3 text-center">
+        <div className={`${featureRowClass} text-center`}>
           <p className="text-3xl font-black leading-tight text-[#fff4d7]">
             {card.feudLines.owners}
           </p>
@@ -456,7 +471,13 @@ function CompactBookiesCard({
           {card.feudLines.banter}
         </p>
         {card.feudLines.odds ? (
-          <p className="mt-2 break-words rounded-md border border-[#c7a653]/15 bg-[#0d1814] px-3 py-2 text-xs font-black uppercase tracking-wide text-[#c7a653]">
+          <p
+            className={`mt-2 break-words rounded-md border px-3 py-2 text-xs font-black uppercase tracking-wide ${
+              glass
+                ? "apple-glass-row text-[#ffe8bf]"
+                : "border-[#c7a653]/15 bg-[#0d1814] text-[#c7a653]"
+            }`}
+          >
             {card.feudLines.odds}
           </p>
         ) : null}
@@ -468,7 +489,7 @@ function CompactBookiesCard({
   const isUnderdog = index === 1;
 
   return (
-    <article className="flex h-full flex-col rounded-lg border border-[#c7a653]/20 bg-[#111d19] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.16)]">
+    <article className={articleClass}>
       <p className="text-xs font-black uppercase tracking-[0.18em] text-[#c7a653]">
         {card.eyebrow}
       </p>
@@ -481,7 +502,7 @@ function CompactBookiesCard({
           {card.title}
         </h3>
         {percentage ? (
-          <p className="mt-2 text-6xl font-black leading-none text-[#f0d88b]">
+          <p className={`mt-2 text-6xl font-black leading-none ${accentTextClass}`}>
             {percentage}
           </p>
         ) : null}
@@ -497,10 +518,12 @@ function CompactBookiesCard({
 
 function BookiesCornerSection({
   compact = false,
+  glass = false,
   oddsPreview,
   premium = false,
 }: {
   compact?: boolean;
+  glass?: boolean;
   oddsPreview: OddsPreview;
   premium?: boolean;
 }) {
@@ -510,9 +533,13 @@ function BookiesCornerSection({
   );
   const sectionClass = premium
     ? "formidable-metal-card mt-4 rounded-lg border p-4 sm:p-5"
+    : glass
+      ? "apple-glass-panel mt-4 rounded-lg border p-4 sm:p-5"
     : "mt-4 rounded-lg border border-[#c7a653]/25 bg-[#0d1814] p-4 shadow-[0_22px_70px_rgba(0,0,0,0.18)] sm:p-5";
   const emptySectionClass = premium
     ? "mt-4 rounded-lg border border-[#d6a93a]/30 bg-[#050504] p-4 sm:p-5"
+    : glass
+      ? "apple-glass-panel mt-4 rounded-lg border p-4 sm:p-5"
     : "mt-4 rounded-lg border border-[#c7a653]/20 bg-[#0d1814] p-4 sm:p-5";
   const cardClass = premium
     ? "formidable-metal-card rounded-lg border p-3.5"
@@ -591,6 +618,7 @@ function BookiesCornerSection({
             ? oddsPreview.marketWatchCards.map((card, index) => (
                 <CompactBookiesCard
                   card={card}
+                  glass={glass}
                   index={index}
                   key={`${card.eyebrow}-${card.title}`}
                 />
@@ -765,6 +793,7 @@ export function SweepstakeDashboard({
   const leaderboardTitle = config.copy?.leaderboardTitle ?? "Family leaderboard";
   const playerStatDetail = config.copy?.playerStatDetail ?? "Family members";
   const isPremium = config.themeVariant === "premium-black-gold";
+  const isAppleGlass = config.themeVariant === "apple-glass";
   const isWideCompact = config.layoutVariant === "wide-compact" || isPremium;
   const pageMaxWidth = isPremium
     ? "max-w-[1680px]"
@@ -802,15 +831,17 @@ export function SweepstakeDashboard({
   return (
     <div
       className={`min-h-screen text-[#fff4d7] ${
-        isPremium ? "formidable-theme " : ""
+        isPremium ? "formidable-theme " : isAppleGlass ? "apple-glass-theme " : ""
       }${
-        isPremium ? "bg-[#030303]" : "bg-[#07110f]"
+        isPremium ? "bg-[#030303]" : isAppleGlass ? "bg-[#101826]" : "bg-[#07110f]"
       }`}
     >
       <header
         className={`sticky top-0 z-20 border-b px-4 backdrop-blur ${
           isPremium
             ? "border-[#d6a93a]/25 bg-[#030303]/95 py-2.5"
+            : isAppleGlass
+              ? "apple-glass-nav border-white/10 bg-transparent py-2.5"
             : "border-[#c7a653]/20 bg-[#07110f]/95 py-3"
         }`}
       >
@@ -825,6 +856,8 @@ export function SweepstakeDashboard({
               className={`flex h-10 w-10 items-center justify-center rounded-md border text-xl ${
                 isPremium
                   ? "border-[#f0c75e]/45 bg-[#080806] shadow-[0_0_24px_rgba(214,169,58,0.18)]"
+                  : isAppleGlass
+                    ? "apple-glass-chip border-white/20 bg-white/10"
                   : "border-[#d7b85f]/45 bg-[#13211c]"
               }`}
             >
@@ -848,6 +881,8 @@ export function SweepstakeDashboard({
               className={`rounded-md px-3 py-2 ${
                 isPremium
                   ? "formidable-nav-link-active"
+                  : isAppleGlass
+                    ? "apple-glass-nav-pill-active"
                   : "hover:bg-[#13211c]"
               }`}
               href="#top"
@@ -856,7 +891,11 @@ export function SweepstakeDashboard({
             </a>
             <a
               className={`rounded-md px-3 py-2 ${
-                isPremium ? "formidable-nav-link" : "hover:bg-[#13211c]"
+                isPremium
+                  ? "formidable-nav-link"
+                  : isAppleGlass
+                    ? "apple-glass-nav-pill"
+                    : "hover:bg-[#13211c]"
               }`}
               href="#entrants"
             >
@@ -864,7 +903,11 @@ export function SweepstakeDashboard({
             </a>
             <a
               className={`rounded-md px-3 py-2 ${
-                isPremium ? "formidable-nav-link" : "hover:bg-[#13211c]"
+                isPremium
+                  ? "formidable-nav-link"
+                  : isAppleGlass
+                    ? "apple-glass-nav-pill"
+                    : "hover:bg-[#13211c]"
               }`}
               href="#knockout"
             >
@@ -872,7 +915,11 @@ export function SweepstakeDashboard({
             </a>
             <a
               className={`rounded-md px-3 py-2 ${
-                isPremium ? "formidable-nav-link" : "hover:bg-[#13211c]"
+                isPremium
+                  ? "formidable-nav-link"
+                  : isAppleGlass
+                    ? "apple-glass-nav-pill"
+                    : "hover:bg-[#13211c]"
               }`}
               href="#fixtures"
             >
@@ -884,6 +931,8 @@ export function SweepstakeDashboard({
             className={`hidden rounded-md border px-3 py-2 text-sm font-black text-[#f0d88b] sm:block ${
               isPremium
                 ? "border-[#d6a93a]/35 bg-[#0b0906] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                : isAppleGlass
+                  ? "apple-glass-chip border-white/20 text-[#f8fbff]"
                 : "border-[#d7b85f]/35 bg-[#171f18]"
             }`}
           >
@@ -902,6 +951,8 @@ export function SweepstakeDashboard({
           className={`relative overflow-hidden rounded-lg border shadow-[0_22px_70px_rgba(0,0,0,0.28)] ${
             isPremium
               ? "formidable-metal-card p-4 sm:p-5"
+              : isAppleGlass
+                ? "apple-glass-hero apple-glass-panel p-4 sm:p-5"
               : `border-[#c7a653]/25 bg-[#0d1814] ${
                   isWideCompact ? "p-4 sm:p-5" : "p-5 sm:p-6"
                 }`
@@ -929,7 +980,9 @@ export function SweepstakeDashboard({
                 {heroEyebrow}
               </p>
               <h1
-                className={`mt-2 max-w-4xl font-black leading-tight text-[#fff4d7] ${
+                className={`mt-2 max-w-4xl font-black leading-tight ${
+                  isAppleGlass ? "apple-glass-heading" : "text-[#fff4d7]"
+                } ${
                   isWideCompact ? "text-3xl sm:text-4xl xl:text-5xl" : "text-3xl sm:text-5xl"
                 }`}
               >
@@ -945,7 +998,11 @@ export function SweepstakeDashboard({
               </h1>
               <p
                 className={`mt-3 max-w-3xl text-lg ${
-                  isPremium ? "leading-7 text-[#ddd3b8]" : "leading-8 text-[#d9dccf]"
+                  isPremium
+                    ? "leading-7 text-[#ddd3b8]"
+                    : isAppleGlass
+                      ? "leading-7 text-[#eef5ff]/90"
+                      : "leading-8 text-[#d9dccf]"
                 }`}
               >
                 {sweepstakeSummary.teamCount} teams started, {teamsEliminated}{" "}
@@ -953,7 +1010,11 @@ export function SweepstakeDashboard({
               </p>
               <p
                 className={`mt-2 max-w-3xl text-lg ${
-                  isPremium ? "leading-7 text-[#c7bfaa]" : "leading-8 text-[#d9dccf]"
+                  isPremium
+                    ? "leading-7 text-[#c7bfaa]"
+                    : isAppleGlass
+                      ? "leading-7 text-[#dce8f6]/82"
+                      : "leading-8 text-[#d9dccf]"
                 }`}
               >
                 {sweepstakeSummary.playerCount} {memberLabelPlural},{" "}
@@ -965,13 +1026,19 @@ export function SweepstakeDashboard({
               className={`rounded-lg border p-4 ${
                 isPremium
                   ? "formidable-metal-card"
+                  : isAppleGlass
+                    ? "apple-glass-card"
                   : "border-[#d7b85f]/35 bg-[#171f18]"
               }`}
             >
               <p
                 className={`text-xs font-black uppercase tracking-[0.18em] ${
-                  isPremium ? "formidable-section-kicker" : "text-[#c7a653]"
-                }`}
+                isPremium
+                  ? "formidable-section-kicker"
+                  : isAppleGlass
+                    ? "text-[#d9ebff]"
+                    : "text-[#c7a653]"
+              }`}
               >
                 Rules snapshot
               </p>
@@ -1038,6 +1105,7 @@ export function SweepstakeDashboard({
               detail={playerStatDetail}
               icon="★"
               label="Players"
+              variant={isAppleGlass ? "glass" : "default"}
               value={`${sweepstakeSummary.playerCount}`}
             />
             <StatCard
@@ -1045,6 +1113,7 @@ export function SweepstakeDashboard({
               detail={`${numberWord(sweepstakeSummary.teamsPerParticipant)} teams each`}
               icon="◆"
               label="Teams"
+              variant={isAppleGlass ? "glass" : "default"}
               value={`${sweepstakeSummary.teamCount}`}
             />
             <StatCard
@@ -1052,6 +1121,7 @@ export function SweepstakeDashboard({
               detail={`${sweepstakeSummary.entryFee} per player`}
               icon="£"
               label="Prize pot"
+              variant={isAppleGlass ? "glass" : "default"}
               value={sweepstakeSummary.prizePot}
             />
             <StatCard
@@ -1059,17 +1129,20 @@ export function SweepstakeDashboard({
               detail={`${teamsEliminated} teams eliminated`}
               icon="●"
               label="Tournament status"
+              variant={isAppleGlass ? "glass" : "default"}
               value={`${teamsRemaining} teams remain`}
             />
             <PrizeCard
               compact
               place="First prize"
               prize={config.prizeSplit.first}
+              variant={isAppleGlass ? "glass" : "default"}
             />
             <PrizeCard
               compact
               place="Second prize"
               prize={config.prizeSplit.second}
+              variant={isAppleGlass ? "glass" : "default"}
             />
           </section>
         ) : (
@@ -1110,6 +1183,7 @@ export function SweepstakeDashboard({
 
         <BookiesCornerSection
           compact={isWideCompact}
+          glass={isAppleGlass}
           oddsPreview={oddsPreview}
           premium={isPremium}
         />
@@ -1118,6 +1192,8 @@ export function SweepstakeDashboard({
           className={`${sectionGap} rounded-lg border p-4 shadow-[0_22px_70px_rgba(0,0,0,0.24)] sm:p-5 ${
             isPremium
               ? "formidable-metal-card"
+              : isAppleGlass
+                ? "apple-glass-panel"
               : "border-[#c7a653]/25 bg-[#0d1814]"
           }`}
           id="entrants"
@@ -1126,14 +1202,22 @@ export function SweepstakeDashboard({
             <div className="min-w-0">
               <p
                 className={`text-sm font-black uppercase tracking-[0.2em] ${
-                  isPremium ? "formidable-section-kicker" : "text-[#c7a653]"
+                  isPremium
+                    ? "formidable-section-kicker"
+                    : isAppleGlass
+                      ? "text-[#d9ebff]"
+                      : "text-[#c7a653]"
                 }`}
               >
                 Who is still in?
               </p>
               <h2
                 className={`mt-2 text-3xl font-black ${
-                  isPremium ? "formidable-gold-text" : "text-[#fff4d7]"
+                  isPremium
+                    ? "formidable-gold-text"
+                    : isAppleGlass
+                      ? "apple-glass-heading"
+                      : "text-[#fff4d7]"
                 }`}
               >
                 {leaderboardTitle}
@@ -1221,12 +1305,16 @@ export function SweepstakeDashboard({
                   className={
                     isPremium
                       ? "rounded-lg border border-[#d6a93a]/30 bg-[#060605] p-1 shadow-[0_20px_60px_rgba(0,0,0,0.38),0_0_40px_rgba(214,169,58,0.05)]"
+                      : isAppleGlass
+                        ? "apple-glass-section-frame rounded-lg p-1"
                       : undefined
                   }
                 >
                   <PlaceholderPanel
                     title="Fixtures and results"
-                    variant={isPremium ? "premium" : "default"}
+                    variant={
+                      isPremium ? "premium" : isAppleGlass ? "glass" : "default"
+                    }
                   >
                   <div className="grid gap-5">
                     <div
@@ -1258,6 +1346,8 @@ export function SweepstakeDashboard({
               className={`${sectionGap} ${
                 isPremium
                   ? "rounded-lg border border-[#d6a93a]/25 bg-[#050504] p-1 shadow-[0_20px_70px_rgba(0,0,0,0.42),0_0_45px_rgba(214,169,58,0.05)]"
+                  : isAppleGlass
+                    ? "apple-glass-section-frame rounded-lg p-1"
                   : ""
               }`}
               key={sectionId}
@@ -1265,6 +1355,7 @@ export function SweepstakeDashboard({
               <KnockoutWallChart
                 compactDesktop={isWideCompact}
                 draw={knockoutDraw}
+                variant={isAppleGlass ? "glass" : "default"}
               />
             </div>
           ),

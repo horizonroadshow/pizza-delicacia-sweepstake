@@ -198,3 +198,231 @@ html {
     #070706;
   border-color: rgba(214, 169, 58, 0.28);
 }
+
+.apple-glass-theme {
+  background:
+    radial-gradient(circle at 10% 8%, rgba(202, 224, 245, 0.28), transparent 24rem),
+    radial-gradient(circle at 86% 22%, rgba(124, 158, 195, 0.18), transparent 28rem),
+    radial-gradient(circle at 76% 84%, rgba(244, 193, 152, 0.22), transparent 30rem),
+    radial-gradient(circle at 16% 78%, rgba(91, 148, 130, 0.16), transparent 28rem),
+    linear-gradient(145deg, #111a26 0%, #172434 40%, #081018 100%);
+  color: #f8fbff;
+  position: relative;
+}
+
+.apple-glass-theme::before {
+  background:
+    radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.18), transparent 18rem),
+    radial-gradient(circle at 80% 66%, rgba(255, 211, 174, 0.16), transparent 20rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 36%);
+  content: "";
+  filter: blur(12px);
+  inset: 0;
+  opacity: 0.82;
+  pointer-events: none;
+  position: fixed;
+  z-index: 0;
+}
+
+.apple-glass-theme::after {
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, 0.34) 100%);
+  content: "";
+  inset: 0;
+  opacity: 0.34;
+  pointer-events: none;
+  position: fixed;
+  z-index: 0;
+}
+
+.apple-glass-theme > * {
+  position: relative;
+  z-index: 1;
+}
+
+.apple-glass-panel,
+.apple-glass-card,
+.apple-glass-row,
+.apple-glass-chip,
+.apple-glass-nav,
+.apple-glass-section-frame {
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  backdrop-filter: blur(22px) saturate(150%);
+}
+
+.apple-glass-panel {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.065) 42%, rgba(190, 215, 238, 0.08)),
+    rgba(18, 30, 43, 0.5);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 28px 90px rgba(0, 0, 0, 0.34),
+    0 0 70px rgba(173, 205, 235, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  position: relative;
+}
+
+.apple-glass-panel::before,
+.apple-glass-card::before {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.36), transparent 42%);
+  content: "";
+  height: 1px;
+  inset: 0 0 auto;
+  pointer-events: none;
+  position: absolute;
+}
+
+.apple-glass-hero::after {
+  background:
+    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.2), transparent 16rem),
+    radial-gradient(circle at 70% 72%, rgba(255, 207, 166, 0.12), transparent 18rem);
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.apple-glass-card {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.055)),
+    rgba(21, 34, 49, 0.43);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 18px 52px rgba(0, 0, 0, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  position: relative;
+}
+
+.apple-glass-row {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.052)),
+    rgba(255, 255, 255, 0.045);
+  border-color: rgba(255, 255, 255, 0.17);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.apple-glass-chip,
+.apple-glass-nav-pill,
+.apple-glass-nav-pill-active {
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.apple-glass-nav {
+  background: rgba(10, 18, 29, 0.46);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 16px 60px rgba(0, 0, 0, 0.24);
+}
+
+.apple-glass-nav-pill {
+  color: rgba(240, 247, 255, 0.82);
+}
+
+.apple-glass-nav-pill:hover,
+.apple-glass-nav-pill-active {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.19), rgba(255, 255, 255, 0.08)),
+    rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.32);
+  color: #ffffff;
+}
+
+.apple-glass-nav-pill-active {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 14px 36px rgba(164, 205, 243, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.apple-glass-heading,
+.apple-glass-value {
+  color: #ffffff;
+  text-shadow: 0 16px 46px rgba(179, 214, 244, 0.16);
+}
+
+.apple-glass-value {
+  color: #fff2d8;
+}
+
+.apple-glass-prize-card {
+  background:
+    linear-gradient(145deg, rgba(255, 240, 218, 0.17), rgba(255, 255, 255, 0.06)),
+    rgba(39, 43, 51, 0.42);
+}
+
+.apple-glass-section-frame {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  box-shadow:
+    0 22px 70px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.13);
+}
+
+.apple-glass-bracket-frame {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.04)),
+    rgba(9, 18, 29, 0.34);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.apple-glass-theme .text-\[\#c7a653\] {
+  color: #dcecff;
+}
+
+.apple-glass-theme .text-\[\#b8c0ae\],
+.apple-glass-theme .text-\[\#858d7d\],
+.apple-glass-theme .text-\[\#d9dccf\] {
+  color: rgba(233, 242, 251, 0.78);
+}
+
+.apple-glass-theme .text-\[\#f0d88b\] {
+  color: #ffe8bf;
+}
+
+.apple-glass-theme input[type="search"] {
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+  backdrop-filter: blur(18px) saturate(145%);
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 16px 42px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.apple-glass-theme #entrants article,
+.apple-glass-theme #fixtures article,
+.apple-glass-theme #knockout article,
+.apple-glass-theme #knockout [data-mobile-round-column="true"],
+.apple-glass-theme #knockout [data-desktop-round-column="true"] > div:first-child,
+.apple-glass-theme #knockout [data-round-id="finals"] > div:first-child {
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+  backdrop-filter: blur(18px) saturate(145%);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.045)),
+    rgba(17, 30, 45, 0.44);
+  border-color: rgba(255, 255, 255, 0.17);
+  box-shadow:
+    0 18px 54px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.17);
+}
+
+.apple-glass-theme #entrants li,
+.apple-glass-theme #fixtures details,
+.apple-glass-theme #fixtures summary,
+.apple-glass-theme #knockout [data-match-card="true"] > div,
+.apple-glass-theme #knockout [data-match-card="true"] span,
+.apple-glass-theme #knockout [data-mobile-connector-column="true"] > div,
+.apple-glass-theme #knockout [data-desktop-connector-column="true"] > div {
+  border-color: rgba(255, 255, 255, 0.13);
+}
+
+.apple-glass-theme #knockout [data-desktop-connector-line="true"] span,
+.apple-glass-theme #knockout [data-mobile-connector-line="true"] {
+  background: rgba(219, 235, 255, 0.42);
+}

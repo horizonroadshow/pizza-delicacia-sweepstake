@@ -3,7 +3,7 @@ type PrizeCardProps = {
   note?: string;
   place: string;
   prize: string;
-  variant?: "default" | "premium";
+  variant?: "default" | "glass" | "premium";
 };
 
 function premiumPrizeChipLabel(label: string) {
@@ -29,6 +29,7 @@ export function PrizeCard({
   variant = "default",
 }: PrizeCardProps) {
   const isPremium = variant === "premium";
+  const isGlass = variant === "glass";
   const prizeParts = isPremium ? prize.split(" / ") : [prize];
   const mainPrize = prizeParts[0];
   const extras = prizeParts.slice(1);
@@ -38,6 +39,8 @@ export function PrizeCard({
       className={`rounded-lg border shadow-[0_18px_45px_rgba(0,0,0,0.2)] ${
         isPremium
           ? "formidable-metal-card"
+          : isGlass
+            ? "apple-glass-card apple-glass-prize-card"
           : "border-[#c7a653]/35 bg-[#111d19]"
       } ${
         compact ? "p-4" : "p-5"
@@ -68,7 +71,7 @@ export function PrizeCard({
         <p
           className={`mt-2 break-words font-black leading-tight text-[#fff4d7] ${
             compact ? "text-2xl xl:text-3xl" : "text-4xl"
-          }`}
+          } ${isGlass ? "apple-glass-value" : ""}`}
         >
           {prize}
         </p>

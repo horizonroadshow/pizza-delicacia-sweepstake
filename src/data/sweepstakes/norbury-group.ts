@@ -69,5 +69,6 @@ export const norburyGroupSweepstake: SweepstakeConfig = {
   sectionOrder: ["fixtures", "knockout"],
   slug: "norbury-group",
   teamsPerParticipant: 2,
+  themeVariant: "apple-glass",
   totalPrizePot: "£120",
 };
