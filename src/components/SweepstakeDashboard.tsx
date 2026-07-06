@@ -366,10 +366,141 @@ function PremiumBookiesCard({ card, index }: { card: MarketWatchCard; index: num
   );
 }
 
+function CompactBookiesCard({
+  card,
+  index,
+}: {
+  card: MarketWatchCard;
+  index: number;
+}) {
+  if (card.rankingRows) {
+    const [leader, ...rest] = card.rankingRows;
+
+    return (
+      <article className="flex h-full flex-col rounded-lg border border-[#c7a653]/20 bg-[#111d19] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.16)]">
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-[#c7a653]">
+          {card.eyebrow}
+        </p>
+        <h3 className="mt-2 text-xl font-black text-[#fff4d7]">{card.title}</h3>
+        {leader ? (
+          <div className="mt-3 rounded-lg border border-[#d7b85f]/35 bg-[#171f18] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <div className="flex min-w-0 flex-wrap items-end justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-[#c7a653]">
+                  1st place
+                </p>
+                <p className="mt-1 text-3xl font-black leading-tight text-[#fff4d7]">
+                  {leader.owner}
+                </p>
+              </div>
+              <p className="text-4xl font-black leading-none text-[#f0d88b]">
+                {leader.percentage}
+              </p>
+            </div>
+            <p className="mt-2 break-words text-sm font-bold leading-5 text-[#d9dccf]">
+              {leader.teams}
+            </p>
+          </div>
+        ) : null}
+        {rest.length > 0 ? (
+          <div className="mt-2 grid gap-2">
+            {rest.map((row) => (
+              <div
+                className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-md border border-[#c7a653]/15 bg-[#0d1814] px-3 py-2"
+                key={`${row.place}-${row.owner}`}
+              >
+                <p className="min-w-0 text-sm font-black text-[#fff4d7]">
+                  <span className="text-[#c7a653]">{row.place}.</span>{" "}
+                  {row.owner}
+                </p>
+                <p className="font-black text-[#f0d88b]">{row.percentage}</p>
+                <p className="basis-full break-words text-xs font-bold text-[#b8c0ae]">
+                  {row.teams}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {card.detail ? (
+          <p className="mt-3 text-xs font-bold leading-5 text-[#858d7d]">
+            {card.detail}
+          </p>
+        ) : null}
+      </article>
+    );
+  }
+
+  if (card.feudLines) {
+    return (
+      <article className="flex h-full flex-col rounded-lg border border-[#c7a653]/20 bg-[#111d19] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.16)]">
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-[#c7a653]">
+          {card.eyebrow}
+        </p>
+        <h3 className="mt-2 text-base font-black uppercase tracking-[0.14em] text-[#c7a653]">
+          {card.title}
+        </h3>
+        <div className="mt-3 rounded-lg border border-[#d7b85f]/25 bg-[#171f18] p-3 text-center">
+          <p className="text-3xl font-black leading-tight text-[#fff4d7]">
+            {card.feudLines.owners}
+          </p>
+          <p className="mt-2 text-sm font-black text-[#d9dccf]">
+            {card.feudLines.fixture}
+          </p>
+          {card.feudLines.date ? (
+            <p className="mt-1 text-xs font-black uppercase tracking-wide text-[#c7a653]">
+              {card.feudLines.date}
+            </p>
+          ) : null}
+        </div>
+        <p className="mt-3 text-center text-sm font-semibold leading-6 text-[#b8c0ae]">
+          {card.feudLines.banter}
+        </p>
+        {card.feudLines.odds ? (
+          <p className="mt-2 break-words rounded-md border border-[#c7a653]/15 bg-[#0d1814] px-3 py-2 text-xs font-black uppercase tracking-wide text-[#c7a653]">
+            {card.feudLines.odds}
+          </p>
+        ) : null}
+      </article>
+    );
+  }
+
+  const percentage = featurePercentageFromDetail(card.detail);
+  const isUnderdog = index === 1;
+
+  return (
+    <article className="flex h-full flex-col rounded-lg border border-[#c7a653]/20 bg-[#111d19] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.16)]">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#c7a653]">
+        {card.eyebrow}
+      </p>
+      <div className={isUnderdog ? "flex flex-1 flex-col justify-center py-3 text-center" : "mt-3"}>
+        <h3
+          className={`font-black leading-tight text-[#fff4d7] ${
+            isUnderdog ? "text-5xl" : "text-2xl"
+          }`}
+        >
+          {card.title}
+        </h3>
+        {percentage ? (
+          <p className="mt-2 text-6xl font-black leading-none text-[#f0d88b]">
+            {percentage}
+          </p>
+        ) : null}
+        {card.detail ? (
+          <p className="mx-auto mt-4 max-w-sm text-sm font-semibold leading-6 text-[#b8c0ae]">
+            {card.detail}
+          </p>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
 function BookiesCornerSection({
+  compact = false,
   oddsPreview,
   premium = false,
 }: {
+  compact?: boolean;
   oddsPreview: OddsPreview;
   premium?: boolean;
 }) {
@@ -456,6 +587,14 @@ function BookiesCornerSection({
                 key={`${card.eyebrow}-${card.title}`}
               />
             ))
+          : compact
+            ? oddsPreview.marketWatchCards.map((card, index) => (
+                <CompactBookiesCard
+                  card={card}
+                  index={index}
+                  key={`${card.eyebrow}-${card.title}`}
+                />
+              ))
           : oddsPreview.marketWatchCards.map((card) => (
           <article
             className={cardClass}
@@ -892,6 +1031,47 @@ export function SweepstakeDashboard({
               variant="premium"
             />
           </section>
+        ) : isWideCompact ? (
+          <section className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-[repeat(4,minmax(0,1fr))_minmax(180px,0.95fr)_minmax(150px,0.82fr)]">
+            <StatCard
+              compact
+              detail={playerStatDetail}
+              icon="★"
+              label="Players"
+              value={`${sweepstakeSummary.playerCount}`}
+            />
+            <StatCard
+              compact
+              detail={`${numberWord(sweepstakeSummary.teamsPerParticipant)} teams each`}
+              icon="◆"
+              label="Teams"
+              value={`${sweepstakeSummary.teamCount}`}
+            />
+            <StatCard
+              compact
+              detail={`${sweepstakeSummary.entryFee} per player`}
+              icon="£"
+              label="Prize pot"
+              value={sweepstakeSummary.prizePot}
+            />
+            <StatCard
+              compact
+              detail={`${teamsEliminated} teams eliminated`}
+              icon="●"
+              label="Tournament status"
+              value={`${teamsRemaining} teams remain`}
+            />
+            <PrizeCard
+              compact
+              place="First prize"
+              prize={config.prizeSplit.first}
+            />
+            <PrizeCard
+              compact
+              place="Second prize"
+              prize={config.prizeSplit.second}
+            />
+          </section>
         ) : (
           <>
             <section className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -928,7 +1108,11 @@ export function SweepstakeDashboard({
           </>
         )}
 
-        <BookiesCornerSection oddsPreview={oddsPreview} premium={isPremium} />
+        <BookiesCornerSection
+          compact={isWideCompact}
+          oddsPreview={oddsPreview}
+          premium={isPremium}
+        />
 
         <section
           className={`${sectionGap} rounded-lg border p-4 shadow-[0_22px_70px_rgba(0,0,0,0.24)] sm:p-5 ${
@@ -1012,7 +1196,7 @@ export function SweepstakeDashboard({
           {filteredParticipants.length > 0 ? (
             <div
               className={`mt-5 grid min-w-0 gap-3 md:grid-cols-2 ${
-                isPremium ? "xl:grid-cols-4" : "xl:grid-cols-3"
+                isWideCompact ? "xl:grid-cols-4" : "xl:grid-cols-3"
               }`}
             >
               {filteredParticipants.map((participant) => (
@@ -1079,7 +1263,7 @@ export function SweepstakeDashboard({
               key={sectionId}
             >
               <KnockoutWallChart
-                compactDesktop={isPremium}
+                compactDesktop={isWideCompact}
                 draw={knockoutDraw}
               />
             </div>

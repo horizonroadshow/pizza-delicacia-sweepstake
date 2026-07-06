@@ -32,6 +32,7 @@ export const norburyGroupSweepstake: SweepstakeConfig = {
   displayTitleLines: ["Norbury Group", "World Cup 2026 Sweepstake ⚽️"],
   entryFee: "£5",
   id: "norbury-group",
+  layoutVariant: "wide-compact",
   name: "Norbury Group World Cup 2026 Sweepstake",
   participants: [
     { id: "asmita", name: "Asmita" },
@@ -65,6 +66,7 @@ export const norburyGroupSweepstake: SweepstakeConfig = {
     summary: "£100 first, £20 second",
   },
   relationships: norburyGroupRelationships,
+  sectionOrder: ["fixtures", "knockout"],
   slug: "norbury-group",
   teamsPerParticipant: 2,
   totalPrizePot: "£120",
