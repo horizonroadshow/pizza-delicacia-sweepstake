@@ -50,6 +50,8 @@ export type Match = {
   homeTeamPlaceholder?: string;
   id: MatchId;
   kickoffAt: string | null;
+  loserNextMatchId?: MatchId | null;
+  loserNextMatchSlot?: MatchSlot | null;
   nextMatchId: MatchId | null;
   nextMatchSlot: MatchSlot | null;
   round: TournamentStage;

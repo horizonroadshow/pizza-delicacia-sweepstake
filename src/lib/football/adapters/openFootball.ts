@@ -173,6 +173,8 @@ export function mapOpenFootballMatchToMatch(
     homeTeamPlaceholder: homeTeam ? undefined : match.team1 ?? "Team TBC",
     id: `openfootball-2026-match-${matchNumber}`,
     kickoffAt: kickoffAt(match),
+    loserNextMatchId: null,
+    loserNextMatchSlot: null,
     nextMatchId: null,
     nextMatchSlot: null,
     round: toTournamentStage(match),
