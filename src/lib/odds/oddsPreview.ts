@@ -204,6 +204,28 @@ function buildOutrightCard(
   };
 }
 
+function remainingTeamNameSet(participants: Participant[]) {
+  return new Set(
+    participants
+      .flatMap((participant) => participant.teams)
+      .filter((team) => team.status === "still-in")
+      .map((team) => normaliseTeamName(team.country)),
+  );
+}
+
+function outrightRemainingCoverage(
+  outrightOdds: OutrightOddsSummary[],
+  participants: Participant[],
+) {
+  const remainingTeams = remainingTeamNameSet(participants);
+
+  return new Set(
+    outrightOdds
+      .map((odd) => normaliseTeamName(odd.team))
+      .filter((teamName) => remainingTeams.has(teamName)),
+  ).size;
+}
+
 function toSavedOutrightSummary(team: string, probability: number): OutrightOddsSummary {
   const decimalOdds = Math.round((100 / probability) * 100) / 100;
 
@@ -320,7 +342,6 @@ function buildUnderdogCard(
 
 function buildFamilyFeudCard(
   events: OddsEventSummary[],
-  outrightOdds: OutrightOddsSummary[],
   participants: Participant[],
   config: SweepstakeConfig,
 ): MarketWatchCard {
@@ -397,40 +418,20 @@ function buildFamilyFeudCard(
     };
   }
 
-  const ownerRankings = rankOwnersByOutrightOdds(
-    outrightOdds,
-    participants,
-  ).filter((ranking) => !isExcludedOwner(ranking.owner));
-  const [leader, chaser] = ownerRankings;
-
-  if (leader && chaser) {
-    const leaderTeams = leader.teams
-      .map((team) => teamDisplayName(team.team, participants))
-      .join(" / ");
-    const chaserTeams = chaser.teams
-      .map((team) => teamDisplayName(team.team, participants))
-      .join(" / ");
-
-    return {
-      detail: `${leader.owner} leads the bookies' board, but ${chaser.owner} is still chasing.`,
-      eyebrow: config.copy?.feudEyebrow ?? "Family Feud",
-      feudLines: {
-        banter: `${leader.owner} leads the bookies' board, but ${chaser.owner} is still chasing.`,
-        fixture: `${leaderTeams} vs ${chaserTeams}`,
-        owners: `${leader.owner} vs. ${chaser.owner}`,
-      },
-      title: "Title-race bragging rights",
-    };
-  }
+  const isFriendsFallback = config.copy?.groupStyleLabel === "friends";
+  const fallbackCopy = isFriendsFallback
+    ? "No confirmed friends matchup yet."
+    : "No confirmed family matchup yet.";
 
   return {
-    detail:
-      config.copy?.genericBraggingRightsCopy ?? "Family bragging rights loading.",
+    detail: fallbackCopy,
     eyebrow: config.copy?.feudEyebrow ?? "Family Feud",
-    title:
-      config.copy?.groupStyleLabel === "friends"
-        ? "Friendship on the line"
-        : "Next Homewrecker",
+    feudLines: {
+      banter: fallbackCopy,
+      fixture: "Fixture TBC",
+      owners: "Matchup TBC",
+    },
+    title: isFriendsFallback ? "Friends fixture watch" : "Family fixture watch",
   };
 }
 
@@ -444,7 +445,7 @@ function buildMarketWatchCards(
   return [
     buildOutrightCard(outrightOdds, outrightOddsState, participants),
     buildUnderdogCard(events, outrightOdds, outrightOddsState, participants),
-    buildFamilyFeudCard(events, outrightOdds, participants, config),
+    buildFamilyFeudCard(events, participants, config),
   ];
 }
 
@@ -462,7 +463,24 @@ function chooseOutrightOddsForDisplay({
     state: OutrightOddsState;
   };
 }) {
-  if (outrightResult.odds.length > 0) {
+  const resultCoverage = outrightRemainingCoverage(
+    outrightResult.odds,
+    participants,
+  );
+  const fallbackCoverage = outrightRemainingCoverage(
+    fallbackOutrightOdds,
+    participants,
+  );
+
+  // The Odds API can occasionally return a partial outright market. If we
+  // normalise only that small subset, countries can look wildly different
+  // across sweepstakes. Prefer the most complete team-level basis so the same
+  // country always has the same displayed outright percentage.
+  if (
+    outrightResult.odds.length > 0 &&
+    resultCoverage > 0 &&
+    resultCoverage >= fallbackCoverage
+  ) {
     return {
       odds: outrightResult.odds,
       state: outrightResult.state,
@@ -614,15 +632,22 @@ export async function loadOddsPreview(
 
   const discovery = cachedDiscovery.result;
   const outrightResult = await loadTheOddsApiOutrights(participants);
+  const discoveryCoverage = outrightRemainingCoverage(
+    discovery.outrightOdds,
+    participants,
+  );
+  const savedCoverage = outrightRemainingCoverage(savedOutrights, participants);
+  const bestFallbackOutrights =
+    discoveryCoverage >= savedCoverage && discoveryCoverage > 0
+      ? discovery.outrightOdds
+      : savedOutrights;
+  const bestFallbackState =
+    discoveryCoverage >= savedCoverage && discoveryCoverage > 0
+      ? "cached-outrights"
+      : "saved-outrights";
   const availableOutrights = chooseOutrightOddsForDisplay({
-    fallbackOutrightOdds:
-      discovery.outrightOdds.length > 0
-        ? discovery.outrightOdds
-        : savedOutrights,
-    fallbackOutrightState:
-      discovery.outrightOdds.length > 0
-        ? "cached-outrights"
-        : "saved-outrights",
+    fallbackOutrightOdds: bestFallbackOutrights,
+    fallbackOutrightState: bestFallbackState,
     participants,
     outrightResult,
   });
