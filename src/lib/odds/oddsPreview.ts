@@ -34,16 +34,12 @@ const SAVED_WORLD_CUP_OUTRIGHTS: Array<{
   probability: number;
   team: string;
 }> = [
-  { probability: 33.4, team: "France" },
-  { probability: 15.7, team: "Argentina" },
-  { probability: 13.2, team: "Spain" },
-  { probability: 7.9, team: "England" },
-  { probability: 6.9, team: "Brazil" },
-  { probability: 6.2, team: "Portugal" },
-  { probability: 5.9, team: "Egypt" },
-  { probability: 3.0, team: "Morocco" },
-  { probability: 2.5, team: "United States" },
-  { probability: 2.2, team: "Norway" },
+  // Team-level fallback snapshot from the latest known good World Cup winner
+  // outright market. Keep this owner-free so every sweepstake maps the same
+  // country probabilities to its own participants.
+  { probability: 56.5, team: "Spain" },
+  { probability: 24.5, team: "England" },
+  { probability: 19.0, team: "Argentina" },
 ];
 
 let cachedTheOddsApiOutrights:
@@ -240,7 +236,11 @@ function toSavedOutrightSummary(team: string, probability: number): OutrightOdds
   };
 }
 
-function savedWorldCupOutrights(
+export function savedWorldCupOutrightSnapshot() {
+  return SAVED_WORLD_CUP_OUTRIGHTS.map((snapshot) => ({ ...snapshot }));
+}
+
+export function savedWorldCupOutrights(
   participants: Participant[],
 ): OutrightOddsSummary[] {
   const allocatedTeams = new Set(
@@ -509,6 +509,23 @@ function chooseOutrightOddsForDisplay({
   };
 }
 
+export async function loadOutrightOddsForDisplay(
+  participants: Participant[],
+): Promise<{
+  odds: OutrightOddsSummary[];
+  state: OutrightOddsState;
+}> {
+  const savedOutrights = savedWorldCupOutrights(participants);
+  const outrightResult = await loadTheOddsApiOutrights(participants);
+
+  return chooseOutrightOddsForDisplay({
+    fallbackOutrightOdds: savedOutrights,
+    fallbackOutrightState: "saved-outrights",
+    participants,
+    outrightResult,
+  });
+}
+
 function toOutrightOddsSummary(
   outcome: TheOddsApiOutrightSummary,
 ): OutrightOddsSummary {
@@ -603,16 +620,9 @@ export async function loadOddsPreview(
   config: SweepstakeConfig,
 ): Promise<OddsPreview> {
   const cachedDiscovery = await loadOddsDiscoveryWithCache();
-  const savedOutrights = savedWorldCupOutrights(participants);
+  const availableOutrights = await loadOutrightOddsForDisplay(participants);
 
   if (!cachedDiscovery.result) {
-    const outrightResult = await loadTheOddsApiOutrights(participants);
-    const availableOutrights = chooseOutrightOddsForDisplay({
-      fallbackOutrightOdds: savedOutrights,
-      fallbackOutrightState: "saved-outrights",
-      participants,
-      outrightResult,
-    });
     const marketWatchCards = buildMarketWatchCards(
       [],
       availableOutrights.odds,
@@ -631,26 +641,6 @@ export async function loadOddsPreview(
   }
 
   const discovery = cachedDiscovery.result;
-  const outrightResult = await loadTheOddsApiOutrights(participants);
-  const discoveryCoverage = outrightRemainingCoverage(
-    discovery.outrightOdds,
-    participants,
-  );
-  const savedCoverage = outrightRemainingCoverage(savedOutrights, participants);
-  const bestFallbackOutrights =
-    discoveryCoverage >= savedCoverage && discoveryCoverage > 0
-      ? discovery.outrightOdds
-      : savedOutrights;
-  const bestFallbackState =
-    discoveryCoverage >= savedCoverage && discoveryCoverage > 0
-      ? "cached-outrights"
-      : "saved-outrights";
-  const availableOutrights = chooseOutrightOddsForDisplay({
-    fallbackOutrightOdds: bestFallbackOutrights,
-    fallbackOutrightState: bestFallbackState,
-    participants,
-    outrightResult,
-  });
   const fixtureOddsByMatchup = buildFixtureOddsMap(
     discovery.oddsExamples,
     participants,

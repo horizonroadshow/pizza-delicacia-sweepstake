@@ -49,7 +49,6 @@ export async function GET(request: NextRequest) {
         medianDecimalOdds: outcome.medianDecimalOdds,
         matchedInternalTeam: outcome.matchedInternalTeam,
         normalisedImpliedProbability: `${outcome.normalisedImpliedProbability}%`,
-        owner: outcome.owner,
         rawImpliedProbability: `${outcome.rawImpliedProbability}%`,
         team: outcome.team,
       })),

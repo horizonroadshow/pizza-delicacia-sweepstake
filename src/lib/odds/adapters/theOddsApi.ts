@@ -1,5 +1,5 @@
 import type { Participant } from "@/data/sweepstake";
-import { normaliseTeamName, ownerLookup } from "@/lib/football/ownerLabels";
+import { normaliseTeamName } from "@/lib/football/ownerLabels";
 import { OddsAdapterError } from "@/lib/odds/types";
 
 const DEFAULT_BASE_URL = "https://api.the-odds-api.com/v4";
@@ -38,7 +38,6 @@ export type TheOddsApiOutrightSummary = {
   medianDecimalOdds: number;
   matchedInternalTeam?: string;
   normalisedImpliedProbability: number;
-  owner?: string;
   rawImpliedProbability: number;
   team: string;
 };
@@ -201,7 +200,6 @@ export function createTheOddsApiAdapter({
   return {
     async discoverWorldCupWinnerOutrights(): Promise<TheOddsApiOutrightDiscovery> {
       const events = await requestOutrights();
-      const ownersByTeam = ownerLookup(participants);
       const targetRemainingTeams = remainingTeamNames(participants);
       const teamsByName = new Map(
         participants.flatMap((participant) =>
@@ -246,7 +244,6 @@ export function createTheOddsApiAdapter({
             bookmakerCount: teamPrices.bookmakers.size,
             matchedInternalTeam: teamsByName.get(normalisedTeam),
             medianDecimalOdds: rounded(median(teamPrices.prices)),
-            owner: ownersByTeam.get(normalisedTeam),
             rawImpliedProbability,
             team: teamPrices.team,
           };
